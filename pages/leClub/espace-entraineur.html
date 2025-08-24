@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Le VBO te propose un espace dédié aux entraineurs.">
+    <link href="/css/styles.css" rel="stylesheet">
+    <link href="/css/leClub/espace-entraineur.css" rel="stylesheet">
+    <title>Espace entraineurs - VBO</title>
+    <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="menu"></div>
+    <div id="content">
+        <div class="header-content">
+            <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club" class="club-logo">
+            <div class="text-content">
+                <h1>Espace entraineurs</h1>
+                <p class="explication">Le Volley-Ball Ollioulais met à disposition des entraineurs un espace dédié pour les aider dans leur mission.
+                    <br>Vous trouverez ici des documents utiles, des conseils et des outils pour vous accompagner dans votre rôle.
+                    <br>Si vous avez des questions ou des suggestions, n'hésitez pas à nous contacter.
+                </p>
+            </div>
+        </div>
+    </div>
+
+<div class="container">
+    <div class="doc-entraineurs">
+        <h2>Documents téléchargeables</h2>
+        <ul class="download-list">
+            <li><a href="/documents/entraineur/frais-de-déplacement.pdf" target="_blank">1 - Fiche de demande de remboursement (version PDF)</a></li>
+            <li><a href="https://docs.google.com/spreadsheets/d/1jR-0Rl2PtGlCLKHwRlO1Tv1urWKT6uaipwbXGz-lxDo/edit?usp=sharing" target="_blank">1 - Fiche de demande de remboursement (version Google Drive)</a></li>
+            <li><a href="/documents/entraineur/Feuille-De-Composition_équipe.pdf" target="_blank">2 - Feuille de composition d'équipe (version PDF)</a></li>
+            <li><a href="https://docs.google.com/document/d/1eGXYZGvCJXkvwcNFvjImAqwtwJsTKQt1Gkj9UyqVxvw/edit?usp=sharing" target="_blank">2- Feuille de composition d'équipe (version Google Drive)</a></li>
+            <li><a href="/documents/entraineur/FRANCHISE-MANIFESTATION-SPORTIVE.pdf" target="_blank">3 - Franchise de manifestation sportive (version PDF)</a></li>
+            <li><a href="https://docs.google.com/document/d/13GphWd857gfS30wid6iQ3rHb7Da_EqYn/edit" target="_blank">3 - Franchise de manifestation sportive (version Google Drive)</a></li>
+        </ul>
+    </div>
+
+<hr class="separator">
+
+<div class="tickets">
+    <h2>Remboursements des frais de déplacements</h2>
+    <p>Grâce à ce formulaire, vous pouvez directement partager vos demandes de remboursement.</p>
+    <p><strong>Important :</strong></p>
+    <p>Quelques règles pour en bénéficier :</p>
+    <ol>
+        <li>Les tickets de péages doivent être scannés sur une feuille blanche et envoyés en format PDF.</li>
+        <li>Les demandes doivent être faites dans un délai de 15 jours après la dépense.</li>
+        <li>Retourner la fiche de demande de remboursement duement remplie.</li>
+    </ol>
+
+    <form id="contactForm" action="/php/envoyer_remboursement.php" method="POST" enctype="multipart/form-data">
+        <div class="input-container">
+            <div class="form-control nom">
+                <input id="nom" type="text" name="nom" required />
+                <label for="nom">
+                    <span style="transition-delay:325ms">N</span>
+                    <span style="transition-delay:300ms">O</span>
+                    <span style="transition-delay:275ms">M</span>
+                    <span style="transition-delay:250ms"></span>
+                    <span style="transition-delay:225ms">e</span>
+                    <span style="transition-delay:200ms">t</span>
+                    <span style="transition-delay:175ms"></span>
+                    <span style="transition-delay:150ms">P</span>
+                    <span style="transition-delay:125ms">r</span>
+                    <span style="transition-delay:100ms">é</span>
+                    <span style="transition-delay:75ms">n</span>
+                    <span style="transition-delay:50ms">o</span>
+                    <span style="transition-delay:25ms">m</span>
+                </label>
+            </div>
+
+            <div class="form-control email">
+                <input id="email" type="email" name="email" required />
+                <label for="email">
+                    <span style="transition-delay:200ms">M</span>
+                    <span style="transition-delay:150ms">a</span>
+                    <span style="transition-delay:100ms">i</span>
+                    <span style="transition-delay:50ms">l</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="container-folder">
+            <div class="folder">
+                <div class="front-side">
+                    <div class="tip"></div>
+                    <div class="cover-folder"></div>
+                </div>
+                <div class="back-side cover-folder"></div>
+            </div>
+
+            <label class="custom-file-upload">
+                <input type="file" name="fichier[]" accept=".pdf" multiple required />
+                Sélectionner un ou plusieurs fichiers (PDF uniquement)
+            </label>
+        </div>
+
+        <div class="form-control full-width">
+            <button type="submit" class="btn-submit">Envoyer</button>
+        </div>
+    </form>
+</div>
+
+<hr class="separator">
+
+    <div class="siteffvb">
+        <h2>Ressources Volley</h2>
+            <p>Retrouvez sur le site mis à disposition par la FFVB des documents utiles pour les entraineurs.</p>
+            <p>Identifiant : ffvolley<br>Mot de passe : ffvolley2021</p>
+            <p>ENJOY !</p>
+                <div>
+                    <div class="btn">
+                        <a href="https://ressourcesvolley.com/" target="_blank">Accéder au site</a>
+                    </div>
+                </div>
+    </div>
+</div>
+
+    <div id="footer"></div>
+
+    <script src="/js/main.js"></script>
+
+    <script>
+        loadHTML('/commun/menu.html', 'menu');
+        loadHTML('/commun/footer.html', 'footer');
+    </script>
+
+</body>
+</html>

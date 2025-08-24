@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galerie 2024-2025 - VBO</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/galerie/galerie-archive.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
+</head>
+<body>
+
+<div id="menu"></div>
+
+<div id="content">
+    <div class="header-content">
+        <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club">
+        <div class="text-content">
+            <h1>Archives Saison 2024-2025</h1>
+            <p>Découvrez les moments marquants de la saison 2024-2025.</p>
+        </div>
+    </div>
+</div>
+
+<section class="archive-section">
+
+    <a href="/pages/galerie/galerie.html" class="back-link">← Retour à la galerie générale</a>
+    
+    <div class="archive-gallery">
+        <a href="/photos/saison-25-26/" target="_blank"><img src="/photos/saison-25-26/" alt=""></a>
+        <a href="https://flic.kr/s/aHBqjCm33x" target="_blank"class="more">Voir plus -><img src="/photos/saison-25-26/" alt=""></a>
+    </div>
+</section>
+
+<a href="/pages/galerie/galerie.html" class="back-link">← Retour à la galerie générale</a>
+
+<div id="footer"></div>
+
+<!-- Scripts -->
+<script>
+    // Charger menu et footer dynamiquement
+    function loadHTML(url, elementId) {
+        fetch(url)
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById(elementId).innerHTML = data;
+            })
+            .catch(error => console.error('Erreur lors du chargement:', error));
+    }
+
+    loadHTML('/commun/menu.html', 'menu');
+    loadHTML('/commun/footer.html', 'footer');
+</script>
+
+</body>
+</html>

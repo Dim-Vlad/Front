@@ -1,0 +1,226 @@
+.container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 90%;
+    margin: 20px auto;
+}
+.training-table-container {
+    width: 100%;
+    overflow-x: auto;
+    margin: 0 auto;
+    border: 2px solid var(--bg-dark);
+}
+
+
+.training-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.training-table th,
+.training-table td {
+    border: 1px solid var(--bg-dark);
+    padding: 5px;
+    text-align: center;
+    vertical-align: middle;
+    white-space: pre-line;
+}
+
+.training-table thead th {
+    background-color: var(--primary-color);
+    font-weight: bold;
+}
+
+.day {
+    background-color: var(--primary-color);
+    font-weight: bold;
+    width: 100px;
+}
+
+.day-separator {
+    height: 2px;
+}
+
+.bg-lundi,
+.bg-mercredi,
+.bg-vendredi {
+    background-color: #e3eae1;
+}
+
+.bg-mardi,
+.bg-jeudi {
+    background-color: whitesmoke;
+}
+
+.print-button-container {
+    text-align: left;
+    margin: 0 0 20px 80px;
+}
+
+.print-button {
+    padding: 10px;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.print-button:hover {
+    background-color: var(--bg-dark);
+}
+
+/* Formulaire */
+.form-container {
+    width: 35%;
+    max-width: 400px;
+    margin: 20px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+    background-color: #f9f9f9;
+}
+.form-container h2 {
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
+.form-container label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+.form-container input, 
+.form-container select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+.form-container button {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.form-container button:hover {
+    background-color: var(--bg-dark);
+}
+.result {
+    margin-top: 20px;
+    font-size: 1rem;
+    color: #b90000;
+    font-weight: bold;
+}
+.contact-button {
+    margin-top: 20px;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.complet {
+    color: #b90000;
+    background-color: var(--primary-color);
+    border: 2px var(--bg-dark) solid;
+    border-radius: 20px;
+    margin: 0 70px 20px 70px;
+    padding: 5px 10px 5px 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+    cursor: default;
+}
+.complet h2 {
+    margin: 0;
+    font-size: 2rem;
+    text-decoration: underline;
+}
+.complet p {
+    margin: 10px 0;
+    font-size: 1.2rem;
+}
+.complet a {
+    text-decoration: underline;
+    font-weight: bold;    
+}
+.complet a:hover {
+    cursor: url('/images/icones/volley-cursor32.png'), auto;
+}
+
+.contact {
+    color: #b90000;
+}
+
+
+
+
+@media (max-width: 768px) {
+.container {
+    flex-direction: column;
+    align-items: center;
+}
+.training-table {
+    width: 100%;
+    zoom: 90%;
+    font-size: 0.8rem;
+}
+.form-container {
+    width: 95%;
+    order: -1;
+}
+.complet {
+    font-size: 0.7rem;
+    margin: 0 5px 20px 5px;
+}
+}
+
+
+@media print {
+.print-button-container,
+body > :not(.container) {
+display: none !important;
+}
+.no-print {
+    display: none !important;
+}
+.container {
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+    background: white;
+    width: 100%;
+}
+.training-table-container {
+    overflow: visible;
+}
+.training-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+table.training-table td,
+table.training-table th {
+    page-break-inside: avoid;
+    border: 1px solid #000;
+    color: black;
+    background: white;
+}
+thead {
+    display: table-header-group;
+}
+tfoot {
+    display: table-footer-group;
+}
+}

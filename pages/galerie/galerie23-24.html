@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galerie 2023-2024 - VBO</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/galerie/galerie-archive.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
+</head>
+<body>
+
+<div id="menu"></div>
+
+<div id="content">
+    <div class="header-content">
+        <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club">
+        <div class="text-content">
+            <h1>Archives Saison 2023-2024</h1>
+            <p>Découvrez les moments marquants de la saison 2023-2024.</p>
+        </div>
+    </div>
+</div>
+
+<section class="archive-section">
+
+    <a href="/pages/galerie/galerie.html" class="back-link">← Retour à la galerie générale</a>
+    
+    <div class="archive-gallery">
+        <a href="/photos/saison-23-24/allezVBO.jpg" target="_blank"><img src="/photos/saison-23-24/allezVBO.jpg" alt=""></a>
+        <a href="/photos/saison-23-24/beach.jpg" target="_blank"><img src="/photos/saison-23-24/beach.jpg" alt=""></a>
+        <a href="/photos/saison-23-24//champion-M18M.jpg" target="_blank"><img src="/photos/saison-23-24//champion-M18M.jpg" alt=""></a>
+        <a href="/photos/saison-23-24/DepartF.jpg" target="_blank"><img src="/photos/saison-23-24/DepartF.jpg" alt=""></a>
+        <a href="/photos/saison-23-24/DepartM.jpg" target="_blank"><img src="/photos/saison-23-24/DepartM.jpg" alt=""></a>
+        <a href="/photos/saison-23-24/loisirs.jpg" target="_blank"><img src="/photos/saison-23-24/loisirs.jpg" alt=""></a>
+        <a href="/photos/saison-23-24/M15F-nico.jpg" target="_blank"><img src="/photos/saison-23-24/M15F-nico.jpg" alt=""></a>
+        <a href="/photos/saison-23-24/M15F.jpg" target="_blank"><img src="/photos/saison-23-24/M15F.jpg" alt=""></a>
+        <a href="/photos/saison-23-24/M15F2.jpg" target="_blank"><img src="/photos/saison-23-24/M15F2.jpg" alt=""></a>
+        <a href="/photos/saison-23-24/M15M.jpg" target="_blank"><img src="/photos/saison-23-24/M15M.jpg" alt=""></a>
+        <a href="/photos/saison-23-24/M18F.jpg" target="_blank"><img src="/photos/saison-23-24/M18F.jpg" alt=""></a>
+        <a href="/photos/saison-23-24/M18M.jpg" target="_blank"><img src="/photos/saison-23-24/M18M.jpg" alt=""></a>
+        <a href="/photos/saison-23-24/M18MCDF.jpg" target="_blank"><img src="/photos/saison-23-24/M18MCDF.jpg" alt=""></a>
+        <a href="/photos/saison-23-24/MA8F-CDF.jpg" target="_blank"><img src="/photos/saison-23-24/MA8F-CDF.jpg" alt=""></a>
+        <a href="/photos/saison-23-24/N3M.jpg" target="_blank"><img src="/photos/saison-23-24/N3M.jpg" alt=""></a>
+        <a href="/photos/saison-23-24/olive-max.jpg" target="_blank"><img src="/photos/saison-23-24/olive-max.jpg" alt=""></a>
+        <a href="/photos/saison-23-24/pitchoun.jpg" target="_blank"><img src="/photos/saison-23-24/pitchoun.jpg" alt=""></a>
+        <a href="/photos/saison-23-24/PNF.jpg" target="_blank"><img src="/photos/saison-23-24/PNF.jpg" alt=""></a>
+        <a href="/photos/saison-23-24/recep-max-pitchoun.jpg" target="_blank"><img src="/photos/saison-23-24/recep-max-pitchoun.jpg" alt=""></a>
+        <a href="/photos/saison-23-24/recompense.jpg" target="_blank"><img src="/photos/saison-23-24/recompense.jpg" alt=""></a>
+        <a href="/photos/saison-23-24/Regio.jpg" target="_blank"><img src="/photos/saison-23-24/Regio.jpg" alt=""></a>
+        <a href="https://flic.kr/s/aHBqjBNNa8" target="_blank" class="more">Voir plus -><img src="/photos/saison-23-24/tournoi-des-familles.jpg" alt=""></a>
+    </div>
+</section>
+
+<a href="/pages/galerie/galerie.html" class="back-link">← Retour à la galerie générale</a>
+
+<div id="footer"></div>
+
+<!-- Scripts -->
+<script>
+    // Charger menu et footer dynamiquement
+    function loadHTML(url, elementId) {
+        fetch(url)
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById(elementId).innerHTML = data;
+            })
+            .catch(error => console.error('Erreur lors du chargement:', error));
+    }
+
+    loadHTML('/commun/menu.html', 'menu');
+    loadHTML('/commun/footer.html', 'footer');
+</script>
+
+</body>
+</html>

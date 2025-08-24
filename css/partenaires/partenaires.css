@@ -1,0 +1,145 @@
+body {
+    font-family: Poppins, sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+.organigramme, .trombinoscope {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.organigramme a,
+.trombinoscope a {
+    color: inherit;
+    transition: color 0.3s ease;
+}
+
+.organigramme a:hover,
+.trombinoscope a:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+.level {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 20px 0;
+}
+
+.position {
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+    width: 150px;
+    height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    border-radius: 10px;
+    border-style: double;
+    border-color: var(--bg-dark);
+    margin: 10px;
+    font-weight: bold;
+    text-align: center;
+    transition: transform 0.5s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.position:hover p {
+    color: white;
+}
+
+.position:hover {
+    transform: translateY(-10px);
+}
+
+.position img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    margin-bottom: 10px;
+}
+
+.separator {
+    width: 80%;
+    max-width: 600px;
+    border-top: 2px solid #ccc;
+    margin: 20px auto;
+}
+
+.minutes {
+    padding: 20px;
+    text-align: center;
+}
+
+.minutes h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: var(--bg-dark);
+}
+
+.button-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    justify-items: center;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 0 50px;
+    background-color: var(--secondary-color);
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 10px;
+    transition: background-color 0.3s, transform 0.3s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.btn:hover {
+    background-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.devenir,
+.dossier {
+    margin: 20px 0;
+    text-align: center;
+    font-size: 1.2rem;
+    color: var(--bg-dark);
+}
+
+
+@media screen and (max-width: 768px) {
+    .button-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .level {
+        flex-direction: column;
+        align-items: center;
+    }
+    .position {
+        margin: 10px 0;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .button-container {
+        grid-template-columns: 1fr;
+    }
+}

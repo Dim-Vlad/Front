@@ -1,0 +1,48 @@
+.container {
+    width: 80%;
+    margin: 0 auto;
+    margin-bottom: 20px;
+    padding: 20px;
+    background-color: var(--primary-color);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    border-radius: 20px;
+}
+
+h1 {
+    color: var(--bg-dark);
+}
+
+h2 {
+    color: var(--secondary-color);
+}
+
+ul {
+    list-style-type: none;
+    padding-left: 20px;
+}
+
+p, ul {
+    margin: 10px 0;
+}
+
+.container a {
+    color: var(--secondary-color);
+    font-weight: bold;
+}
+
+.container iframe {
+    width: 150px;
+    height: 150px;
+    border: none;
+    border-radius: 20px;
+    margin: 20px 0;
+}
+
+.affiche img {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    margin: 20px auto;
+}

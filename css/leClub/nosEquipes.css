@@ -1,0 +1,236 @@
+.soon{
+    background-color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+    margin: 20px auto;
+    width: 50%;
+}
+
+.soon p {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--secondary-color);
+    font-style: bold;
+}
+
+.soon img {
+    width: 250px;
+    height: auto;
+}
+
+.main {
+    display: flex;
+    flex-wrap: wrap;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 30px;
+    padding: 10px;
+    justify-content: center;
+    align-items: center;
+    min-height: 50vh;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.wrap {
+    flex: 1 1 200px;
+    min-width: 150px;
+    max-width: 250px;
+    margin: 10px;
+    cursor: pointer;
+    text-align: center;
+    background-color: #f9f9f9;
+    border-radius: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    font-size: 1.2rem;
+}
+
+.wrap:hover {
+    transform: scale(1.10);
+}
+
+.item {
+    width: 100%;
+    background-color: var(--primary-color);
+    border-radius: 20px;
+    transition: 0.2s;
+    padding: 20px;
+    box-shadow: 0 30px 20px #5555;
+    border: 2px solid #888;
+}
+
+.wrap img {
+    width: 100%;
+    height: 160px;
+    border-radius: 10px;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1010;
+    left: 0;
+    top: 0;  /* Aligner en haut de l'écran */
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    overflow: auto;
+    font-size: 1.2rem;
+    opacity: 0;  /* Commence invisible */
+    transition: opacity 0.3s ease;
+    justify-content: center;  /* Centrer horizontalement */
+    align-items: flex-start;  /* Aligner en haut */
+    padding-top: 20px;  /* Ajouter un espace entre le haut de l'écran et la modale */
+}
+
+.modal-content {
+    background-color: var(--primary-color);
+    margin: 0 auto;  /* Supprimer la marge verticale automatique */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 90%;
+    max-width: 600px;
+    text-align: center;
+    border-radius: 20px;
+    transform: scale(0.7);  /* Commence réduit */
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
+    position: relative;
+}
+
+#modal-image {
+    width: 100%; 
+    border-radius: 10px;
+    border: 1px #888 solid;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 1rem;
+    color: white;
+    background-color: var(--secondary-color);
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background-color: var(--bg-dark);
+}
+
+
+/* Effet d'animation lors de l'ouverture */
+.modal.show {
+    opacity: 1;
+}
+
+.modal.show .modal-content {
+    transform: scale(1);
+    opacity: 1;
+}
+
+.close {
+    color: black;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: white;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+
+@media (min-width: 1200px) {
+    .main {
+    grid-template-columns: repeat(5, 1fr);
+    max-width: 85%;
+    }
+
+    .gif {
+    width: 80%;
+    }
+
+    .gif img {
+        width: 100%;
+        height: auto;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    .main {
+    grid-template-columns: repeat(4, 1fr);
+    max-width: 85%;
+    }
+
+    .gif {
+    width: 80%;
+    }
+
+    .gif img {
+        width: 100%;
+        height: auto;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .main {
+    grid-template-columns: repeat(3, 1fr); 
+    max-width: 85%;
+    }
+
+    .gif {
+    width: 80%;
+    }
+
+    .gif img {
+        width: 100%;
+        height: auto;
+    }
+}
+
+@media (min-width: 576px) and (max-width: 767px) {
+    .main {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 85%;
+    }
+
+    .gif {
+    width: 80%;
+    }
+
+    .gif img {
+        width: 100%;
+        height: auto;
+    }
+}
+
+@media (max-width: 575px) {
+    .main {
+    grid-template-columns: 1fr;
+    max-width: 85%;
+    }
+
+    .gif {
+    width: 80%;
+    }
+
+    .gif img {
+        width: 100%;
+        height: auto;
+    }
+}

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrainements - VBO</title>
+    <link href="/css/styles.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/entrainements.css">
+    <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="menu"></div>
+    <div id="content">
+        <div class="header-content">
+            <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club" class="club-logo">
+            <div class="text-content">
+                <h1>Planning des entrainements</h1>
+                <p>En fonction de l'année de naissance et du genre (féminin ou masculin), </br>
+                    vous pouvez connaitre les jours et horaires des entrainements.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="complet">
+        <h2>Planning des entrainements de la saison 2025 - 2026.</h2>
+            <p>Beaucoup de catégories comptent déjà un grand nombre de joueurs.<br>
+            Si vous souhaitez vous inscrire, il est préférable de <a class="contact" href="/pages/nousContacter.html">contacter le club</a> 
+            pour vérifier la disponibilité.</p>
+        <h2>⚠️​ Attention ! ⚠️​</h2>
+            <p>Les horaires et les lieux des entrainements peuvent être modifiés.</br>
+            Il est préférable de <a class="contact" href="/pages/nousContacter.html">contacter le club</a> pour avoir les bonnes infos.</p>
+    </div>
+
+    <div class="print-button-container">
+        <button onclick="window.print()" class="print-button">
+            🖨️ Imprimer / Enregistrer sous PDF
+        </button>
+    </div>
+
+<!-- Tableau Entrainements -->
+    <div class="container">
+        <div class="training-table-container">
+            <table class="training-table">
+                <thead>
+                    <tr>
+                        <th colspan="5" scope="colgroup">Saison 2025 - 2026</th>
+                    </tr>
+                    <tr>
+                        <th scope="col">Jour</th>
+                        <th scope="col">Horaire<br>Lieu</th>
+                        <th scope="col">Terrain 1</th>
+                        <th scope="col">Terrain 2</th>
+                        <th scope="col">Terrain 3</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr class="bg-lundi">
+                        <td class="day" rowspan="3">Lundi</td>
+                        <td>18h00 - 19h30<br>La Cordeille</td>
+                        <td>M15 Féminin</br>Quentin</td>
+                        <td>.</td>
+                        <td>.</td>
+                    </tr>
+                    <tr class="bg-lundi">
+                        <td>19h30 - 21h30<br>La Cordeille</td>
+                        <td colspan="2">Loisirs</br>Carine et Tom</td>
+                        <td>Match Compet Lib</br>Matthieu D.</td>
+                    </tr>
+                    <tr class="bg-lundi">
+                        <td>20h00 - 22h00<br>Piemontesi</td>
+                        <td colspan="3">N3 Féminin</br>Anne-Sophie</td>
+                    </tr>
+
+                    <tr>
+                        <td colspan="5" class="day-separator"></td>
+                    </tr>
+
+                    <tr class="bg-mardi">
+                        <td class="day" rowspan="3">Mardi</td>
+                        <td>17h30 - 18h45<br>Piemontesi</td>
+                        <td>M13 Masculin</br>Lucas</td>
+                        <td>M13 Féminin<br>Benjamin</td>
+                        <td>M15 Masculin</br>Daniel</td>
+                    </tr>
+                    <tr class="bg-mardi">
+                        <td>18h45 - 20h15<br>Piemontesi</td>
+                        <td>Départ Masculin 2</br>David</td>
+                        <td>.</td>
+                        <td>M18 Masculin</br>Gil</td>
+                    </tr>
+                    <tr class="bg-mardi">
+                        <td>20h15 - 22h15<br>Piemontesi</td>
+                        <td colspan="3">N3 Masculin</br>Pierre C.</td>
+                    </tr>
+
+                    <tr>
+                        <td colspan="5" class="day-separator"></td>
+                    </tr>
+
+                    <tr class="bg-mercredi">
+                        <td class="day" rowspan="5">Mercredi</td>
+                        <td>16h30 - 17h30<br>Piemontesi</td>
+                        <td colspan="1">BABY - Tatami en haut</br>Pas d'entraineur</td>
+                        <td colspan="1">.</td>
+                        <td colspan="1">M7 et M9</br>Pas d'entraineur</td>
+                    </tr>
+                    <tr class="bg-mercredi">
+                        <td>17h30 - 18h45<br>Piemontesi</td>
+                        <td>M11 F et M</br>Fabrice</td>
+                        <td>M18 Féminin<br>Pauline</td>
+                        <td>M15 Féminin</br>Quentin</td>
+                    </tr>
+                    <tr class="bg-mercredi">
+                        <td>18h45 - 20h15<br>Piemontesi</td>
+                        <td>Départ Féminin</br>Quentin</td>
+                        <td>M18 Féminin</br>Pauline</td>
+                        <td>Départ Masculin</br>Pierre D.</td>
+                    </tr>
+                    <tr class="bg-mercredi">
+                        <td>20h15 - 22h15<br>Piemontesi</td>
+                        <td colspan="3">Pré-Nationale Masculin</br>Dimitri</td>
+                    </tr>
+                    <tr class="bg-mercredi">
+                        <td>20h00 - 21h30</br>Charles Coste</td>
+                        <td colspan="2">Loisirs</br>Carine et Tom</td>
+                        <td>Compet Lib</br>Matthieu D.</td>
+                    </tr>
+
+                    <tr>
+                        <td colspan="5" class="day-separator"></td>
+                    </tr>
+
+                    <tr class="bg-jeudi">
+                        <td class="day" rowspan="3">Jeudi</td>
+                        <td>17h30 - 18h45<br>Piemontesi</td>
+                        <td>M13 Masculin</br>Lucas</td>
+                        <td>M13 Féminin</br>Benjamin</td>
+                        <td>M15 Masculin</br>Daniel</td>
+                    </tr>
+                    <tr class="bg-jeudi">
+                        <td>18h45 - 20h15<br>Piemontesi</td>
+                        <td>Départ Masculin 2</br>David</td>
+                        <td>M18 Masculin</br>Gil</td>
+                        <td>N3 Féminin</br>Anne-Sophie</td>
+                    </tr>
+                    <tr class="bg-jeudi">
+                        <td>20h15 - 22h15<br>Piemontesi</td>
+                        <td colspan="3">N3 Masculin</br>Pierre C.</td>
+                    </tr>
+
+                    <tr>
+                        <td colspan="5" class="day-separator"></td>
+                    </tr>
+
+                    <tr class="bg-vendredi">
+                        <td class="day" rowspan="3">Vendredi</td>
+                        <td>17h30 - 18h45<br>Piemontesi</td>
+                        <td>M11 F et M</br>Fabrice</td>
+                        <td>M18 Féminin<br>Pauline</td>
+                        <td>M13 Féminin</br>Quentin</td>
+                    </tr>
+                    <tr class="bg-vendredi">
+                        <td>18h45 - 20h15<br>Piemontesi</td>
+                        <td>Départ Féminin</br>Quentin</td>
+                        <td>M18 Féminin</br>Pauline</td>
+                        <td>Départ Masculin</br>Pierre D.</td>
+                    </tr>
+                    <tr class="bg-vendredi">
+                        <td>20h15 - 22h15<br>Piemontesi</td>
+                        <td colspan="3">Pré-Nationale Masculin</br>Dimitri</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+<!-- Déterminer catégorie -->
+        <div class="form-container">
+            <h2>Déterminer la Catégorie</h2>
+            <form id="category-form">
+                <label for="birth-year">Année de Naissance:</label>
+                    <select id="birth-year" name="birth-year" required>
+                        <option value="" disabled selected>Choisir l'année de naissance</option>
+                        <option value="2022">2022</option>
+                        <option value="2021">2021</option>
+                        <option value="2020">2020</option>
+                        <option value="2019">2019</option>
+                        <option value="2018">2018</option>
+                        <option value="2017">2017</option>
+                        <option value="2016">2016</option>
+                        <option value="2015">2015</option>
+                        <option value="2014">2014</option>
+                        <option value="2013">2013</option>
+                        <option value="2012">2012</option>
+                        <option value="2011">2011</option>
+                        <option value="2010">2010</option>
+                        <option value="2009">2009</option>
+                        <option value="2008">2008</option>
+                        <option value="2007">2007</option>
+                        <option value="2006">2006</option>
+                        <option value="2005">2005</option>
+                        <option value="2004">2004 ou avant</option>
+                    </select>
+                <label for="gender">Genre:</label>
+                <select id="gender" name="gender" required>
+                    <option value="" disabled selected>Choisir masculin ou féminin</option>
+                    <option value="male">Masculin</option>
+                    <option value="female">Féminin</option>
+                </select>
+                <button type="submit">Soumettre</button>
+            </form>
+            <div id="result" class="result"></div>
+            <button id="contact-button" class="contact-button" >Nous contacter</button>
+        </div>
+    </div>
+
+    <div class="print-button-container">
+        <button onclick="window.print()" class="print-button">
+            🖨️ Imprimer / Enregistrer sous PDF
+        </button>
+    </div>
+
+<div id="footer"></div>
+
+<script src="/js/main.js"></script>
+<script>
+document.getElementById('category-form').addEventListener('submit', function(event) {
+event.preventDefault();
+
+const birthYear = document.getElementById('birth-year').value;
+const gender = document.getElementById('gender').value;
+let category = '';
+let schedule = '';
+
+if (birthYear === '2022' || birthYear === '2021') {
+    category = 'Baby';
+    schedule = 'Malheureusement, nous n\'avons pas d\'entraîneur pour cette catégorie. Contactez le club pour plus d\'informations.';
+} else if (birthYear === '2020' || birthYear === '2019') {
+    category = 'M7';
+    schedule = 'Mercredi 16h30 - 17h45';
+} else if (birthYear === '2018' || birthYear === '2017') {
+    category = 'M9';
+    schedule = 'Mercredi 16h30 - 17h45';
+} else if (birthYear === '2016' || birthYear === '2015') {
+    category = 'M11';
+    schedule = 'Mercredi 17h30 - 18h45 et Vendredi 17h30 - 18h45';
+} else if (birthYear === '2014' || birthYear === '2013') {
+    if (gender === 'female') {
+        category = 'M13 Féminin';
+        schedule = 'Mardi 17h30 - 18h45 et Jeudi 17h30 - 18h45';
+    } else if (gender === 'male') {
+        category = 'M13 Masculin';
+        schedule = 'Mardi 17h30 - 18h45 et Jeudi 17h30 - 18h45';
+    }
+} else if (birthYear === '2012' || birthYear === '2011') {
+    if (gender === 'female') {
+        category = 'M15 Féminin';
+        schedule = 'Lundi - 18h00 - 19h30 à la Cordeille et Mercredi 17h30 - 18h45';
+    } else if (gender === 'male') {
+        category = 'M15 Masculin';
+        schedule = 'Mardi 17h30 - 18h45 et Jeudi 17h30 - 18h45';
+    }
+} else if (birthYear === '2010' || birthYear === '2009' || birthYear === '2008') {
+    if (gender === 'female') {
+        category = 'M18 Féminin';
+        schedule = 'Contactez le club pour plus d\'informations';
+    } else if (gender === 'male') {
+        category = 'M18 Masculin';
+        schedule = 'Mardi 18h45 - 20h15 et Jeudi 18h45 - 20h15';
+    } 
+} else if (birthYear === '2007' || birthYear === '2006' || birthYear === '2005') {
+    if (gender === 'female') {
+        category = 'M21 Féminin = Départ Féminin';
+        schedule = 'Mercredi 18h45 - 20h15 et Vendredi 20h15 - 22h15';
+    } else if (gender === 'male') {
+        category = 'M21 Masculin = Départ Masculin';
+        schedule = 'Mercredi 18h45 - 20h15 et Vendredi 20h15 - 22h15';
+    }
+} else {
+    category = 'Catégorie senior';
+    schedule = 'Contactez le club pour plus d\'informations';
+}
+
+document.getElementById('result').textContent = `Catégorie: ${category}, Horaires: ${schedule}`;
+});
+
+loadHTML('../commun/footer.html', 'footer');
+
+document.getElementById('contact-button').addEventListener('click', function() {
+    window.location.href = 'nousContacter.html';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MERCI</title>
+    <link href="/css/styles.css" rel="stylesheet">
+    <link href="/css/merci.css" rel="stylesheet">
+    <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0"></script>
+</head>
+
+<body>
+    <div id="menu"></div>
+    <div id="content">
+        <div class="header-content">
+            <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club" class="club-logo">            
+        </div>
+    </div>
+    <div>
+        <h1>MERCI DE VOTRE PARTICIPATION</h1>
+        <p>Nous avons bien pris en compte votre inscription.<br>
+        Pour tout autres renseignements, vous pouvez prendre contact avec nous.</p>
+        <p><a class="btn" href="/pages/nousContacter.html">Nous contacter</a></p>
+        <p><a class="btn" href="/">Retour à l'accueil</a></p>
+    </div>
+    
+        <script src="/js/main.js"></script>
+        <script>
+            loadHTML('/commun/menu.html', 'menu');
+            loadHTML('/commun/footer.html', 'footer');
+        </script>
+        <script>
+            window.onload = function() {
+                var duration = 5 * 1000; // 5 secondes
+                var animationEnd = Date.now() + duration;
+                var colors = ['#bb0000', '#ffffff', '#00bb00', '#0000bb'];
+        
+                (function frame() {
+                    confetti({
+                        particleCount: 5,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0 },
+                        colors: colors
+                    });
+        
+                    confetti({
+                        particleCount: 5,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 1 },
+                        colors: colors
+                    });
+        
+                    if (Date.now() < animationEnd) {
+                        requestAnimationFrame(frame);
+                    }
+                })();
+            };
+        </script>
+        
+    </body>
+    </html>

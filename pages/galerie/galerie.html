@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galerie - VBO</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper @11/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper @11/swiper-bundle.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css " />
+    <link href="/css/styles.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/galerie/galerie.css">
+    <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
+    <link href=" https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    </head>
+
+<body>
+    <div id="menu"></div>
+
+    <div id="content">
+        <div class="header-content">
+            <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club" class="club-logo">
+            <div class="text-content">
+                <h1>Galerie</h1>
+                <p>Vous pouvez nous partager vos photos pour qu'elles soient ensuite publiées ici sur le site et sur nos réseaux.</p>
+            </div>
+        </div>
+    </div>
+
+<section class="carousel-section">
+    <h2>Photos à la une</h2>
+        <div class="swiper-container">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide"><img src="/photos/saison-24-25/4x4Mixte-24-25.jpg" alt="vedette 1"></div>
+                <div class="swiper-slide"><img src="/photos/saison-24-25/acro-branche.jpg" alt="vedette 2"></div>
+                <div class="swiper-slide"><img src="/photos/saison-24-25/balade-stage2.jpg" alt="vedette 3"></div>
+                <div class="swiper-slide"><img src="/photos/saison-24-25/departF-24-25.jpg" alt="vedette 4"></div>
+                <div class="swiper-slide"><img src="/photos/saison-24-25/departM-24-25.jpg" alt="vedette 5"></div>
+                <div class="swiper-slide"><img src="/photos/saison-24-25/M13 F.jpg" alt="vedette 6"></div>
+                <div class="swiper-slide"><img src="/photos/saison-24-25/tournoi-halloween.jpg" alt="vedette 7"></div>
+                <div class="swiper-slide"><img src="/photos/saison-24-25/stage.jpg" alt="vedette 8"></div>
+                <div class="swiper-slide"><img src="/photos/saison-24-25/PNM-Chauff2.jpg" alt="vedette 9"></div>
+                <div class="swiper-slide"><img src="/photos/saison-24-25/N3M-24-25.jpg" alt="vedette 10"></div>
+            </div>
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
+                <div class="swiper-pagination"></div>
+        </div>
+</section>
+
+<section class="gallery-section">
+    <h2>Saison 2024-2025</h2>
+        <div class="photo-grid">
+            <a href="/photos/saison-24-25/4x4Mixte-24-25.jpg"><img src="/photos/saison-24-25/4x4Mixte-24-25.jpg" alt=""></a>
+            <a href="/photos/saison-24-25/M11.jpg"><img src="/photos/saison-24-25/M11.jpg" alt=""></a>
+            <a href="/photos/saison-24-25/M13 F.jpg"><img src="/photos/saison-24-25/M13 F.jpg" alt=""></a>
+            <a href="/photos/saison-24-25/M13-masculin.jpg"><img src="/photos/saison-24-25/M13-masculin.jpg" alt=""></a>
+            <a href="/photos/saison-24-25/M15-masculin.jpg"><img src="/photos/saison-24-25/M15-masculin.jpg" alt=""></a>
+            <a href="/photos/saison-24-25/M15F-24-25.jpeg"><img src="/photos/saison-24-25/M15F-24-25.jpeg" alt=""></a>
+            <a href="/photos/saison-24-25/M18F-24-25.jpg"><img src="/photos/saison-24-25/M18F-24-25.jpg" alt=""></a>
+            <a href="/photos/saison-24-25/M18F-photo2-deb-24-25.jpg"><img src="/photos/saison-24-25/M18F-photo2-deb-24-25.jpg" alt=""></a>
+            <a href="/photos/saison-24-25/M21M-24-25.jpg"><img src="/photos/saison-24-25/M21M-24-25.jpg" alt=""></a>
+            <a href="/photos/saison-24-25/N3M-24-25.jpg"><img src="/photos/saison-24-25/N3M-24-25.jpg" alt=""></a>
+            <a href="/photos/saison-24-25/PNF-24-25.png"><img src="/photos/saison-24-25/PNF-24-25.png" alt=""></a>
+            <a href="/photos/saison-24-25/PNM-24-25.jpg"><img src="/photos/saison-24-25/PNM-24-25.jpg" alt=""></a>
+            <a href="/photos/saison-24-25/stage.jpg"><img src="/photos/saison-24-25/stage.jpg" alt=""></a>
+        </div>
+</section>
+
+<hr class="separator">
+
+<section class="archives-section">
+    <h2>Archives</h2>
+        <select id="season-select">
+            <option value="" disabled selected>Faites votre sélection</option>
+            <!-- <option value="2025">2025-2026</option> -->
+            <option value="2024">2024-2025</option>
+            <option value="2023">2023-2024</option>
+            <option value="events">Évènements</option>
+        </select>
+    <div id="archive-gallery">
+    <!-- Chargement dynamique via JS ou redirection -->
+    </div>
+</section>
+
+<hr class="separator">
+
+<h2>Envoyez-nous vos photos</h2>
+<section class="form-section">
+    <form action="/php/galerie2.php" method="post" enctype="multipart/form-data">
+    <label>Prénom et NOM :
+        <input type="text" name="name" required>
+    </label>
+    <label>Email :
+        <input type="email" name="email" required>
+    </label>
+    <label>Catégorie :
+        <select name="category" required>
+        <option value="" disabled selected>Choisissez la catégorie</option>
+        <option value="Baby">Baby, M7, M9</option>
+        <option value="M11">M11</option>
+        <option value="M13">M13</option>
+        <option value="M15">M15</option>
+        <option value="M18">M18</option>
+        <option value="M21">M21</option>
+        <option value="Senior">Sénior</option>
+        </select>
+    </label>
+    <label>Photo :
+        <input type="file" name="photos[]" accept="image/*" multiple required>
+    </label>
+    <label>Légende (optionnel) :
+        <textarea name="caption"></textarea>
+    </label>
+    <button type="submit">Envoyer</button>
+    </form>
+</section>
+
+<div id="footer"></div>
+
+<script>
+    loadHTML('/commun/menu.html', 'menu');
+    loadHTML('/commun/footer.html', 'footer');
+</script>
+
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js "></script>
+<script src="/js/main.js"></script>
+<script src="/js/galerie.js"></script>
+
+<!-- Initialisation du carrousel -->
+<script>
+    const swiper = new Swiper('.swiper-container', {
+    loop: true,
+    autoplay: { delay: 3000 },
+    pagination: { el: '.swiper-pagination' },
+    navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' }
+    });
+</script>
+
+</body>
+</html>

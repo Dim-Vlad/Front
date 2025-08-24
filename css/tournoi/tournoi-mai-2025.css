@@ -1,0 +1,170 @@
+h2 {
+    color: var(--bg-dark);
+    text-decoration: underline;
+    text-align: center;
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.regles {
+    width: 100%;
+    max-width: 1200px;
+    padding: 20px;
+    border: 2px solid var(--secondary-color);
+    background-color: var(--primary-color);
+    border-radius: 20px;
+    margin: 20px;
+}
+
+.inscription-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 1200px;
+}
+
+.tableau-inscription, .form-content {
+    flex: 1;
+    min-width: 300px;
+    max-width: 580px;
+    padding: 20px;
+    border: 2px solid var(--secondary-color);
+    background-color: var(--primary-color);
+    border-radius: 20px;
+    margin: 20px;
+}
+
+.equipes-inscrites {
+    width: 400px;
+    height: 800px;
+    border: 2px solid var(--secondary-color);
+    background-color: var(--primary-color);
+    border-radius: 20px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 10px 20px;
+    font-size: 1rem;
+    color: white;
+    background-color: var(--secondary-color);
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background-color: var(--bg-dark);
+}
+
+.live-score {
+    width: 100%;
+    max-width: 1200px;
+    padding: 20px;
+    border: 2px solid var(--secondary-color);
+    background-color: var(--primary-color);
+    border-radius: 20px;
+    margin: 20px;
+}
+
+/* Style de la fenêtre modale */
+.modal {
+    display: none; 
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    overflow: auto;
+    transition: transform 0.5s ease, opacity 0.5s ease; /* Animation fluide */
+}
+
+.video-container {
+    position: relative;
+    width: 90%;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    background: #000; /* Fond noir en cas d'espace vide */
+}
+
+/* L'iframe de la vidéo */
+.video-container iframe {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Centrer la vidéo */
+    width: 100%;
+    height: 100%;
+}
+
+.modal-content {
+    position: relative;
+    margin: auto;
+    top: 20%;
+    width: 80%;
+    max-width: 800px;
+    background-color: var(--primary-color);
+    border-radius: 10px;
+    border-color: var(--secondary-color);
+    padding: 10px;
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 30px;
+    color: #fff;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.close-btn:hover {
+    color: var(--secondary-color);
+}
+
+
+@media screen and (max-width: 768px) {
+    .inscription-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .regles {
+        margin-left: 10px;
+        margin-right: auto;
+        width: 100%;
+        text-align: center;
+    }
+
+    .modal {
+        transform: rotate(90deg);
+        top: 50%;
+        left: 50%;
+        transform-origin: center center;
+        width: 100vh; /* Prendre la hauteur de l'écran comme largeur pour la modale */
+        height: 100vw; /* La hauteur devient la largeur */
+        margin-top: -50vw; /* Décalage pour centrer la modale après la rotation */
+        margin-left: -50vh; /* Décalage pour centrer la modale après la rotation */
+    }
+    
+    /* Ajuster le ratio de la vidéo pour le mode paysage */
+    .video-container {
+        padding-bottom: 42.5%; /* Ajuste le ratio pour une vidéo en mode paysage */
+    }
+}

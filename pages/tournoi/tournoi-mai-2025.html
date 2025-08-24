@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tournoi de volley organisé par le Volley-Ball Ollioulais le 18 mai 2025. Inscrivez votre équipe sur HelloAsso !">
+    <link href="/css/styles.css" rel="stylesheet">
+    <link href="/css/tournoi/tournoi-mai-2025.css" rel="stylesheet">
+    <title>Tournoi 18 mai - VBO</title>
+    <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="menu"></div>
+    <div id="content">
+        <div class="header-content">
+            <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club" class="club-logo">
+            <div class="text-content">
+                <h1>Tournoi du 18 mai 2025</h1>
+                <p class="explication">Le Volley-Ball Ollioulais organise un tournoi pour clôturer la saison.
+                    <br>Dimanche 18 mai 2025 à 8h30 au gymnase Piemontesi et Vallon.
+                    <br>Inscription sur HelloAsso via le formulaire ci-dessous.
+                    <br>Buvette et BBQ sur place.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <div class="live-score">
+            <h2>Live Score</h2>
+            <p>Composition des poules de brassage et suivre les résultats en direct</p>
+            <p><a class="btn" href="/pages/tournoi/tournoi-mai-2025-dif.html">Aller à la page</a></p>
+        </div>
+
+        <div class="inscription-container">
+            <div class="tableau-inscription">
+                <h2>Les équipes inscrites</h2>
+                <iframe class="equipes-inscrites" title="Les équipes inscrites" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQCRPlX3Cf3kjIcwN6JHRq38wBX3sCE0OyO4azkw90SWrXNJaDdiKFKZ9Ge-ByQZyBRDI7DOFlwOkoV/pubhtml?gid=1342785329&amp;single=true&amp;widget=true&amp;headers=false"></iframe>
+            </div>
+            <div class="form-content">
+                <h2>Inscription</h2>
+                <iframe class="helloAsso" id="haWidget" title="Inscription Tournoi 18 Mai 2025" src="https://www.helloasso.com/associations/volley-ball-ollioulais/evenements/inscription-tournoi-18-mai-2025/widget-vignette" style="width: 350px; height: 710px; border: 2px solid var(--secondary-color); border-radius: 20px;"></iframe>
+            </div>
+        </div>
+    </div>
+
+<!-- Fenêtre modale -->
+<div id="video-popup" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" id="close-popup">&times;</span>
+        <div class="video-container">
+            <iframe src="https://www.youtube.com/embed/2NCG0VvyOlI?autoplay=1&mute=1" 
+                    title="YouTube video player" 
+                    style="border: none;" 
+                    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                    referrerpolicy="strict-origin-when-cross-origin" 
+                    allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+</div>
+
+    <div id="footer"></div>
+
+    
+    <script src="/js/main.js"></script>
+
+    <script>
+        loadHTML('/commun/menu.html', 'menu');
+        loadHTML('/commun/footer.html', 'footer');
+    </script>
+
+    <script>
+    window.onload = function() {
+        var modal = document.getElementById("video-popup");
+        var closeBtn = document.getElementById("close-popup");
+        var iframe = document.getElementById("youtube-video");
+
+        // Ouvre la modale
+        modal.style.display = "block";
+
+        // Ferme la modale et arrête la vidéo lorsque l'utilisateur clique sur le bouton de fermeture
+        closeBtn.onclick = function() {
+            modal.style.display = "none";
+            iframe.src = "";  // Réinitialiser l'iframe pour stopper la vidéo
+        }
+
+        // Ferme la modale si l'utilisateur clique en dehors de la vidéo
+        window.onclick = function(event) {
+            if (event.target === modal) {
+                modal.style.display = "none";
+                iframe.src = "";  // Réinitialiser l'iframe pour stopper la vidéo
+            }
+        }
+    };
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nous contacter - VBO</title>
+    <link href="/css/styles.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/nousContacter.css">
+    <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="menu"></div>
+    <div id="content">
+        <div class="header-content">
+            <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club" class="club-logo">
+            <div class="text-content">
+                <h1>Nous contacter</h1>
+                <p>Vous pouvez prendre contact avec nous en remplissant ce formulaire. </br>
+                Pour venir nous voir, suivez les liens ci-dessous</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-container">
+        <div class="form-map-wrapper">
+            <div class="form-container">
+                <form id="contact-form" action="/php/send_mail_contact.php" method="post">
+                    <div class="row">
+                        <div class="col-25">
+                            <label for="fname">Nom</label>
+                        </div>
+                        <div class="col-75">
+                            <input type="text" id="fname" name="lastname" placeholder="Mon nom.." required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-25">
+                            <label for="lname">Prénom</label>
+                        </div>
+                        <div class="col-75">
+                            <input type="text" id="lname" name="firstname" placeholder="Mon prénom.." required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-25">
+                            <label for="phone">Téléphone</label>
+                        </div>
+                        <div class="col-75">
+                            <input type="phone" id="phone" name="phone" placeholder="06 12 34 56 78" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-25">
+                            <label for="mail">E-mail</label>
+                        </div>
+                        <div class="col-75">
+                            <input type="email" id="mail" name="mail" placeholder="mon.mail@mail.com" required>
+                        </div>
+                    </div>                    
+                    <div class="row">
+                        <div class="col-25">
+                            <label for="subject-dropdown">Objet</label>
+                        </div>
+                        <div class="col-75">
+                            <select id="subject-dropdown" name="subject-dropdown" required>
+                                <option value="" disabled selected>Choisissez l'objet</option>
+                                <option value="Général">Demande d'information - Générale</option>
+                                <option value="Entrainements">Entrainements</option>
+                                <option value="Stage">Stages vacances</option>
+                                <option value="Loto">Loto</option>
+                                <option value="Partenaire">Partenaire - Je souhaite devenir partenaire</option>
+                                <option value="Commissions">Commissions - Je voudrais plus d'information</option>
+                                <option value="Feedback">Retour d'expérience du site</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-25">
+                            <label for="subject">Texte</label>
+                        </div>
+                        <div class="col-75">
+                            <textarea id="subject" name="subject" placeholder="Bonjour, je voudrais des renseignements sur..." style="height:200px" required></textarea>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <input type="submit" value="Envoyer">
+                    </div>
+                </form>
+            </div>
+
+            <!-- Map -->
+            <div class="map-container">
+                <iframe title="maps" src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d5822.942177210254!2d5.846950039566753!3d43.13663599912857!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sfr!2sfr!4v1722042914782!5m2!1sfr!2sfr" 
+                width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+            </div>
+        </div>
+
+        <!-- Addresses -->
+        <div class="addresses">
+            <h2>Nos adresses</h2>
+            <ul>
+                <li><a href="https://maps.app.goo.gl/5ba5onV5EHCqze6m9" target="_blank">Siège social</a></li>
+                <li><a href="https://maps.app.goo.gl/Aa3LosRUZM7QG6B68" target="_blank">Gymnase Piemontesi, Parking Orlandi 1</a></li>
+                <li><a href="https://maps.app.goo.gl/GbgXnTr8EQxSmCnt6" target="_blank">Gymnase Charles Coste (ex-Vallon)</a></li>
+                <li><a href="https://maps.app.goo.gl/AUNfpeh4rVn3smVX8" target="_blank">Gymnase de La Cordeille</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="footer"></div>
+
+    <script src="/js/main.js"></script>
+    <script>
+        loadHTML('/commun/menu.html', 'menu');
+        loadHTML('/commun/footer.html', 'footer');
+
+        document.getElementById('contact-form').addEventListener('submit', function (event) {
+            event.preventDefault(); // Empêche le rechargement de la page
+
+            const form = this; // Référence au formulaire
+            const formData = new FormData(form);
+
+            // Envoyer la requête POST avec fetch
+            fetch('/php/send_mail_contact.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erreur réseau lors de l\'envoi de l\'email');
+                }
+                return response.text();
+            })
+            .then(data => {
+                // Si la réponse est correcte, affiche un message d'alerte et réinitialise le formulaire
+                alert('Votre message a été envoyé avec succès !');
+                form.reset(); // Réinitialise les champs du formulaire
+            })
+            .catch(error => {
+                // Si une erreur survient, affiche un message d'erreur
+                alert('Une erreur est survenue lors de l\'envoi de votre message.');
+                console.error('Erreur:', error);
+            });
+        });
+    </script>
+</body>
+</html>

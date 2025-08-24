@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tournoi de volley organisé par le Volley-Ball Ollioulais le 18 mai 2025. Inscrivez votre équipe sur HelloAsso !">
+    <link href="/css/styles.css" rel="stylesheet">
+    <link href="/css/tournoi/tournoi-mai-2025-dif.css" rel="stylesheet">
+    <title>Tournoi 18 mai - VBO</title>
+    <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="menu"></div>
+    <div id="content">
+        <div class="header-content">
+            <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club" class="club-logo">
+            <div class="text-content">
+                <h1>Tournoi du 18 mai 2025</h1>
+                <p class="explication">Composition des poules de brassage et
+                    <br>tous les résultats en live sur cette page.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="regles">
+            <h2>Déroulement du tournoi</h2>
+            <p>Les matchs se dérouleront en 15 minutes, entre chaque match il y aura 5 minutes pour la mise en place des équipes et faire une chauffe au filet.</p>
+            <p>En cas d'absence ou d'abandon d'un joueur en cours de tournoi, l'équipe devra continuer avec trois joueurs sans pouvoir en recruter un d'une autre équipe.</p>
+                <h3>Matin, Phase 1 : Brassage</h3>
+                <p>4 Poules de 4 équipes par gymnase.</p>
+
+                <h3>Après-midi, Phase 2 : Principale et consolante</h3>
+                <p>Le classement des poules de brassages définira où les équipes joueront en phase 2, soit en consolante à Vallon, 
+                    soit en principal à Piémontési.<br>Les équipes classées 3ème et 4ème de la phase 2, feront au moins un match de classement.</p>
+                <p><span style="text-decoration: underline;">Phases finales :</span> équipes classées 1ère et 2ème joueront les quarts de finale, suivis des demi-finales, puis des finales pour la 1ère et 2ème place, ainsi que pour la 3ème et 4ème place. 
+                    <br>Cette formule sera appliquée aux deux tableaux, principal et consolante.</p>
+                
+                <h3>Les filles ou équipes M18</h3>
+                <p>Une joueuse dans l'équipe rapporte 2 points, les joueuses supplémentaires rapportent 1 point.
+                    <br>Exemple : 4 filles contre 4 garçons = 5-0. La première joueuse fait gagner 2 points à son équipe et les trois autres 1 point chacune.
+                    <br>Si l'adversaire à le même nombre de joueuses, le match débute à 0-0.
+                    <br>Il y a des équipes composées uniquement de M18, ces équipes commencent avec 5 points.</p> 
+
+                <h3>Arbitrage</h3>
+                <p>Pour les deux phases de poule, les arbitres sont définis à l'avance. 
+                    <br>Pour les phases finales et les matchs de classement, l'équipe gagnante arbitrera le match suivant.</p> 
+
+                <h3>Buvette</h3>
+                <p>Nous ferons une pause pour manger à midi autour d'un BBQ, la buvette sera ouverte toute la journée au gymnase Piemontesi. 
+                    <br>Une petite buvette sera mise en place à Vallon avec des boissons et de quoi grignoter.</p>
+        </div>
+
+        <div class="brassage">
+            <h2>Poules de brassage</h2>
+            <iframe class="tableau-brassage" title="Poule de brassage" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQCRPlX3Cf3kjIcwN6JHRq38wBX3sCE0OyO4azkw90SWrXNJaDdiKFKZ9Ge-ByQZyBRDI7DOFlwOkoV/pubhtml?gid=996927528&single=true"></iframe>
+        </div>
+
+        <div class="score">
+            <h2>Live score</h2>
+            <iframe class="live-score" title="Score en live" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQCRPlX3Cf3kjIcwN6JHRq38wBX3sCE0OyO4azkw90SWrXNJaDdiKFKZ9Ge-ByQZyBRDI7DOFlwOkoV/pubhtml?gid=58427999&single=true"></iframe>
+        </div>
+    </div>
+
+    <div id="footer"></div>
+
+    <script src="/js/main.js"></script>
+
+    <script>
+        loadHTML('/commun/menu.html', 'menu');
+        loadHTML('/commun/footer.html', 'footer');
+    </script>
+</body>
+</html>

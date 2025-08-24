@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Volley Ball Ollioulais</title>
+  <link href="css/styles.css" rel="stylesheet">
+  <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <!-- HTML Meta Tags -->
+  <meta name="description" content="Bienvenue sur le site du VBO.
+    Club de volley ball situé à Ollioules dans Var.
+    Ce club existe depuis plus de 35 ans et compte à l'heure actuelle pas loin de 250 licenciés. ">
+  <!-- Facebook Meta Tags -->
+  <meta property="og:url" content="https://www.volleyballollioulais.fr/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Volley Ball Ollioulais">
+  <meta property="og:description" content="Bienvenue sur le site du VBO.
+    Club de volley ball situé à Ollioules dans Var.
+    Ce club existe depuis plus de 35 ans et compte à l'heure actuelle pas loin de 250 licenciés. ">
+  <meta property="og:image" content="https://opengraph.b-cdn.net/production/images/4ee0370b-9034-44aa-9997-26045bcf69a7.png?token=Hg-9Ea1Ht1UrJIqPIDXC-j3VS8p3fk9L63vIxE7lhYE&height=900&width=1200&expires=33278838837">
+  <!-- Twitter Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta property="twitter:domain" content="volleyballollioulais.fr">
+  <meta property="twitter:url" content="https://www.volleyballollioulais.fr/">
+  <meta name="twitter:title" content="Volley Ball Ollioulais">
+  <meta name="twitter:description" content="Bienvenue sur le site du VBO.
+    Club de volley ball situé à Ollioules dans Var.
+    Ce club existe depuis plus de 35 ans et compte à l'heure actuelle pas loin de 250 licenciés. ">
+  <meta name="twitter:image" content="https://opengraph.b-cdn.net/production/images/4ee0370b-9034-44aa-9997-26045bcf69a7.png?token=Hg-9Ea1Ht1UrJIqPIDXC-j3VS8p3fk9L63vIxE7lhYE&height=900&width=1200&expires=33278838837">
+</head>
+
+<body>
+  <div id="menu"></div>
+  <div id="content">
+    <!-- Contenu principal ici -->    
+  </div>
+  
+  <script src="js/main.js"></script>
+  <script>
+    loadHTML('commun/menu.html', 'menu');
+    loadHTML('pages/home.html', 'content');
+    loadHTML('commun/footer.html', 'footer');
+
+    window.addEventListener('error', function() {
+        window.location.href = '/pages/404.html';
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+.tableau {
+    margin-bottom: 50px;
+}
+
+.tableau iframe {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+    border: 2px solid black;
+    width: 650px;
+    height: 1600px;
+}
+
+
+@media screen and (max-width: 720px) {
+.tableau {
+    position: relative;
+    width: 90%;
+    height: 1250px;
+    overflow: hidden;
+    touch-action: pan-x pan-y; /* Permet le défilement sur mobile */
+    margin: 0 auto 50px;    
+    }
+
+.tableau iframe {
+    width: 95%;
+    height: 95%;
+    zoom: 75%;
+    }
+}
+
+
+@media screen and (max-width: 550px) {
+    .tableau {
+        position: relative;
+        width: 90%;
+        height: 870px;
+        overflow: hidden;
+        touch-action: pan-x pan-y; /* Permet le défilement sur mobile */
+        margin: 0 auto 10px;    
+    }
+    
+    .tableau iframe {
+        width: 95%;
+        height: 95%;
+        zoom: 50%;
+    }    
+}

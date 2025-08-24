@@ -1,0 +1,247 @@
+body {
+    font-family: Poppins, sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+.organigramme, .trombinoscope {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.level, 
+.level-coaches {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 20px 0;
+}
+
+.position {
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+    width: 150px;
+    height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    border-radius: 10px;
+    border: var(--bg-dark) double;
+    margin: 20px 10px;
+    font-weight: bold;
+    text-align: center;
+    transition: transform 0.5s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+}
+
+.name {
+    margin-top: 10px;
+}
+
+.name-commission {
+    margin-top: 10px;
+    text-transform: uppercase;
+}
+
+.categorie {
+    margin: 5px 0 5px 0;
+}
+
+.see-more {
+    margin-top: 10px;
+    font-size: 0.6rem;
+    color: var(--secondary-color);
+    text-decoration: underline;
+}
+
+.position:hover p {
+    color: white;
+}
+
+.position:hover {
+    transform: translateY(-10px);
+    cursor: url('/images/icones/volley-cursor32.png'), auto;
+}
+
+.position img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: contain;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+}
+
+.position a {
+    color: var(--secondary-color);
+    margin: 5px;
+}
+
+.position a:hover {
+    color: white;
+}
+
+.separator {
+    width: 80%; 
+    max-width: 600px;
+    border-top: 2px solid #ccc;
+    margin: 20px auto;
+}
+
+h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: var(--bg-dark);
+}
+
+.pvag {
+    padding: 20px;
+    text-align: center;
+}
+
+.button-container {
+    font-size: 1rem;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    justify-items: center;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 50px;
+    margin: 0 50px;
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 20px;
+    transition: background-color 0.3s, transform 0.3s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+}
+
+.btn:hover {
+    background-color: var(--secondary-color);
+    transform: translateY(-2px);
+    text-decoration: underline;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    overflow: auto;
+}
+
+.modal-content {
+    background: white;
+    margin: 10% auto;
+    padding: 2rem;
+    width: 90%;
+    max-width: 600px;
+    border-radius: 10px;
+    position: relative;
+    animation: modalopen 0.5s;
+}
+
+@keyframes modalopen {
+    from {opacity: 0; transform: translateY(-50px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
+.close {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    font-size: 2rem;
+    cursor: pointer;
+    color: #333;
+}
+
+#modal-image {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 1rem;
+}
+
+.modal-description {
+    margin: 1.5rem 0;
+    line-height: 1.6;
+    text-align: left;
+}
+
+.modal-description h3 {
+    color: var(--bg-dark);
+    margin: 1rem 0 0.5rem 0;
+    font-size: 1.1rem;
+}
+
+.modal-description ul {
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+}
+
+.modal-description li {
+    margin-bottom: 0.3rem;
+    line-height: 1.5;
+}
+
+.modal-description p {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+
+#modal-links a {
+    display: inline-block;
+    margin: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--secondary-color);
+    color: white;
+    border-radius: 5px;
+    text-decoration: none;
+}
+
+#modal-links a:hover {
+    background: var(--primary-color);
+}
+
+
+@media screen and (max-width: 768px) {
+    .button-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .modal-content {
+        width: 95%;
+        margin: 20% auto;
+    }
+}
+
+@media (max-width: 600px) {
+    .level {
+        flex-direction: column;
+        align-items: center;
+    }
+    .position {
+        margin: 10px 10px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .button-container {
+        grid-template-columns: 1fr;
+    }
+}

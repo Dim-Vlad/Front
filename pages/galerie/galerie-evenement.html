@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galerie Évènements - VBO</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/galerie/galerie-archive.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
+</head>
+<body>
+
+<div id="menu"></div>
+
+<div id="content">
+    <div class="header-content">
+        <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club">
+        <div class="text-content">
+            <h1>Archives évènements</h1>
+            <p>Découvrez les moments marquants des diffétents évènements organisés par le club.</p>
+        </div>
+    </div>
+</div>
+
+<section class="archive-section">
+
+    <a href="/pages/galerie/galerie.html" class="back-link">← Retour à la galerie générale</a>
+    
+    <div class="archive-gallery">
+        <a href="/photos/evenement/319318020_500300565417139_1539210815656812046_n_rnbpxa_54080018475_l.jpg" target="_blank"><img src="/photos/evenement/319318020_500300565417139_1539210815656812046_n_rnbpxa_54080018475_l.jpg" alt=""></a>
+        <a href="/photos/evenement/319643846_1093109258016595_6527375015217971659_n_uldsap_54079808758_l.jpg" target="_blank"><img src="/photos/evenement/319643846_1093109258016595_6527375015217971659_n_uldsap_54079808758_l.jpg" alt=""></a>
+        <a href="/photos/evenement/347252923_2781934258628567_5511093358154173239_n_yzshkv_54079559326_l.jpg" target="_blank"><img src="/photos/evenement/347252923_2781934258628567_5511093358154173239_n_yzshkv_54079559326_l.jpg" alt=""></a>
+        <a href="/photos/evenement/347415856_2781934221961904_1357314847641302251_n_satt6t_54079808728_l.jpg" target="_blank"><img src="/photos/evenement/347415856_2781934221961904_1357314847641302251_n_satt6t_54079808728_l.jpg" alt=""></a>
+        <a href="/photos/evenement/441056494_3052543861567604_7259515796742906809_n_x73daw_54079559301_l.jpg" target="_blank"><img src="/photos/evenement/441056494_3052543861567604_7259515796742906809_n_x73daw_54079559301_l.jpg" alt=""></a>
+        <a href="/photos/evenement/441153581_3052862754869048_5248308222707361300_n_htgjov_54079559316_l.jpg" target="_blank"><img src="/photos/evenement/441153581_3052862754869048_5248308222707361300_n_htgjov_54079559316_l.jpg" alt=""></a>
+        <a href="/photos/evenement/img-20241031-wa0007_54108080734_l.jpg" target="_blank"><img src="/photos/evenement/img-20241031-wa0007_54108080734_l.jpg" alt=""></a>
+        <a href="/photos/evenement/img-20241031-wa0009_54108080714_l.jpg" target="_blank"><img src="/photos/evenement/img-20241031-wa0009_54108080714_l.jpg" alt=""></a>
+        <a href="https://flic.kr/s/aHBqjBNH2v" target="_blank"class="more">Voir plus -><img src="/photos/evenement/img-20241031-wa0019_54106874362_l.jpg" alt=""></a>
+    </div>
+</section>
+
+<a href="/pages/galerie/galerie.html" class="back-link">← Retour à la galerie générale</a>
+
+<div id="footer"></div>
+
+<!-- Scripts -->
+<script>
+    // Charger menu et footer dynamiquement
+    function loadHTML(url, elementId) {
+        fetch(url)
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById(elementId).innerHTML = data;
+            })
+            .catch(error => console.error('Erreur lors du chargement:', error));
+    }
+
+    loadHTML('/commun/menu.html', 'menu');
+    loadHTML('/commun/footer.html', 'footer');
+</script>
+
+</body>
+</html>
