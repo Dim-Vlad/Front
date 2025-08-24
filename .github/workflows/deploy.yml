@@ -1,0 +1,23 @@
+name: 🚀 Déploiement OVH via FTP
+
+on:
+  push:
+    branches:
+      - master  # si ta branche principale est main, change ici
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupération du code
+        uses: actions/checkout@v3
+
+      - name: Déploiement FTP sur OVH
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}     # ton serveur FTP OVH
+          username: ${{ secrets.FTP_USERNAME }} # ton login FTP
+          password: ${{ secrets.FTP_PASSWORD }} # ton mot de passe FTP
+          server-dir: /www/                     # dossier cible sur OVH
+          local-dir: ./                          # dossier local à déployer
+          dry-run: false                         # true = teste sans envoyer, false = upload réel
