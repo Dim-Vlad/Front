@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // ====== Paramètres email ======
     $destinataire = "dimitrigarrigues@gmail.com, elodiep67@gmail.com, secretariatvbo@free.fr";
-    $sujet = "Nouveau formulaire avec PDF(s) - $nom";
+    $sujet = "Nouveau formulaire de remboursement avec PDF - $nom";
 
     $message = "Message reçu depuis le formulaire de remboursement.\n\n";
     $message .= "Merci de trouver ci-joint les documents de $nom ($email).\n";
@@ -56,9 +56,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // ====== Préparation email multipart ======
     $boundary = md5(uniqid());
-    $headers = "From: webmaster@volleyballollioulais.fr\r\n";
+    $headers = "From: webmaster-remboursement@volleyballollioulais.fr\r\n";
     $headers .= "Reply-To: $email\r\n";
-    $headers .= "Return-Path: webmaster@volleyballollioulais.fr\r\n";
+    $headers .= "Return-Path: webmaster-remboursement@volleyballollioulais.fr\r\n";
     $headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
     $headers .= "X-Priority: 3\r\n";
     $headers .= "MIME-Version: 1.0\r\n";
