@@ -1,3 +1,47 @@
+/* Aperçu PDF dynamique */
+.pdf-preview {
+    width: 100%;
+    min-height: 32px;
+    margin: 0 auto;
+    transition: all 0.3s;
+}
+.pdf-preview.single {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
+    gap: 1em;
+}
+.pdf-preview.multiple {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 1em;
+    gap: 0.3em;
+    padding-right: 0.5em;
+}
+.pdf-preview .pdf-file {
+    background: rgba(255,255,255,0.7);
+    border-radius: 7px;
+    padding: 0.3em 0.7em;
+    margin: 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+    min-width: 180px;
+    max-width: 95%;
+    word-break: break-all;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+.pdf-preview.single .pdf-file {
+    font-size: 1.2em;
+    padding: 0.7em 1.2em;
+}
+.pdf-preview .pdf-icon {
+    font-size: 1.5em;
+    margin-right: 0.5em;
+}
 /* ===== CONTAINER PRINCIPAL ===== */
 .container {
     display: flex;
@@ -54,20 +98,21 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: flex-start;
     padding: 10px;
     background: linear-gradient(135deg, var(--bg-dark), var(--primary-color));
     border-radius: 15px;
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-    height: calc(var(--folder-H) * 1.7);
     position: relative;
-    margin-top: 70px;
+    padding-top: 20px; /* Laisse la place pour le dossier flottant */
 }
 
 .folder {
     position: absolute;
-    top: -20px;
-    left: calc(50% - 60px);
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 0;
     animation: float 2.5s infinite ease-in-out;
     transition: transform var(--transition) ease;
 }
