@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Le VBO te propose un espace dédié aux entraineurs.">
     <link href="/css/styles.css" rel="stylesheet">
-    <link href="/css/leClub/espace-entraineur.css" rel="stylesheet">
-    <title>Espace entraineurs - VBO</title>
+    <link href="/css/leClub/remboursement.css" rel="stylesheet">
+    <title>Remboursement - VBO</title>
     <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,10 +19,9 @@
         <div class="header-content">
             <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club" class="club-logo">
             <div class="text-content">
-                <h1>Espace entraineurs</h1>
-                <p class="explication">Le Volley-Ball Ollioulais met à disposition des entraineurs un espace dédié pour les aider dans leur mission.
-                    <br>Vous trouverez ici des documents utiles, des conseils et des outils pour vous accompagner dans votre rôle.
-                    <br>Si vous avez des questions ou des suggestions, n'hésitez pas à nous contacter.
+                <h1>Remboursement</h1>
+                <p class="explication">Vous avez engagé des frais concernant une équipe du club ?<br>
+                    Vous pouvez demander le remboursement de ces frais en utilisant les documents ci-dessous et le formulaire d'envois.
                 </p>
             </div>
         </div>
@@ -30,27 +29,27 @@
 
 <div class="container">
     <div class="doc-entraineurs">
-        <h2>Documents téléchargeables</h2>
+        <h2>Documents</h2>
         <ul class="download-list">
-            <li><a href="/documents/entraineur/Feuille-De-Composition_équipe.pdf" target="_blank">1 - Feuille de composition d'équipe (version PDF)</a></li>
-            <li><a href="https://docs.google.com/document/d/1eGXYZGvCJXkvwcNFvjImAqwtwJsTKQt1Gkj9UyqVxvw/edit?usp=sharing" target="_blank">1- Feuille de composition d'équipe (version Google Drive)</a></li>
-            <li><a href="/documents/entraineur/FRANCHISE-MANIFESTATION-SPORTIVE.pdf" target="_blank">2 - Franchise de manifestation sportive (version PDF)</a></li>
-            <li><a href="https://docs.google.com/document/d/17_vaxJHF0k1tXLqmGU-xpMof9yFYoVGB/edit?usp=sharing&ouid=106315105789082397455&rtpof=true&sd=true" target="_blank">2 - Franchise de manifestation sportive (version Google Drive)</a></li>
+            <li><a href="/documents/entraineur/frais-de-déplacement.pdf" target="_blank">Fiche de demande de remboursement (version PDF)</a></li>
+            <li><a href="https://docs.google.com/spreadsheets/d/1jR-0Rl2PtGlCLKHwRlO1Tv1urWKT6uaipwbXGz-lxDo/edit?usp=sharing" target="_blank">Fiche de demande de remboursement (version Google Drive)</a></li>
         </ul>
     </div>
 
 <hr class="separator">
 
 <div class="tickets">
-    <h2>Franchise de manifestation sportive</h2>
-    <p>Grâce à ce formulaire, vous pouvez directement envoyer le document.</p>
-    <p>Quelques règles :</p>
+    <h2>Remboursements des frais</h2>
+    <p>Grâce à ce formulaire, vous pouvez directement envoyer vos demandes de remboursement.</p>
+    <p><strong>Important :</strong></p>
+    <p>Quelques règles pour en bénéficier :</p>
     <ol>
-        <li>Envoyez le document au format PDF.</li>
-        <li>Retournez la fiche "Franchise de manifestation sportive" dûment remplie.</li>
+        <li>Les tickets de péages doivent être scannés sur une feuille blanche et envoyés au format PDF.</li>
+        <li>Les demandes doivent être faites dans un délai de 15 jours après la dépense.</li>
+        <li>Retourner la fiche de demande de remboursement dûment remplie.</li>
     </ol>
 
-    <form id="contactForm" action="/php/manif_sportive.php" method="POST" enctype="multipart/form-data">
+    <form id="contactForm" action="/php/envoyer_remboursement.php" method="POST" enctype="multipart/form-data">
         <div class="input-container">
             <div class="form-control nom">
                 <input id="nom" type="text" name="nom" required />
@@ -124,21 +123,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-</div>
-
-<hr class="separator">
-
-    <div class="siteffvb">
-        <h2>Ressources Volley</h2>
-            <p>Retrouvez sur le site mis à disposition par la FFVB des documents utiles pour les entraineurs.</p>
-            <p>Identifiant : ffvolley<br>Mot de passe : ffvolley2021</p>
-            <p>ENJOY !</p>
-                <div>
-                    <div class="btn">
-                        <a href="https://ressourcesvolley.com/" target="_blank">Accéder au site</a>
-                    </div>
-                </div>
-    </div>
 </div>
 
     <div id="footer"></div>
