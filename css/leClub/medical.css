@@ -1,0 +1,157 @@
+body {
+    font-family: 'Ubuntu', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    height: 100vh;
+    margin: 0;
+    background-color: #acc2ab;
+}
+
+.container {
+    background: #e3eae1;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.8);
+    overflow: hidden;
+    width: 500px;
+    margin: 20px 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.couverture img {
+    width: 50%;
+    height: 350px;
+    object-fit: cover;
+    display: block;
+    margin: 20px auto;
+    border-radius: 10px;
+    border: 2px solid #223224;
+}
+
+.partenariat {
+    text-align: center;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    color: #333;
+    margin: 0 20px;
+}
+
+.card {
+    padding: 20px;
+    text-align: center;
+}
+
+.metier {
+    font-size: 1.2rem;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.postadress, .contact-info, .dl {
+    margin-bottom: 5px;
+    font-size: 1.2rem;
+}
+
+.contact-info, .postadress {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.contact-info img, .postadress img {
+    width: 24px;
+    height: 24px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #acc2ab;
+    color: #223224;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    text-align: center;
+    margin: 10px 0;
+    text-decoration: none;
+}
+
+.btn:hover {
+    background-color: #8fae8f;
+}
+
+.retour {
+    display: flex; 
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0;
+}
+
+.retour a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #223224;
+    font-weight: bold;
+    font-size: 1.2rem;
+    padding: 10px 20px;
+    background-color: #acc2ab;
+    border-radius: 5px; 
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.retour a:hover {
+    background-color: #8fae8f;
+}
+
+.retour img {
+    margin-right: 10px;
+    width: 20px;
+    height: auto;
+}
+
+.img-hopital {
+    display: block;
+    margin: 20px auto 20px auto;
+    max-width: 50%;
+    height: auto;
+    border-radius: 10px;
+    border: 2px solid #223224;
+}
+
+
+@media (max-width: 600px) {
+    .container {
+        width: 90%;
+        margin: 20px auto;
+    }
+
+    .couverture img {
+        height: auto;
+    }
+
+    .social-links .link-wrapper {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .social-links div {
+        margin: 10px 0;
+    }
+
+    .retour a {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .retour img {
+        margin-right: 8px;
+        width: 20px;
+    }
+}
