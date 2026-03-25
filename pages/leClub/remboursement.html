@@ -21,22 +21,13 @@
             <div class="text-content">
                 <h1>Remboursement</h1>
                 <p class="explication">Vous avez engagé des frais concernant une équipe du club ?<br>
-                    Vous pouvez demander le remboursement de ces frais en utilisant les documents ci-dessous et le formulaire d'envois.
+                    Vous pouvez demander le remboursement de ces frais en utilisant le formulaire ci-dessous.
                 </p>
             </div>
         </div>
     </div>
 
 <div class="container">
-    <div class="doc-entraineurs">
-        <h2>Documents</h2>
-        <ul class="download-list">
-            <li><a href="/documents/entraineur/frais-de-déplacement.pdf" target="_blank">Fiche de demande de remboursement (version PDF)</a></li>
-            <li><a href="https://docs.google.com/spreadsheets/d/1jR-0Rl2PtGlCLKHwRlO1Tv1urWKT6uaipwbXGz-lxDo/edit?usp=sharing" target="_blank">Fiche de demande de remboursement (version Google Drive)</a></li>
-        </ul>
-    </div>
-
-<hr class="separator">
 
 <div class="tickets">
     <h2>Remboursements des frais</h2>
@@ -44,85 +35,20 @@
     <p><strong>Important :</strong></p>
     <p>Quelques règles pour en bénéficier :</p>
     <ol>
-        <li>Les tickets de péages doivent être scannés sur une feuille blanche et envoyés au format PDF.</li>
+        <li>Les pièces jointes doivent être scannés sur une feuille blanche et envoyés au format PDF.</li>
         <li>Les demandes doivent être faites dans un délai de 15 jours après la dépense.</li>
-        <li>Retourner la fiche de demande de remboursement dûment remplie.</li>
     </ol>
-
-    <form id="contactForm" action="/php/envoyer_remboursement.php" method="POST" enctype="multipart/form-data">
-        <div class="input-container">
-            <div class="form-control nom">
-                <input id="nom" type="text" name="nom" required />
-                <label for="nom">
-                    <span style="transition-delay:325ms">N</span>
-                    <span style="transition-delay:300ms">O</span>
-                    <span style="transition-delay:275ms">M</span>
-                    <span style="transition-delay:250ms"></span>
-                    <span style="transition-delay:225ms">e</span>
-                    <span style="transition-delay:200ms">t</span>
-                    <span style="transition-delay:175ms"></span>
-                    <span style="transition-delay:150ms">P</span>
-                    <span style="transition-delay:125ms">r</span>
-                    <span style="transition-delay:100ms">é</span>
-                    <span style="transition-delay:75ms">n</span>
-                    <span style="transition-delay:50ms">o</span>
-                    <span style="transition-delay:25ms">m</span>
-                </label>
-            </div>
-
-            <div class="form-control email">
-                <input id="email" type="email" name="email" required />
-                <label for="email">
-                    <span style="transition-delay:200ms">M</span>
-                    <span style="transition-delay:150ms">a</span>
-                    <span style="transition-delay:100ms">i</span>
-                    <span style="transition-delay:50ms">l</span>
-                </label>
-            </div>
-        </div>
-
-        <div class="container-folder">
-            <label class="custom-file-upload">
-                <input type="file" id="pdfInput" name="fichier[]" accept=".pdf" multiple required />
-                Sélectionner un ou plusieurs fichiers (PDF uniquement)
-            </label>
-            <div id="pdfPreview" class="pdf-preview" style="margin-top:1em;"></div>
-            <div class="form-control full-width">
-                <button type="submit" class="btn-submit">Envoyer</button>
-            </div>
-        </div>
-    </form>
 </div>
 
-<script>
-// Aperçu PDF avant envoi avec style adaptatif
-document.addEventListener('DOMContentLoaded', function() {
-    const input = document.getElementById('pdfInput');
-    const preview = document.getElementById('pdfPreview');
-    if (!input || !preview) return;
-    input.addEventListener('change', function() {
-        preview.innerHTML = '';
-        const files = Array.from(input.files).filter(f => f.type === 'application/pdf');
-        preview.classList.remove('single', 'multiple');
-        if (files.length === 0) return;
-        preview.classList.add(files.length === 1 ? 'single' : 'multiple');
-        files.forEach(file => {
-            const fileDiv = document.createElement('div');
-            fileDiv.className = 'pdf-file';
-            // Icône PDF
-            const icon = document.createElement('span');
-            icon.className = 'pdf-icon';
-            icon.innerHTML = '📄';
-            // Nom et taille
-            const info = document.createElement('span');
-            info.textContent = `${file.name} (${(file.size/1024).toFixed(1)} Ko)`;
-            fileDiv.appendChild(icon);
-            fileDiv.appendChild(info);
-            preview.appendChild(fileDiv);
-        });
-    });
-});
-</script>
+<div>
+    <iframe
+    src="https://script.google.com/macros/s/AKfycbzncmtoCl9anZObnHREOojUTeamwDnEoUT4qzs8xghY4z_SFlKdFp8XAOLygRg3g3-W/exec"
+    width="100%"
+    height="600px"
+    style="border: none;">
+</iframe>
+</div>
+
 </div>
 
     <div id="footer"></div>
