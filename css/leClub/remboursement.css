@@ -60,7 +60,12 @@
     margin-bottom: 0.5rem;
 }
 
-
+iframe {
+    height: 900px;
+    width: 1000px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+}
 
 /* ===== RESPONSIVE ===== */
 @media screen and (max-width: 768px) {
@@ -72,4 +77,9 @@
     .tickets h2 {
         font-size: 1.5rem;
     }
+
+    iframe {
+    height: 1000px;
+    width: 400px;
+}
 }
