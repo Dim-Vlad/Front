@@ -1,55 +1,9 @@
-/* Aperçu PDF dynamique */
-.pdf-preview {
-    width: 100%;
-    min-height: 32px;
-    margin: 0 auto;
-    transition: all 0.3s;
-}
-.pdf-preview.single {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2em;
-    gap: 1em;
-}
-.pdf-preview.multiple {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    font-size: 1em;
-    gap: 0.3em;
-    padding-right: 0.5em;
-}
-.pdf-preview .pdf-file {
-    background: rgba(255,255,255,0.7);
-    border-radius: 7px;
-    padding: 0.3em 0.7em;
-    margin: 0;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.07);
-    min-width: 180px;
-    max-width: 95%;
-    word-break: break-all;
-    display: flex;
-    align-items: center;
-    gap: 0.5em;
-}
-.pdf-preview.single .pdf-file {
-    font-size: 1.2em;
-    padding: 0.7em 1.2em;
-}
-.pdf-preview .pdf-icon {
-    font-size: 1.5em;
-    margin-right: 0.5em;
-}
-
 /* ===== CONTAINER PRINCIPAL ===== */
 .container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
     gap: 2rem;
     padding: 2rem 1rem;
 }
@@ -74,148 +28,11 @@
     text-decoration: none;
 }
 
-/* ===== SECTION "Tickets remboursement" ===== */
-.container-folder {
-    --transition: 350ms;
-    --folder-W: 120px;
-    --folder-H: 80px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 10px;
-    background: linear-gradient(135deg, var(--bg-dark), var(--primary-color));
-    border-radius: 15px;
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-    position: relative;
-}
-
-.container-folder:hover 
-.back-side::before {
-    transform: rotateX(-5deg) skewX(5deg);
-}
-.container-folder:hover 
-.back-side::after {
-    transform: rotateX(-15deg) skewX(12deg);
-}
-
-.custom-file-upload {
-    font-size: 1.1em;
-    color: #ffffff;
-    text-align: center;
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    border-radius: 10px;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-    transition: background var(--transition) ease;
-    display: inline-block;
-    width: 80%;
-    padding: 10px 35px;
-    position: relative;
-}
-
-.custom-file-upload:hover {
-    background: rgba(255, 255, 255, 0.4);
-}
-
-.custom-file-upload input[type="file"] {
-    display: none;
-}
-
-.input-container {
-    display: flex;
-    justify-content: center;
-    gap: 3rem;
-    width: 100%;
-    max-width: 600px;
-    margin: 20px auto;
-    flex-wrap: wrap;
-}
-
-.input-container 
-.form-control {
-    flex: 1;
-    min-width: 250px;
-    box-sizing: border-box;
-    position: relative;
-    margin: 20px 0;
-}
-
-.form-control input {
-    background-color: transparent;
-    border: 0;
-    border-bottom: 2px var(--bg-dark) solid;
-    display: block;
-    width: 100%;
-    padding: 15px 0;
-    font-size: 18px;
-    color: var(--bg-dark);
-}
-
-.form-control input:focus,
-.form-control input:valid {
-    outline: 0;
-    border-bottom-color: var(--primary-color);
-}
-
-.form-control label {
-    position: absolute;
-    top: 15px;
-    left: 0;
-    pointer-events: none;
-    transition: all 0.3s ease;
-}
-
-.form-control label span {
-    display: inline-block;
-    font-size: 18px;
-    min-width: 5px;
-    color: var(--bg-dark);
-    opacity: 0.7;
-    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-.form-control input:focus + label span,
-.form-control input:valid + label span {
-    transform: translateY(-30px);
-    color: var(--bg-dark);
-    opacity: 1;
-}
-
-.btn-submit {
-    display: inline-block;
-    padding: 12px 24px;
-    background-color: var(--primary-color);
-    color: var(--bg-dark);
-    border: none;
-    border-radius: 10px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.btn-submit:hover {
-    background-color: var(--secondary-color);
-    transform: translateY(-2px);
-    color: white;
-    text-decoration: none;
-}
-
-.full-width {
-    width: 100%;
-    text-align: center;
-    margin-top: 20px;
-}
-
-/* ===== SECTIONS "DOCUMENTS" ET "TICKETS" ET "SITE FFVB" ===== */
+/* ===== SECTIONS ===== */
 .doc-entraineurs,
-.tickets,
 .siteffvb {
     max-width: 800px;
     width: 100%;
-    margin: 2.5rem auto;
     background: white;
     border-radius: 0.625rem;
     box-shadow: 0 0.313rem 0.938rem rgba(0, 0, 0, 0.1);
@@ -225,7 +42,6 @@
 }
 
 .doc-entraineurs::before,
-.tickets::before,
 .siteffvb::before {
     content: '';
     position: absolute;
@@ -237,7 +53,6 @@
 }
 
 .doc-entraineurs h2,
-.tickets h2,
 .siteffvb h2 {
     color: var(--bg-dark);
     margin-bottom: 1.25rem;
@@ -248,7 +63,6 @@
 }
 
 .doc-entraineurs h2::before,
-.tickets h2::before,
 .siteffvb h2::before {
     content: '';
     position: absolute;
@@ -259,14 +73,6 @@
     height: 70%;
     background-color: var(--secondary-color);
     border-radius: 0.188rem;
-}
-
-.doc-entraineurs strong,
-.tickets strong {
-    color: var(--bg-dark);
-    font-size: 1.2rem;
-    display: block;
-    margin-bottom: 0.5rem;
 }
 
 .download-list {
@@ -293,19 +99,14 @@
 }
 
 .separator {
-    width: 80%; 
+    width: 80%;
     max-width: 600px;
     border-top: 2px solid #ccc;
-    margin: 20px auto;
+    margin: 0 auto;
 }
 
 /* ===== RESPONSIVE ===== */
 @media screen and (max-width: 768px) {
-    .book {
-        width: 200px;
-        height: 260px;
-    }
-
     .btn a {
         padding: 8px 30px;
         margin: 0 20px;
@@ -313,28 +114,13 @@
     }
 
     .doc-entraineurs,
-    .tickets,
     .siteffvb {
         margin: 1.5rem 1rem;
         padding: 1rem;
     }
 
     .doc-entraineurs h2,
-    .tickets h2
     .siteffvb h2 {
         font-size: 1.5rem;
-    }
-
-    .input-container {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .input-container .form-control {
-        width: 100%;
-    }
-
-    .form-control label span {
-        font-size: 16px;
     }
 }
