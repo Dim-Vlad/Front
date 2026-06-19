@@ -1,3 +1,14 @@
 node_modules
 package-lock.json
 package.json
+
+# Credentials BDD — ne jamais committer
+php/config.php
+
+# Script temporaire de création d'utilisateurs
+php/create_user.php
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+*.log

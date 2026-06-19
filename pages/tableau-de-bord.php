@@ -1,0 +1,80 @@
+<?php
+require_once __DIR__ . '/../php/auth.php';
+require_login();
+
+$user = current_user();
+?>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de bord - VBO</title>
+    <link href="/css/styles.css" rel="stylesheet">
+    <link href="/css/tableau-de-bord.css" rel="stylesheet">
+    <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="menu"></div>
+
+    <div id="content">
+        <div class="header-content">
+            <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club">
+            <div class="text-content">
+                <h1>Tableau de bord</h1>
+                <?php
+                    $fullname = trim(($user['prenom'] ?? '') . ' ' . ($user['nom'] ?? ''));
+                    $display  = $fullname !== '' ? $fullname : $user['username'];
+                ?>
+                <p>Bonjour, <strong><?= htmlspecialchars($display) ?></strong> 👋</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <div class="dashboard-cards">
+
+            <a href="/pages/leClub/espace-entraineur.php" class="dashboard-card">
+                <div class="card-icon">📋</div>
+                <h2>Espace Entraineurs</h2>
+                <p>- Documents téléchargeables<br>
+                    - Ressources FFVB.</p>
+            </a>
+
+            <a href="/pages/leClub/minibus.php" class="dashboard-card">
+                <div class="card-icon">🚌</div>
+                <h2>Réservations Minibus</h2>
+                <p>Consultez les réservations des minibus de la mairie au celui du club.</p>
+            </a>
+
+            <a href="/pages/leClub/presences.php" class="dashboard-card">
+                <div class="card-icon">✅</div>
+                <h2>Pointage Présences</h2>
+                <p>Suivez le pointage des présences aux entraînements et aux matchs.</p>
+            </a>
+
+            <?php if (has_role('admin')): ?>
+            <a href="/pages/admin/index.php" class="dashboard-card card-admin">
+                <div class="card-icon">⚙️</div>
+                <h2>Administration</h2>
+                <p>Gestion du site, des utilisateurs et des contenus.</p>
+            </a>
+            <?php endif; ?>
+
+        </div>
+
+        <a href="/php/logout.php" class="btn-logout">Se déconnecter</a>
+    </div>
+
+    <div id="footer"></div>
+
+    <script src="/js/main.js"></script>
+    <script>
+        loadHTML('/commun/menu.html', 'menu');
+        loadHTML('/commun/footer.html', 'footer');
+    </script>
+</body>
+</html>

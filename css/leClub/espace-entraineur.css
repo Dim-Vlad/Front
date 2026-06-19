@@ -105,6 +105,27 @@
     margin: 0 auto;
 }
 
+.btn-logout-page {
+    display: block;
+    width: fit-content;
+    margin: 1rem auto 2rem;
+    padding: 0.6rem 1.5rem;
+    background-color: transparent;
+    color: #888;
+    border: 1px solid #ccc;
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+    font-family: var(--font-poppins);
+    text-decoration: none;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.btn-logout-page:hover {
+    background-color: #c0392b;
+    color: white;
+    border-color: #c0392b;
+}
+
 /* ===== RESPONSIVE ===== */
 @media screen and (max-width: 768px) {
     .btn a {

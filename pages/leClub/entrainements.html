@@ -25,23 +25,14 @@
         </div>
     </div>
 
-    <div class="complet">
-        <h2>Planning des entrainements de la saison 2025 - 2026.</h2>
-        <h2>⚠️​ Attention ! ⚠️​</h2>
-            <p>A cause de travaux de rénovation du gymnase Piemontesi, le planning des entrainements a été modifié.</br>
-                Rendez-vous sur la page <a href="/pages/alerte.html">"Organisation provisoire"</a> pour plus d'informations.</p>
-    </div>
-
-    <!-- <div class="print-button-container">
-        <button onclick="window.print()" class="print-button">
-            🖨️ Imprimer / Enregistrer sous PDF
-        </button>
-    </div> -->
-
 <!-- Tableau Entrainements -->
     <div class="container">
         <div class="training-table-container">
-            <table class="training-table">
+            <div class="table-header">
+                <h2>Tableau des entrainements</h2>
+                <p>Bientôt disponible pour la saison 2026 - 2027</p>
+            </div>
+            <!-- <table class="training-table">
                 <thead>
                     <tr>
                         <th colspan="5" scope="colgroup">Saison 2025 - 2026</th>
@@ -172,17 +163,19 @@
                         <td colspan="3">Pré-Nationale Masculin</br>Dimitri</td>
                     </tr>
                 </tbody>
-            </table>
+            </table> -->
         </div>
 
 <!-- Déterminer catégorie -->
 
         <div class="form-container">
             <h2>Déterminer la Catégorie</h2>
+            <p class="season-label">Saison 2026 - 2027</p>
             <form id="category-form">
                 <label for="birth-year">Année de Naissance:</label>
                     <select id="birth-year" name="birth-year" required>
                         <option value="" disabled selected>Choisir l'année de naissance</option>
+                        <option value="2023">2023</option>
                         <option value="2022">2022</option>
                         <option value="2021">2021</option>
                         <option value="2020">2020</option>
@@ -200,8 +193,7 @@
                         <option value="2008">2008</option>
                         <option value="2007">2007</option>
                         <option value="2006">2006</option>
-                        <option value="2005">2005</option>
-                        <option value="2004">2004 ou avant</option>
+                        <option value="2005">2005 ou avant</option>
                     </select>
                 <label for="gender">Genre:</label>
                 <select id="gender" name="gender" required>
@@ -216,12 +208,6 @@
         </div>
     </div>
 
-    <!-- <div class="print-button-container">
-        <button onclick="window.print()" class="print-button">
-            🖨️ Imprimer / Enregistrer sous PDF
-        </button>
-    </div> -->
-
 <div id="footer"></div>
 
 <script src="/js/main.js"></script>
@@ -234,53 +220,34 @@ const gender = document.getElementById('gender').value;
 let category = '';
 let schedule = '';
 
-if (birthYear === '2022' || birthYear === '2021') {
+// Catégories FFvolley saison 2026/2027
+if (birthYear === '2023' || birthYear === '2022') {
     category = 'Baby';
-    schedule = 'Malheureusement, nous n\'avons pas d\'entraîneur pour cette catégorie. Contactez le club pour plus d\'informations.';
-} else if (birthYear === '2020' || birthYear === '2019') {
+    schedule = 'Contactez le club pour plus d\'informations.';
+} else if (birthYear === '2021' || birthYear === '2020') {
     category = 'M7';
-    schedule = 'Mercredi 16h30 - 17h45';
-} else if (birthYear === '2018' || birthYear === '2017') {
+    schedule = 'Contactez le club pour les horaires de la saison 2026-2027.';
+} else if (birthYear === '2019' || birthYear === '2018') {
     category = 'M9';
-    schedule = 'Mercredi 16h30 - 17h45';
-} else if (birthYear === '2016' || birthYear === '2015') {
+    schedule = 'Contactez le club pour les horaires de la saison 2026-2027.';
+} else if (birthYear === '2017' || birthYear === '2016') {
     category = 'M11';
-    schedule = 'Mercredi 17h30 - 18h45 et Vendredi 17h30 - 18h45';
-} else if (birthYear === '2014' || birthYear === '2013') {
-    if (gender === 'female') {
-        category = 'M13 Féminin';
-        schedule = 'Mardi 17h30 - 18h45 et Jeudi 17h30 - 18h45';
-    } else if (gender === 'male') {
-        category = 'M13 Masculin';
-        schedule = 'Mardi 17h30 - 18h45 et Jeudi 17h30 - 18h45';
-    }
-} else if (birthYear === '2012' || birthYear === '2011') {
-    if (gender === 'female') {
-        category = 'M15 Féminin';
-        schedule = 'Lundi - 18h00 - 19h30 à la Cordeille et Mercredi 17h30 - 18h45';
-    } else if (gender === 'male') {
-        category = 'M15 Masculin';
-        schedule = 'Mardi 17h30 - 18h45 et Jeudi 17h30 - 18h45';
-    }
-} else if (birthYear === '2010' || birthYear === '2009' || birthYear === '2008') {
-    if (gender === 'female') {
-        category = 'M18 Féminin';
-        schedule = 'Contactez le club pour plus d\'informations';
-    } else if (gender === 'male') {
-        category = 'M18 Masculin';
-        schedule = 'Mardi 18h45 - 20h15 et Jeudi 18h45 - 20h15';
-    } 
-} else if (birthYear === '2007' || birthYear === '2006' || birthYear === '2005') {
-    if (gender === 'female') {
-        category = 'M21 Féminin = Départ Féminin';
-        schedule = 'Mercredi 18h45 - 20h15 et Vendredi 20h15 - 22h15';
-    } else if (gender === 'male') {
-        category = 'M21 Masculin = Départ Masculin';
-        schedule = 'Mercredi 18h45 - 20h15 et Vendredi 20h15 - 22h15';
-    }
+    schedule = 'Contactez le club pour les horaires de la saison 2026-2027.';
+} else if (birthYear === '2015' || birthYear === '2014') {
+    category = gender === 'female' ? 'M13 Féminin' : 'M13 Masculin';
+    schedule = 'Contactez le club pour les horaires de la saison 2026-2027.';
+} else if (birthYear === '2013' || birthYear === '2012') {
+    category = gender === 'female' ? 'M15 Féminin' : 'M15 Masculin';
+    schedule = 'Contactez le club pour les horaires de la saison 2026-2027.';
+} else if (birthYear === '2011' || birthYear === '2010' || birthYear === '2009') {
+    category = gender === 'female' ? 'M18 Féminin' : 'M18 Masculin';
+    schedule = 'Contactez le club pour les horaires de la saison 2026-2027.';
+} else if (birthYear === '2008' || birthYear === '2007' || birthYear === '2006') {
+    category = gender === 'female' ? 'M21 Féminin' : 'M21 Masculin';
+    schedule = 'Contactez le club pour les horaires de la saison 2026-2027.';
 } else {
-    category = 'Catégorie senior';
-    schedule = 'Contactez le club pour plus d\'informations';
+    category = 'Sénior';
+    schedule = 'Contactez le club pour plus d\'informations.';
 }
 
 document.getElementById('result').textContent = `Catégorie: ${category}, Horaires: ${schedule}`;

@@ -1,3 +1,8 @@
+<?php
+require_once __DIR__ . '/../../php/auth.php';
+require_login();
+?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -35,7 +40,6 @@
             <h2>Documents téléchargeables</h2>
             <ul class="download-list">
                 <li><a href="/documents/entraineur/Feuille-De-Composition_équipe.pdf" target="_blank">1 - Feuille de composition d'équipe (version PDF)</a></li>
-                <li><a href="/documents/entraineur/FRANCHISE-MANIFESTATION-SPORTIVE.pdf" target="_blank">2 - Franchise de manifestation sportive (version PDF)</a></li>
             </ul>
         </div>
 
@@ -51,6 +55,8 @@
             </div>
         </div>
     </div>
+
+    <a href="/php/logout.php" class="btn-logout-page">Se déconnecter</a>
 
     <div id="footer"></div>
 

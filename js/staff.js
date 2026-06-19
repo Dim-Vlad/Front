@@ -69,7 +69,6 @@ const descriptions = {
         </ul>
     `,
     "Textile": `
-        <p>Adjoint : Pierre Desoomer</p>
         <h3>Objectif :</h3>
         <p>Gérer les équipements et les tenues du club</p>
         

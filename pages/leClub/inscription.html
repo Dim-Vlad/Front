@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fiche de renseignements - VBO</title>
+    <link href="/css/styles.css" rel="stylesheet">
+    <link href="/css/leClub/inscription.css" rel="stylesheet">
+    <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+
+<body>
+    <div id="menu"></div>
+
+    <div id="content">
+
+        <div class="inscription-header">
+            <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo VBO">
+            <div class="text-content">
+                <h1>Fiche de renseignements<br>
+                    Saison 2026–2027</h1>
+                <p>Remplissez votre fiche en ligne et téléchargez-la en PDF, prête à remettre au club.</p>
+            </div>
+        </div>
+
+        <!-- ── Onglets de navigation ── -->
+        <div class="inscription-tabs">
+            <div class="inscription-tab active" id="tab-jeunes" onclick="switchTab('jeunes')">
+                <div class="tab-inner">
+                    <div class="tab-icon">&#x1F3D0;</div>
+                    <div class="tab-text">
+                        <div class="tab-label">Formulaire</div>
+                        <div class="tab-title">Jeunes</div>
+                        <div class="tab-sub">M7 &middot; M9&#8209;M15 &middot; M18&#8209;M21</div>
+                    </div>
+                </div>
+                <div class="tab-bar"></div>
+            </div>
+
+            <div class="inscription-tab" id="tab-seniors" onclick="switchTab('seniors')">
+                <div class="tab-inner">
+                    <div class="tab-icon">&#x1F3D0;</div>
+                    <div class="tab-text">
+                        <div class="tab-label">Formulaire</div>
+                        <div class="tab-title">Seniors</div>
+                        <div class="tab-sub">Seniors &middot; Loisirs &middot; Compet&nbsp;Lib</div>
+                    </div>
+                </div>
+                <div class="tab-bar"></div>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════ -->
+        <!--               FORMULAIRE JEUNES             -->
+        <!-- ════════════════════════════════════════════ -->
+        <div class="inscription-main">
+            <div id="form-jeunes" class="form-panel active">
+
+                <!-- Catégorie -->
+                <div class="form-section">
+                    <div class="form-section-title">Catégorie</div>
+                    <div class="form-section-body">
+                        <div class="tarifs-grid">
+
+                            <div class="tarif-card" onclick="selectTarif('j', this)">
+                                <div class="tarif-header">
+                                    <input type="radio" name="catJ" id="j_m7" value="M7">
+                                    <label for="j_m7">M7 – Baby Volley</label>
+                                </div>
+                                <div class="tarif-body">
+                                    <div class="annees">Né(e) en 2020, 2021 et après</div>
+                                    <div class="prix">140 € + 47 € (maillot &amp; short)</div>
+                                    <div class="cheques">2 chèques</div>
+                                </div>
+                            </div>
+
+                            <div class="tarif-card" onclick="selectTarif('j', this)">
+                                <div class="tarif-header">
+                                    <input type="radio" name="catJ" id="j_m9" value="M9-M15">
+                                    <label for="j_m9">M9 à M15</label>
+                                </div>
+                                <div class="tarif-body">
+                                    <div class="annees">Né(e) entre 2012 et 2019</div>
+                                    <div class="prix">160 € + 47 € (maillot &amp; short)</div>
+                                    <div class="cheques">2 chèques</div>
+                                </div>
+                            </div>
+
+                            <div class="tarif-card" onclick="selectTarif('j', this)">
+                                <div class="tarif-header">
+                                    <input type="radio" name="catJ" id="j_m18" value="M18-M21">
+                                    <label for="j_m18">M18 et M21</label>
+                                </div>
+                                <div class="tarif-body">
+                                    <div class="annees">Né(e) entre 2006 et 2011</div>
+                                    <div class="prix">190 € + 47 € (maillot &amp; short)</div>
+                                    <div class="cheques">2 chèques</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Identité licencié -->
+                <div class="form-section">
+                    <div class="form-section-title">Identité du licencié</div>
+                    <div class="form-section-body">
+                        <div class="fields-grid spacer">
+                            <div class="field"><label>NOM</label><input id="j_nom" type="text" placeholder="Nom de famille"></div>
+                            <div class="field"><label>Prénom</label><input id="j_prenom" type="text" placeholder="Prénom"></div>
+                            <div class="field"><label>Date de naissance</label><input id="j_ddn" type="date"></div>
+                            <div class="field"><label>Nationalité</label><input id="j_nat" type="text" placeholder="Ex : Française"></div>
+                            <div class="field"><label>Téléphone</label><input id="j_tel" type="tel" placeholder="06 xx xx xx xx"></div>
+                            <div class="field"><label>Email</label><input id="j_email" type="email" placeholder="email@exemple.fr"></div>
+                        </div>
+                        <div class="fields-grid cols-1 spacer">
+                            <div class="field"><label>Adresse</label><input id="j_adresse" type="text" placeholder="Numéro et nom de rue"></div>
+                        </div>
+                        <div class="fields-grid cols-3">
+                            <div class="field"><label>Code postal / Ville</label><input id="j_ville" type="text" placeholder="83190 Ollioules"></div>
+                            <div class="field"><label>Taille maillot</label>
+                                <select id="j_tshirt">
+                                    <option value="">—</option>
+                                    <option>XS</option><option>S</option><option>M</option><option>L</option>
+                                    <option>XL</option><option>XXL</option><option>XXXL</option><option>XXXXL</option>
+                                </select>
+                            </div>
+                            <div class="field"><label>Taille short</label>
+                                <select id="j_short">
+                                    <option value="">—</option>
+                                    <option>XS</option><option>S</option><option>M</option><option>L</option>
+                                    <option>XL</option><option>XXL</option><option>XXXL</option><option>XXXXL</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Responsable légal -->
+                <div class="form-section">
+                    <div class="form-section-title">Responsable légal</div>
+                    <div class="form-section-body">
+                        <div class="fields-grid cols-1 spacer">
+                            <div class="field"><label>Nom et prénom</label><input id="j_rl_nom" type="text" placeholder="Nom et prénom du responsable légal"></div>
+                        </div>
+                        <div class="fields-grid">
+                            <div class="field"><label>Téléphone père</label><input id="j_tel_pere" type="tel" placeholder="06 xx xx xx xx"></div>
+                            <div class="field"><label>Email père</label><input id="j_email_pere" type="email" placeholder="email@exemple.fr"></div>
+                            <div class="field"><label>Téléphone mère</label><input id="j_tel_mere" type="tel" placeholder="06 xx xx xx xx"></div>
+                            <div class="field"><label>Email mère</label><input id="j_email_mere" type="email" placeholder="email@exemple.fr"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pièces à fournir -->
+                <div class="form-section">
+                    <div class="form-section-title">Pièces à fournir</div>
+                    <div class="form-section-body">
+                        <div class="pieces-grid">
+                            <div class="pieces-col">
+                                <h4>Licencié saison 2025/2026 au VBO</h4>
+                                <ul>
+                                    <li>La présente fiche de renseignement</li>
+                                    <li>Cotisation par chèque (échelonnable) + chèque 47 € maillot à l'ordre de : Volley Ball Ollioulais ou paiement HelloAsso</li>
+                                    <li>Le formulaire de demande de licence complété</li>
+                                    <li>Certificat médical si QS non OK</li>
+                                </ul>
+                            </div>
+                            <div class="pieces-col">
+                                <h4>Nouveau licencié</h4>
+                                <ul>
+                                    <li>La présente fiche de renseignement</li>
+                                    <li>Cotisation par chèque (échelonnable) + chèque 47 € maillot à l'ordre de : Volley Ball Ollioulais ou paiement HelloAsso</li>
+                                    <li>Le formulaire de demande de licence complété</li>
+                                    <li>Certificat médical si QS non OK</li>
+                                    <li>1 photo d'identité</li>
+                                    <li>Photocopie carte d'identité ou livret famille (page du licencié)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Autorisations -->
+                <div class="form-section">
+                    <div class="form-section-title">Autorisations</div>
+                    <div class="form-section-body">
+                        <div class="checks">
+                            <label class="check-item"><input type="checkbox" id="j_aut1"> J'autorise mon enfant à participer aux entraînements, matchs et déplacements organisés par le club.</label>
+                            <label class="check-item"><input type="checkbox" id="j_aut2"> J'autorise le club à prendre toute disposition médicale en cas d'accident.</label>
+                            <label class="check-item"><input type="checkbox" id="j_aut3"> J'autorise l'utilisation de l'image de mon enfant dans le cadre des activités du club, sauf opposition écrite.</label>
+                            <label class="check-item"><input type="checkbox" id="j_aut4"> J'autorise l'utilisation des données personnelles de mon enfant pour la gestion interne du club.</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Engagement & Signature -->
+                <div class="form-section">
+                    <div class="form-section-title">Engagement &amp; Signature</div>
+                    <div class="form-section-body">
+                        <div class="checks" style="margin-bottom: 18px;">
+                            <label class="check-item">
+                                <input type="checkbox" id="j_eng">
+                                Je reconnais avoir pris connaissance des statuts et du règlement intérieur du Volley Ball Ollioulais et les accepter sans réserve. Je comprends que l'adhésion est soumise à l'agrément du comité directeur.
+                            </label>
+                        </div>
+                        <div class="fields-grid spacer">
+                            <div class="field"><label>Fait à</label><input id="j_fait_a" type="text" placeholder="Ville"></div>
+                            <div class="field"><label>Le</label><input id="j_date_sign" type="date"></div>
+                        </div>
+                        <div class="field">
+                            <label>Signature du représentant légal</label>
+                            <div class="sign-area">
+                                <canvas id="j_canvas" height="130"></canvas>
+                                <div class="sign-hint" id="j_hint">Signez ici avec votre doigt ou votre souris</div>
+                            </div>
+                            <div class="sign-controls">
+                                <button class="btn-clear" onclick="clearCanvas('j')">&#x2715; Effacer</button>
+                                <span class="sign-info">La signature sera intégrée dans le PDF</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-pdf" onclick="generatePDF('jeunes')">&#11015; Télécharger ma fiche Jeunes en PDF</button>
+
+            </div><!-- /form-jeunes -->
+
+
+            <!-- ════════════════════════════════════════════ -->
+            <!--              FORMULAIRE SENIORS             -->
+            <!-- ════════════════════════════════════════════ -->
+            <div id="form-seniors" class="form-panel">
+
+                <!-- Catégorie -->
+                <div class="form-section">
+                    <div class="form-section-title">Catégorie</div>
+                    <div class="form-section-body">
+                        <div class="tarifs-grid">
+
+                            <div class="tarif-card" onclick="selectTarif('s', this)">
+                                <div class="tarif-header">
+                                    <input type="radio" name="catS" id="s_comp" value="Seniors">
+                                    <label for="s_comp">Seniors</label>
+                                </div>
+                                <div class="tarif-body">
+                                    <div class="annees">Né(e) en 2005 et avant</div>
+                                    <div class="prix">200 € + 47 € (maillot &amp; short)</div>
+                                    <div class="cheques">2 chèques</div>
+                                </div>
+                            </div>
+
+                            <div class="tarif-card" onclick="selectTarif('s', this)">
+                                <div class="tarif-header">
+                                    <input type="radio" name="catS" id="s_loisirs" value="Seniors Loisirs">
+                                    <label for="s_loisirs">Seniors Loisirs</label>
+                                </div>
+                                <div class="tarif-body">
+                                    <div class="prix">100 € + 47 € (maillot &amp; short)</div>
+                                    <div class="cheques">Maillot non obligatoire</div>
+                                </div>
+                            </div>
+
+                            <div class="tarif-card" onclick="selectTarif('s', this)">
+                                <div class="tarif-header">
+                                    <input type="radio" name="catS" id="s_lib" value="Compet Lib">
+                                    <label for="s_lib">Compet Lib</label>
+                                </div>
+                                <div class="tarif-body">
+                                    <div class="prix">130 € + 47 € (maillot &amp; short)</div>
+                                    <div class="cheques">Maillot non obligatoire</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Identité -->
+                <div class="form-section">
+                    <div class="form-section-title">Identité du licencié</div>
+                    <div class="form-section-body">
+                        <div class="fields-grid spacer">
+                            <div class="field"><label>NOM</label><input id="s_nom" type="text" placeholder="Nom de famille"></div>
+                            <div class="field"><label>Prénom</label><input id="s_prenom" type="text" placeholder="Prénom"></div>
+                            <div class="field"><label>Date de naissance</label><input id="s_ddn" type="date"></div>
+                            <div class="field"><label>Nationalité</label><input id="s_nat" type="text" placeholder="Ex : Française"></div>
+                            <div class="field"><label>Téléphone</label><input id="s_tel" type="tel" placeholder="06 xx xx xx xx"></div>
+                            <div class="field"><label>Email</label><input id="s_email" type="email" placeholder="email@exemple.fr"></div>
+                        </div>
+                        <div class="fields-grid cols-1 spacer">
+                            <div class="field"><label>Adresse</label><input id="s_adresse" type="text" placeholder="Numéro et nom de rue"></div>
+                        </div>
+                        <div class="fields-grid cols-3 spacer">
+                            <div class="field"><label>Code postal / Ville</label><input id="s_ville" type="text" placeholder="83190 Ollioules"></div>
+                            <div class="field"><label>Taille maillot</label>
+                                <select id="s_tshirt">
+                                    <option value="">—</option>
+                                    <option>XS</option><option>S</option><option>M</option><option>L</option>
+                                    <option>XL</option><option>XXL</option><option>XXXL</option><option>XXXXL</option>
+                                </select>
+                            </div>
+                            <div class="field"><label>Taille short</label>
+                                <select id="s_short">
+                                    <option value="">—</option>
+                                    <option>XS</option><option>S</option><option>M</option><option>L</option>
+                                    <option>XL</option><option>XXL</option><option>XXXL</option><option>XXXXL</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 0;">
+                            <div class="oui-non-row">
+                                <span class="q">Je suis intéressé(e) par une formation d'arbitre ou marqueur</span>
+                                <div class="oui-non">
+                                    <label><input type="radio" name="s_arb" value="OUI"> OUI</label>
+                                    <label><input type="radio" name="s_arb" value="NON" checked> NON</label>
+                                </div>
+                            </div>
+                            <div class="oui-non-row">
+                                <span class="q">Je suis intéressé(e) par une formation d'entraîneur</span>
+                                <div class="oui-non">
+                                    <label><input type="radio" name="s_ent" value="OUI"> OUI</label>
+                                    <label><input type="radio" name="s_ent" value="NON" checked> NON</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pièces à fournir -->
+                <div class="form-section">
+                    <div class="form-section-title">Pièces à fournir</div>
+                    <div class="form-section-body">
+                        <div class="pieces-grid">
+                            <div class="pieces-col">
+                                <h4>Licencié saison 2025/2026 au VBO</h4>
+                                <ul>
+                                    <li>La présente fiche de renseignement</li>
+                                    <li>Cotisation par chèque (échelonnable) + chèque 47 € maillot à l'ordre de : Volley Ball Ollioulais ou paiement HelloAsso</li>
+                                    <li>Le formulaire de demande de licence complété</li>
+                                    <li>Certificat médical si QS non OK</li>
+                                </ul>
+                            </div>
+                            <div class="pieces-col">
+                                <h4>Nouveau licencié</h4>
+                                <ul>
+                                    <li>La présente fiche de renseignement</li>
+                                    <li>Cotisation par chèque (échelonnable) + chèque 47 € maillot à l'ordre de : Volley Ball Ollioulais ou paiement HelloAsso</li>
+                                    <li>Le formulaire de demande de licence complété</li>
+                                    <li>Certificat médical si QS non OK</li>
+                                    <li>1 photo d'identité</li>
+                                    <li>Photocopie de la carte d'identité</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Engagement & Signature -->
+                <div class="form-section">
+                    <div class="form-section-title">Engagement &amp; Signature</div>
+                    <div class="form-section-body">
+                        <div class="checks" style="margin-bottom: 18px;">
+                            <label class="check-item"><input type="checkbox" id="s_eng1"> Je reconnais avoir pris connaissance des statuts et du règlement intérieur du Volley Ball Ollioulais et les accepter sans réserve.</label>
+                            <label class="check-item"><input type="checkbox" id="s_eng2"> J'autorise le club à utiliser mes données personnelles pour la gestion interne et les communications officielles.</label>
+                            <label class="check-item"><input type="checkbox" id="s_eng3"> J'autorise l'utilisation de mon image sur les supports de communication du club.</label>
+                            <label class="check-item"><input type="checkbox" id="s_eng4"> Je comprends que l'adhésion est soumise à l'agrément du comité directeur.</label>
+                        </div>
+                        <div class="fields-grid spacer">
+                            <div class="field"><label>Fait à</label><input id="s_fait_a" type="text" placeholder="Ville"></div>
+                            <div class="field"><label>Le</label><input id="s_date_sign" type="date"></div>
+                        </div>
+                        <div class="field">
+                            <label>Signature du licencié</label>
+                            <div class="sign-area">
+                                <canvas id="s_canvas" height="130"></canvas>
+                                <div class="sign-hint" id="s_hint">Signez ici avec votre doigt ou votre souris</div>
+                            </div>
+                            <div class="sign-controls">
+                                <button class="btn-clear" onclick="clearCanvas('s')">&#x2715; Effacer</button>
+                                <span class="sign-info">La signature sera intégrée dans le PDF</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-pdf" onclick="generatePDF('seniors')">&#11015; Télécharger ma fiche Seniors en PDF</button>
+
+            </div><!-- /form-seniors -->
+        </div><!-- /inscription-main -->
+
+    </div><!-- /content -->
+
+    <div id="footer"></div>
+
+    <script src="/js/main.js"></script>
+    <script src="/js/inscription.js"></script>
+    <script>
+        loadHTML('/commun/menu.html', 'menu');
+        loadHTML('/commun/footer.html', 'footer');
+        document.dispatchEvent(new Event("inscriptionLoaded"));
+    </script>
+</body>
+</html>
