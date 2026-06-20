@@ -105,6 +105,11 @@ h2 {
     text-align: center;
 }
 
+.statuts-reglement {
+    padding: 20px;
+    text-align: center;
+}
+
 .button-container {
     font-size: 1rem;
     display: grid;

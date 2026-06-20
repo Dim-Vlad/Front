@@ -39,15 +39,24 @@ $user = current_user();
 
             <a href="/pages/leClub/espace-entraineur.php" class="dashboard-card">
                 <div class="card-icon">📋</div>
-                <h2>Espace Entraineurs</h2>
+                <h2>Ressources</h2>
                 <p>- Documents téléchargeables<br>
                     - Ressources FFVB.</p>
             </a>
 
+            <?php if (has_role('arbitre') || has_role('admin') || has_role('bureau')): ?>
+            <a href="/pages/arbitres/arbitres.php" class="dashboard-card">
+                <div class="card-icon">📣</div>
+                <h2>Arbitres &amp; Marqueurs</h2>
+                <p>Planning et feuilles de match pour les arbitres et marqueurs.</p>
+            </a>
+            <?php endif; ?>
+
+            <?php if (!has_role('arbitre')): ?>
             <a href="/pages/leClub/minibus.php" class="dashboard-card">
                 <div class="card-icon">🚌</div>
                 <h2>Réservations Minibus</h2>
-                <p>Consultez les réservations des minibus de la mairie au celui du club.</p>
+                <p>Consultez les réservations des minibus de la mairie et celui du club.</p>
             </a>
 
             <a href="/pages/leClub/presences.php" class="dashboard-card">
@@ -55,6 +64,7 @@ $user = current_user();
                 <h2>Pointage Présences</h2>
                 <p>Suivez le pointage des présences aux entraînements et aux matchs.</p>
             </a>
+            <?php endif; ?>
 
             <?php if (has_role('admin')): ?>
             <a href="/pages/admin/index.php" class="dashboard-card card-admin">

@@ -11,7 +11,7 @@ require_login();
     <meta name="description" content="Le VBO te propose un espace dédié aux entraineurs.">
     <link href="/css/styles.css" rel="stylesheet">
     <link href="/css/leClub/espace-entraineur.css" rel="stylesheet">
-    <title>Espace entraineurs - VBO</title>
+    <title>Ressources - VBO</title>
     <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,9 +25,10 @@ require_login();
         <div class="header-content">
             <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club">
             <div class="text-content">
-                <h1>Espace entraineurs</h1>
+                <h1>Ressources</h1>
                 <p class="explication">
-                    Le Volley-Ball Ollioulais met à disposition des entraineurs un espace dédié pour les aider dans leur mission.
+                    Le Volley-Ball Ollioulais met à disposition des entraineurs, des arbitres et des marqueurs,
+                    <br> un espace dédié pour les aider dans leurs missions.
                     <br>Vous trouverez ici des documents utiles, des conseils et des outils pour vous accompagner dans votre rôle.
                     <br>Si vous avez des questions ou des suggestions, n'hésitez pas à nous contacter.
                 </p>
@@ -35,12 +36,19 @@ require_login();
         </div>
     </div>
 
+    <a href="/pages/tableau-de-bord.php" class="sheet-back">← Retour au tableau de bord</a>
+    
     <div class="container">
         <div class="doc-entraineurs">
             <h2>Documents téléchargeables</h2>
+            <h3>Pour les entraineurs</h3>
             <ul class="download-list">
-                <li><a href="/documents/entraineur/Feuille-De-Composition_équipe.pdf" target="_blank">1 - Feuille de composition d'équipe (version PDF)</a></li>
+                <li><a href="/documents/entraineur/Feuille-De-Composition_équipe.pdf" target="_blank">Feuille de composition d'équipe (version PDF)</a></li>
             </ul>
+            <h3>Pour les arbitres</h3>
+            <ul class="download-list">
+                <li><a href="/documents/entraineur/Reçu-indemnit-marqueur.pdf" target="_blank">Reçu d'indemnité pour marqueur (version PDF)</a></li>
+                <li><a href="/documents/entraineur/FFvolley_Modifications_principales_reglementaires_2026-2027.pdf" target="_blank">Modifications principales règlementaires (version PDF)</a></li>
         </div>
 
         <hr class="separator">
@@ -55,8 +63,6 @@ require_login();
             </div>
         </div>
     </div>
-
-    <a href="/php/logout.php" class="btn-logout-page">Se déconnecter</a>
 
     <div id="footer"></div>
 

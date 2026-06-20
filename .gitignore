@@ -1,3 +1,4 @@
+# Dépendances
 node_modules
 package-lock.json
 package.json
@@ -5,10 +6,24 @@ package.json
 # Credentials BDD — ne jamais committer
 php/config.php
 
-# Script temporaire de création d'utilisateurs
+# Scripts temporaires
 php/create_user.php
+
+# Variables d'environnement
+.env
+.env.*
 
 # Fichiers système
 .DS_Store
 Thumbs.db
 *.log
+*.tmp
+*.bak
+
+# ============================================================
+# DOSSIER _local/ — NE PAS ENVOYER SUR LE SERVEUR
+# Ce dossier contient des fichiers de développement uniquement :
+#   - setup.sql          → structure initiale de la BDD
+#   - migration_*.sql    → scripts d'évolution de la BDD
+# Ces fichiers sont suivis dans git mais doivent rester en local.
+# ============================================================

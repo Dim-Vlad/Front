@@ -1,6 +1,10 @@
 <?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
+if (has_role('arbitre')) {
+    header('Location: /pages/tableau-de-bord.php');
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">

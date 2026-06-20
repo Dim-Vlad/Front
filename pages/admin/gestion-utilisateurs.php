@@ -24,6 +24,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
+// Changement de rôle
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'change_role') {
+    $id   = (int)($_POST['user_id'] ?? 0);
+    $role = in_array($_POST['new_role'] ?? '', ['entraineur', 'admin', 'arbitre', 'bureau']) ? $_POST['new_role'] : '';
+    $currentId = (int)(current_user()['id']);
+
+    if ($id <= 0 || $id === $currentId) {
+        $message = 'Impossible de modifier ce compte.';
+        $messageType = 'error';
+    } elseif ($role === '') {
+        $message = 'Rôle invalide.';
+        $messageType = 'error';
+    } else {
+        $pdo->prepare('UPDATE users SET role = ? WHERE id = ?')->execute([$role, $id]);
+        $message = 'Rôle modifié avec succès.';
+        $messageType = 'success';
+    }
+}
+
 // Changement de mot de passe
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'change_password') {
     $id       = (int)($_POST['user_id'] ?? 0);
@@ -47,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'create') {
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
-    $role     = in_array($_POST['role'] ?? '', ['entraineur', 'admin']) ? $_POST['role'] : 'entraineur';
+    $role     = in_array($_POST['role'] ?? '', ['entraineur', 'admin', 'arbitre', 'bureau']) ? $_POST['role'] : 'entraineur';
     $prenom   = trim($_POST['prenom'] ?? '');
     $nom      = trim($_POST['nom'] ?? '');
 
@@ -143,6 +162,8 @@ $currentId = (int)(current_user()['id']);
                         <label for="role">Rôle</label>
                         <select id="role" name="role">
                             <option value="entraineur">Entraineur</option>
+                            <option value="arbitre">Arbitre</option>
+                            <option value="bureau">Bureau</option>
                             <option value="admin">Admin</option>
                         </select>
                     </div>
@@ -177,6 +198,10 @@ $currentId = (int)(current_user()['id']);
                                 Modifier MDP
                             </button>
                             <?php if ((int)$u['id'] !== $currentId): ?>
+                            <button class="btn-edit"
+                                onclick="openRoleModal(<?= $u['id'] ?>, '<?= htmlspecialchars($u['username'], ENT_QUOTES) ?>', '<?= $u['role'] ?>')">
+                                Modifier rôle
+                            </button>
                             <form method="POST" onsubmit="return confirm('Supprimer « <?= htmlspecialchars($u['username']) ?> » ?')" style="display:inline">
                                 <input type="hidden" name="action" value="delete">
                                 <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
@@ -229,6 +254,31 @@ $currentId = (int)(current_user()['id']);
         </div>
     </div>
 
+    <!-- Modale changement de rôle -->
+    <div id="modal-role" class="modal-overlay" style="display:none" onclick="closeRoleModalOnOverlay(event)">
+        <div class="modal-card">
+            <h3>Modifier le rôle</h3>
+            <p>Utilisateur : <strong id="modal-role-username"></strong></p>
+            <form method="POST" class="admin-form">
+                <input type="hidden" name="action" value="change_role">
+                <input type="hidden" name="user_id" id="modal-role-user-id">
+                <div class="form-group">
+                    <label for="modal-new-role">Nouveau rôle</label>
+                    <select name="new_role" id="modal-new-role">
+                        <option value="entraineur">Entraineur</option>
+                        <option value="arbitre">Arbitre</option>
+                        <option value="bureau">Bureau</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn-admin">Enregistrer</button>
+                    <button type="button" class="btn-cancel" onclick="closeRoleModal()">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="footer"></div>
 
     <script src="/js/main.js"></script>
@@ -260,6 +310,21 @@ $currentId = (int)(current_user()['id']);
 
         function closeModalOnOverlay(e) {
             if (e.target === document.getElementById('modal-password')) closeModal();
+        }
+
+        function openRoleModal(userId, username, currentRole) {
+            document.getElementById('modal-role-user-id').value = userId;
+            document.getElementById('modal-role-username').textContent = username;
+            document.getElementById('modal-new-role').value = currentRole;
+            document.getElementById('modal-role').style.display = 'flex';
+        }
+
+        function closeRoleModal() {
+            document.getElementById('modal-role').style.display = 'none';
+        }
+
+        function closeRoleModalOnOverlay(e) {
+            if (e.target === document.getElementById('modal-role')) closeRoleModal();
         }
 
         document.getElementById('modal-form').addEventListener('submit', function(e) {

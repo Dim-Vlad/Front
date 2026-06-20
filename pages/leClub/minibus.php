@@ -1,6 +1,10 @@
 <?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
+if (has_role('arbitre')) {
+    header('Location: /pages/tableau-de-bord.php');
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -50,7 +54,7 @@ require_login();
             <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club">
             <div class="text-content">
                 <h1>Réservations Minibus</h1>
-                <p class="explication">Consultez et gérez les réservations du minibus du club.</p>
+                <p class="explication">Consultez les réservations des minibus de la mairie et celui du club.</p>
             </div>
         </div>
     </div>

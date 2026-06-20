@@ -152,6 +152,16 @@
     color: #a04000;
 }
 
+.badge--arbitre {
+    background: #e8eaf6;
+    color: #283593;
+}
+
+.badge--bureau {
+    background: #f3e5f5;
+    color: #6a1b9a;
+}
+
 .btn-delete {
     padding: 0.35rem 0.9rem;
     background: transparent;
