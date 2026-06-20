@@ -57,7 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="login-card">
             <img src="/images/logo-club/LogoVBO.png" alt="Logo VBO" class="login-logo">
             <h1>Connexion</h1>
-            <p class="login-subtitle">Espace réservé aux membres du club</p>
+            <p class="login-subtitle">Espace réservé aux entraineurs du club</p>
+            <p class="login-subtitle">Si vous avez oublié votre mot de passe, veuillez contacter l'administrateur du site.</p>
 
             <?php if ($error): ?>
                 <div class="login-error"><?= htmlspecialchars($error) ?></div>
