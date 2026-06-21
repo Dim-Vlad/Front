@@ -17,15 +17,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             $pdo  = get_pdo();
-            $stmt = $pdo->prepare('SELECT id, username, password, role, prenom, nom FROM users WHERE username = ?');
+            $stmt = $pdo->prepare('SELECT id, username, password, prenom, nom FROM users WHERE username = ?');
             $stmt->execute([$username]);
             $user = $stmt->fetch();
 
             if ($user && password_verify($password, $user['password'])) {
+                $rolesStmt = $pdo->prepare(
+                    'SELECT r.name FROM roles r
+                     JOIN user_roles ur ON ur.role_id = r.id
+                     WHERE ur.user_id = ?'
+                );
+                $rolesStmt->execute([$user['id']]);
+                $roles = $rolesStmt->fetchAll(PDO::FETCH_COLUMN);
                 session_regenerate_id(true);
                 $_SESSION['user_id']  = $user['id'];
                 $_SESSION['username'] = $user['username'];
-                $_SESSION['role']     = $user['role'];
+                $_SESSION['roles']    = $roles;
                 $_SESSION['prenom']   = $user['prenom'];
                 $_SESSION['nom']      = $user['nom'];
                 header('Location: /pages/tableau-de-bord.php');

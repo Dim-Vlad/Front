@@ -32,12 +32,16 @@ function current_user(): array {
     return [
         'id'       => $_SESSION['user_id'] ?? null,
         'username' => $_SESSION['username'] ?? null,
-        'role'     => $_SESSION['role'] ?? null,
+        'roles'    => $_SESSION['roles'] ?? [],
         'prenom'   => $_SESSION['prenom'] ?? null,
         'nom'      => $_SESSION['nom'] ?? null,
     ];
 }
 
 function has_role(string $role): bool {
-    return ($_SESSION['role'] ?? '') === $role;
+    return in_array($role, $_SESSION['roles'] ?? [], true);
+}
+
+function has_any_role(array $roles): bool {
+    return !empty(array_intersect($roles, $_SESSION['roles'] ?? []));
 }

@@ -5,6 +5,7 @@ package.json
 
 # Credentials BDD — ne jamais committer
 php/config.php
+_local
 
 # Scripts temporaires
 php/create_user.php

@@ -30,6 +30,15 @@ $user = current_user();
                     $display  = $fullname !== '' ? $fullname : $user['username'];
                 ?>
                 <p>Bonjour, <strong><?= htmlspecialchars($display) ?></strong> 👋</p>
+                <?php if (!empty($user['roles'])):
+                    $roleLabels = ['entraineur'=>'Entraineur','admin'=>'Admin','arbitre'=>'Arbitre','bureau'=>'Bureau','moderateur'=>'Modérateur'];
+                ?>
+                <div class="user-roles">
+                    <?php foreach ($user['roles'] as $r): ?>
+                    <span class="badge badge--<?= htmlspecialchars($r) ?>"><?= htmlspecialchars($roleLabels[$r] ?? ucfirst($r)) ?></span>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>

@@ -19,5 +19,5 @@ echo json_encode([
     'logged_in'     => isset($_SESSION['user_id']),
     'username'      => $_SESSION['username'] ?? null,
     'display_short' => $display_short,
-    'role'          => $_SESSION['role'] ?? null,
+    'roles'         => $_SESSION['roles'] ?? [],
 ]);

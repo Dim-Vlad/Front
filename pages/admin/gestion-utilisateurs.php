@@ -10,8 +10,17 @@ $pdo = get_pdo();
 $message = '';
 $messageType = '';
 
+$validRoles = ['entraineur', 'admin', 'arbitre', 'bureau', 'moderateur'];
+$roleLabels = [
+    'entraineur' => 'Entraineur',
+    'admin'      => 'Admin',
+    'arbitre'    => 'Arbitre',
+    'bureau'     => 'Bureau',
+    'moderateur' => 'Modérateur',
+];
+
 // Suppression
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
     $id = (int)($_POST['user_id'] ?? 0);
     $currentId = (int)(current_user()['id']);
     if ($id > 0 && $id !== $currentId) {
@@ -24,27 +33,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-// Changement de rôle
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'change_role') {
-    $id   = (int)($_POST['user_id'] ?? 0);
-    $role = in_array($_POST['new_role'] ?? '', ['entraineur', 'admin', 'arbitre', 'bureau']) ? $_POST['new_role'] : '';
+// Modification des rôles
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'change_roles') {
+    $id = (int)($_POST['user_id'] ?? 0);
+    $newRoles = array_values(array_filter($_POST['new_roles'] ?? [], fn($r) => in_array($r, $validRoles, true)));
     $currentId = (int)(current_user()['id']);
 
     if ($id <= 0 || $id === $currentId) {
         $message = 'Impossible de modifier ce compte.';
         $messageType = 'error';
-    } elseif ($role === '') {
-        $message = 'Rôle invalide.';
+    } elseif (empty($newRoles)) {
+        $message = 'Veuillez sélectionner au moins un rôle.';
         $messageType = 'error';
     } else {
-        $pdo->prepare('UPDATE users SET role = ? WHERE id = ?')->execute([$role, $id]);
-        $message = 'Rôle modifié avec succès.';
+        $pdo->prepare('DELETE FROM user_roles WHERE user_id = ?')->execute([$id]);
+        $stmt = $pdo->prepare('INSERT INTO user_roles (user_id, role_id) SELECT ?, id FROM roles WHERE name = ?');
+        foreach ($newRoles as $r) {
+            $stmt->execute([$id, $r]);
+        }
+        $message = 'Rôles modifiés avec succès.';
         $messageType = 'success';
     }
 }
 
 // Changement de mot de passe
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'change_password') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'change_password') {
     $id       = (int)($_POST['user_id'] ?? 0);
     $password = $_POST['new_password'] ?? '';
 
@@ -63,12 +76,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 // Création
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'create') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'create') {
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
-    $role     = in_array($_POST['role'] ?? '', ['entraineur', 'admin', 'arbitre', 'bureau']) ? $_POST['role'] : 'entraineur';
+    $roles    = array_values(array_filter($_POST['roles'] ?? [], fn($r) => in_array($r, $validRoles, true)));
     $prenom   = trim($_POST['prenom'] ?? '');
     $nom      = trim($_POST['nom'] ?? '');
+
+    if (empty($roles)) $roles = ['entraineur'];
 
     if ($username === '' || $password === '' || $prenom === '' || $nom === '') {
         $message = 'Tous les champs sont obligatoires.';
@@ -79,8 +94,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     } else {
         try {
             $hash = password_hash($password, PASSWORD_DEFAULT);
-            $pdo->prepare('INSERT INTO users (username, password, role, prenom, nom) VALUES (?, ?, ?, ?, ?)')->execute([$username, $hash, $role, $prenom, $nom]);
-            $message = 'Compte de ' . htmlspecialchars($prenom) . ' ' . htmlspecialchars($nom) . ' créé avec le rôle "' . $role . '".';
+            $pdo->prepare('INSERT INTO users (username, password, prenom, nom) VALUES (?, ?, ?, ?)')->execute([$username, $hash, $prenom, $nom]);
+            $newId = (int)$pdo->lastInsertId();
+            $stmt = $pdo->prepare('INSERT INTO user_roles (user_id, role_id) SELECT ?, id FROM roles WHERE name = ?');
+            foreach ($roles as $r) {
+                $stmt->execute([$newId, $r]);
+            }
+            $rolesStr = implode(', ', array_map(fn($r) => $roleLabels[$r] ?? $r, $roles));
+            $message = 'Compte de ' . htmlspecialchars($prenom) . ' ' . htmlspecialchars($nom) . ' créé avec le(s) rôle(s) : ' . $rolesStr . '.';
             $messageType = 'success';
         } catch (PDOException $e) {
             $message = str_contains($e->getMessage(), 'Duplicate entry')
@@ -91,7 +112,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-$users = $pdo->query('SELECT id, username, prenom, nom, role, created_at FROM users ORDER BY created_at DESC')->fetchAll();
+$users = $pdo->query(
+    "SELECT u.id, u.username, u.prenom, u.nom, u.created_at,
+            GROUP_CONCAT(r.name ORDER BY r.name SEPARATOR ',') AS roles
+     FROM users u
+     LEFT JOIN user_roles ur ON ur.user_id = u.id
+     LEFT JOIN roles r ON r.id = ur.role_id
+     GROUP BY u.id, u.username, u.prenom, u.nom, u.created_at
+     ORDER BY u.created_at DESC"
+)->fetchAll();
 $currentId = (int)(current_user()['id']);
 ?>
 <!DOCTYPE html>
@@ -159,13 +188,17 @@ $currentId = (int)(current_user()['id']);
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="role">Rôle</label>
-                        <select id="role" name="role">
-                            <option value="entraineur">Entraineur</option>
-                            <option value="arbitre">Arbitre</option>
-                            <option value="bureau">Bureau</option>
-                            <option value="admin">Admin</option>
-                        </select>
+                        <label>Rôle(s)</label>
+                        <div class="roles-box">
+                            <div class="roles-checkboxes">
+                                <?php foreach ($validRoles as $r): ?>
+                                <label class="role-check">
+                                    <input type="checkbox" name="roles[]" value="<?= $r ?>"<?= $r === 'entraineur' ? ' checked' : '' ?>>
+                                    <?= $roleLabels[$r] ?>
+                                </label>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <button type="submit" class="btn-admin">Créer le compte</button>
@@ -180,17 +213,23 @@ $currentId = (int)(current_user()['id']);
                     <tr>
                         <th>Nom complet</th>
                         <th>Identifiant</th>
-                        <th>Rôle</th>
+                        <th>Rôle(s)</th>
                         <th>Créé le</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($users as $u): ?>
+                    <?php foreach ($users as $u):
+                        $userRoles = $u['roles'] ? explode(',', $u['roles']) : [];
+                    ?>
                     <tr>
                         <td><?= htmlspecialchars($u['prenom'] . ' ' . $u['nom']) ?></td>
                         <td><?= htmlspecialchars($u['username']) ?></td>
-                        <td><span class="badge badge--<?= $u['role'] ?>"><?= $u['role'] ?></span></td>
+                        <td>
+                            <?php foreach ($userRoles as $r): ?>
+                            <span class="badge badge--<?= htmlspecialchars($r) ?>"><?= htmlspecialchars($roleLabels[$r] ?? $r) ?></span>
+                            <?php endforeach; ?>
+                        </td>
                         <td><?= date('d/m/Y', strtotime($u['created_at'])) ?></td>
                         <td class="actions-cell">
                             <button class="btn-edit"
@@ -199,10 +238,10 @@ $currentId = (int)(current_user()['id']);
                             </button>
                             <?php if ((int)$u['id'] !== $currentId): ?>
                             <button class="btn-edit"
-                                onclick="openRoleModal(<?= $u['id'] ?>, '<?= htmlspecialchars($u['username'], ENT_QUOTES) ?>', '<?= $u['role'] ?>')">
-                                Modifier rôle
+                                onclick="openRoleModal(<?= $u['id'] ?>, '<?= htmlspecialchars($u['username'], ENT_QUOTES) ?>', <?= htmlspecialchars(json_encode($userRoles), ENT_QUOTES) ?>)">
+                                Modifier rôles
                             </button>
-                            <form method="POST" onsubmit="return confirm('Supprimer « <?= htmlspecialchars($u['username']) ?> » ?')" style="display:inline">
+                            <form method="POST" onsubmit="return confirm('Supprimer «<?= htmlspecialchars($u['username']) ?>» ?')" style="display:inline">
                                 <input type="hidden" name="action" value="delete">
                                 <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
                                 <button type="submit" class="btn-delete">Supprimer</button>
@@ -254,22 +293,26 @@ $currentId = (int)(current_user()['id']);
         </div>
     </div>
 
-    <!-- Modale changement de rôle -->
+    <!-- Modale modification des rôles -->
     <div id="modal-role" class="modal-overlay" style="display:none" onclick="closeRoleModalOnOverlay(event)">
         <div class="modal-card">
-            <h3>Modifier le rôle</h3>
+            <h3>Modifier les rôles</h3>
             <p>Utilisateur : <strong id="modal-role-username"></strong></p>
             <form method="POST" class="admin-form">
-                <input type="hidden" name="action" value="change_role">
+                <input type="hidden" name="action" value="change_roles">
                 <input type="hidden" name="user_id" id="modal-role-user-id">
                 <div class="form-group">
-                    <label for="modal-new-role">Nouveau rôle</label>
-                    <select name="new_role" id="modal-new-role">
-                        <option value="entraineur">Entraineur</option>
-                        <option value="arbitre">Arbitre</option>
-                        <option value="bureau">Bureau</option>
-                        <option value="admin">Admin</option>
-                    </select>
+                    <label>Rôle(s) <span class="hint">(au moins un requis)</span></label>
+                    <div class="roles-box">
+                        <div class="roles-checkboxes">
+                            <?php foreach ($validRoles as $r): ?>
+                            <label class="role-check">
+                                <input type="checkbox" name="new_roles[]" value="<?= $r ?>" id="modal-role-<?= $r ?>">
+                                <?= $roleLabels[$r] ?>
+                            </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-actions">
                     <button type="submit" class="btn-admin">Enregistrer</button>
@@ -312,10 +355,14 @@ $currentId = (int)(current_user()['id']);
             if (e.target === document.getElementById('modal-password')) closeModal();
         }
 
-        function openRoleModal(userId, username, currentRole) {
+        function openRoleModal(userId, username, currentRoles) {
             document.getElementById('modal-role-user-id').value = userId;
             document.getElementById('modal-role-username').textContent = username;
-            document.getElementById('modal-new-role').value = currentRole;
+            document.querySelectorAll('#modal-role input[type="checkbox"]').forEach(cb => cb.checked = false);
+            currentRoles.forEach(r => {
+                const cb = document.getElementById('modal-role-' + r);
+                if (cb) cb.checked = true;
+            });
             document.getElementById('modal-role').style.display = 'flex';
         }
 
