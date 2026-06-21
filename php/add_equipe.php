@@ -16,30 +16,32 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$id = (int)($_POST['id'] ?? 0);
-if ($id <= 0) {
+$nom    = trim($_POST['nom']    ?? '');
+$groupe = trim($_POST['groupe'] ?? '');
+$niveau = trim($_POST['poule']  ?? '');
+$coach  = trim($_POST['coach']  ?? '');
+$lien   = trim($_POST['lien']   ?? '');
+
+if ($nom === '' || !in_array($groupe, ['seniors', 'jeunes'], true)) {
     http_response_code(400);
-    echo json_encode(['error' => 'ID invalide.']);
+    echo json_encode(['error' => 'Nom et groupe requis.']);
     exit;
 }
 
 $pdo = get_pdo();
-$check = $pdo->prepare('SELECT id FROM equipes WHERE id = ?');
-$check->execute([$id]);
-if (!$check->fetch()) {
-    http_response_code(404);
-    echo json_encode(['error' => 'Équipe introuvable.']);
-    exit;
-}
 
-$poule = trim($_POST['poule'] ?? '');
-$coach  = trim($_POST['coach'] ?? '');
-$lien   = trim($_POST['lien']  ?? '');
+$maxOrdre = $pdo->prepare('SELECT COALESCE(MAX(ordre), 0) FROM equipes WHERE groupe = ?');
+$maxOrdre->execute([$groupe]);
+$ordre = (int)$maxOrdre->fetchColumn() + 1;
 
-$photoPath = null;
+$pdo->prepare('INSERT INTO equipes (nom, groupe, niveau, coach, lien, photo, ordre) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    ->execute([$nom, $groupe, $niveau, $coach, $lien, '', $ordre]);
+$newId = (int)$pdo->lastInsertId();
+
+$photoPath = '';
 if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
-    $tmp  = $_FILES['photo']['tmp_name'];
-    $type = mime_content_type($tmp);
+    $tmp     = $_FILES['photo']['tmp_name'];
+    $type    = mime_content_type($tmp);
     $allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
     if (!in_array($type, $allowed, true)) {
@@ -55,7 +57,7 @@ if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
         default      => 'jpg',
     };
 
-    $filename  = $id . '.' . $ext;
+    $filename  = $newId . '.' . $ext;
     $uploadDir = __DIR__ . '/../photos/equipes/';
     if (!move_uploaded_file($tmp, $uploadDir . $filename)) {
         http_response_code(500);
@@ -63,16 +65,9 @@ if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
         exit;
     }
     $photoPath = '/photos/equipes/' . $filename;
+    $pdo->prepare('UPDATE equipes SET photo = ? WHERE id = ?')->execute([$photoPath, $newId]);
 }
 
-if ($photoPath !== null) {
-    $pdo->prepare('UPDATE equipes SET niveau = ?, coach = ?, lien = ?, photo = ? WHERE id = ?')
-        ->execute([$poule, $coach, $lien, $photoPath, $id]);
-} else {
-    $pdo->prepare('UPDATE equipes SET niveau = ?, coach = ?, lien = ? WHERE id = ?')
-        ->execute([$poule, $coach, $lien, $id]);
-}
-
-$row = $pdo->prepare('SELECT niveau AS poule, coach, lien, photo FROM equipes WHERE id = ?');
-$row->execute([$id]);
-echo json_encode(['success' => true, 'data' => $row->fetch()]);
+$row = $pdo->prepare('SELECT * FROM equipes WHERE id = ?');
+$row->execute([$newId]);
+echo json_encode(['success' => true, 'data' => $row->fetch(PDO::FETCH_ASSOC)]);

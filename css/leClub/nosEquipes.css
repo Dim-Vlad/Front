@@ -13,7 +13,7 @@
 .group-title {
   display: inline-block;
   font-family: var(--font-poppins);
-  font-size: 0.82rem;
+  font-size: 1.25rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -22,6 +22,38 @@
   padding: 6px 20px;
   border-radius: 6px;
   margin-bottom: 18px;
+}
+
+/* ── En-tête de groupe (titre + bouton ajouter) ── */
+.group-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.group-header .group-title {
+  margin-bottom: 0;
+}
+
+.btn-add-team {
+  background: var(--secondary-color);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: var(--font-poppins);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.btn-add-team:hover {
+  background: var(--bg-dark);
 }
 
 /* ── Grille de cartes ── */
@@ -116,7 +148,7 @@
 .card-level {
   font-size: 0.66rem;
   font-weight: 600;
-  color: var(--secondary-color);
+  color: #a8d4a8;
   text-transform: uppercase;
   letter-spacing: 0.07em;
 }
@@ -435,6 +467,78 @@
   margin: 8px 0 0;
   color: var(--secondary-color);
 }
+
+/* ── Zone suppression dans modale édition ── */
+.edit-delete-zone {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(34, 50, 36, 0.15);
+}
+
+.btn-delete {
+  width: 100%;
+  background: transparent;
+  color: #c0392b;
+  border: 1px solid #c0392b;
+  border-radius: 6px;
+  padding: 7px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: var(--font-poppins);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-delete:hover {
+  background: #c0392b;
+  color: #fff;
+}
+
+.delete-confirm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.delete-confirm span {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #c0392b;
+  flex: 1 1 100%;
+}
+
+.btn-delete-confirm {
+  flex: 1;
+  background: #c0392b;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: var(--font-poppins);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-delete-confirm:hover { background: #a93226; }
+
+.btn-cancel-delete {
+  flex: 1;
+  background: transparent;
+  color: var(--bg-dark);
+  border: 1px solid rgba(34, 50, 36, 0.3);
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: var(--font-poppins);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.btn-cancel-delete:hover { border-color: var(--bg-dark); }
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
