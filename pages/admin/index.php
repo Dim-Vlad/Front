@@ -42,6 +42,18 @@ $user = current_user();
                 <p>Créer, consulter et supprimer les comptes entraineurs.</p>
             </a>
 
+            <a href="/pages/admin/journal.php" class="dashboard-card card-admin">
+                <div class="card-icon">📝</div>
+                <h2>Journal des activités</h2>
+                <p>Historique des modifications effectuées par les modérateurs et administrateurs.</p>
+            </a>
+
+            <a href="/pages/admin/journal-connexions.php" class="dashboard-card card-admin">
+                <div class="card-icon">🔑</div>
+                <h2>Journal des connexions</h2>
+                <p>Historique des connexions à l'espace membres.</p>
+            </a>
+
         </div>
 
         <a href="/pages/tableau-de-bord.php" class="btn-logout">← Retour au tableau de bord</a>

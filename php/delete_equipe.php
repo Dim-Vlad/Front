@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/journal_log.php';
 
 header('Content-Type: application/json');
 header('Cache-Control: no-cache, no-store');
@@ -24,7 +25,7 @@ if ($id <= 0) {
 }
 
 $pdo   = get_pdo();
-$check = $pdo->prepare('SELECT photo FROM equipes WHERE id = ?');
+$check = $pdo->prepare('SELECT nom, photo FROM equipes WHERE id = ?');
 $check->execute([$id]);
 $row   = $check->fetch();
 
@@ -43,5 +44,7 @@ if ($photo && str_starts_with($photo, '/photos/equipes/')) {
 }
 
 $pdo->prepare('DELETE FROM equipes WHERE id = ?')->execute([$id]);
+
+log_activite($pdo, 'suppression', 'equipe', "Suppression de « {$row['nom']} »");
 
 echo json_encode(['success' => true]);

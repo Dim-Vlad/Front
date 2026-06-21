@@ -35,6 +35,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['roles']    = $roles;
                 $_SESSION['prenom']   = $user['prenom'];
                 $_SESSION['nom']      = $user['nom'];
+
+                $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '';
+                try {
+                    $pdo->prepare('INSERT INTO journal_connexions (user_id, username, ip) VALUES (?, ?, ?)')
+                        ->execute([$user['id'], $user['username'], $ip]);
+                } catch (Exception $e) {}
+
                 header('Location: /pages/tableau-de-bord.php');
                 exit;
             } else {

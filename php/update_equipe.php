@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/journal_log.php';
 
 header('Content-Type: application/json');
 header('Cache-Control: no-cache, no-store');
@@ -24,9 +25,10 @@ if ($id <= 0) {
 }
 
 $pdo = get_pdo();
-$check = $pdo->prepare('SELECT id FROM equipes WHERE id = ?');
+$check = $pdo->prepare('SELECT id, nom FROM equipes WHERE id = ?');
 $check->execute([$id]);
-if (!$check->fetch()) {
+$equipe = $check->fetch();
+if (!$equipe) {
     http_response_code(404);
     echo json_encode(['error' => 'Équipe introuvable.']);
     exit;
@@ -72,6 +74,10 @@ if ($photoPath !== null) {
     $pdo->prepare('UPDATE equipes SET niveau = ?, coach = ?, lien = ? WHERE id = ?')
         ->execute([$poule, $coach, $lien, $id]);
 }
+
+$parts = ["poule : {$poule}", "coach : {$coach}"];
+if ($photoPath !== null) $parts[] = 'photo mise à jour';
+log_activite($pdo, 'modification', 'equipe', "Modification de « {$equipe['nom']} » — " . implode(', ', $parts));
 
 $row = $pdo->prepare('SELECT niveau AS poule, coach, lien, photo FROM equipes WHERE id = ?');
 $row->execute([$id]);

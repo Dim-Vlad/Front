@@ -47,10 +47,9 @@ $user = current_user();
         <div class="dashboard-cards">
 
             <a href="/pages/leClub/espace-entraineur.php" class="dashboard-card">
-                <div class="card-icon">📋</div>
+                <div class="card-icon">📂</div>
                 <h2>Ressources</h2>
-                <p>- Documents téléchargeables<br>
-                    - Ressources FFVB.</p>
+                <p>Documents téléchargeables et ressources FFVB.</p>
             </a>
 
             <?php if (has_role('arbitre') || has_role('admin') || has_role('bureau')): ?>
@@ -72,6 +71,14 @@ $user = current_user();
                 <div class="card-icon">✅</div>
                 <h2>Pointage Présences</h2>
                 <p>Suivez le pointage des présences aux entraînements et aux matchs.</p>
+            </a>
+            <?php endif; ?>
+
+            <?php if (has_any_role(['admin', 'moderateur'])): ?>
+            <a href="/pages/admin/journal.php" class="dashboard-card">
+                <div class="card-icon">📝</div>
+                <h2>Journal des activités</h2>
+                <p>Historique des modifications effectuées par les modérateurs et administrateurs.</p>
             </a>
             <?php endif; ?>
 

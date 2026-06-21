@@ -223,14 +223,14 @@ $currentId = (int)(current_user()['id']);
                         $userRoles = $u['roles'] ? explode(',', $u['roles']) : [];
                     ?>
                     <tr>
-                        <td><?= htmlspecialchars($u['prenom'] . ' ' . $u['nom']) ?></td>
-                        <td><?= htmlspecialchars($u['username']) ?></td>
-                        <td>
+                        <td data-label="Nom"><?= htmlspecialchars($u['prenom'] . ' ' . $u['nom']) ?></td>
+                        <td data-label="Identifiant"><?= htmlspecialchars($u['username']) ?></td>
+                        <td data-label="Rôle(s)">
                             <?php foreach ($userRoles as $r): ?>
                             <span class="badge badge--<?= htmlspecialchars($r) ?>"><?= htmlspecialchars($roleLabels[$r] ?? $r) ?></span>
                             <?php endforeach; ?>
                         </td>
-                        <td><?= date('d/m/Y', strtotime($u['created_at'])) ?></td>
+                        <td data-label="Créé le"><?= date('d/m/Y', strtotime($u['created_at'])) ?></td>
                         <td class="actions-cell">
                             <button class="btn-edit"
                                 onclick="openPasswordModal(<?= $u['id'] ?>, '<?= htmlspecialchars($u['username'], ENT_QUOTES) ?>')">

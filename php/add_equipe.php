@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/journal_log.php';
 
 header('Content-Type: application/json');
 header('Cache-Control: no-cache, no-store');
@@ -67,6 +68,8 @@ if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
     $photoPath = '/photos/equipes/' . $filename;
     $pdo->prepare('UPDATE equipes SET photo = ? WHERE id = ?')->execute([$photoPath, $newId]);
 }
+
+log_activite($pdo, 'ajout', 'equipe', "Ajout de « {$nom} » dans {$groupe}");
 
 $row = $pdo->prepare('SELECT * FROM equipes WHERE id = ?');
 $row->execute([$newId]);
