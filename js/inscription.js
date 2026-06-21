@@ -88,12 +88,54 @@ document.addEventListener("inscriptionLoaded", () => {
 });
 
 function v(id) { return (document.getElementById(id) || {}).value || ""; }
+function fmtDate(val) { if (!val) return ""; const [y,m,d] = val.split("-"); return d+"/"+m+"/"+y; }
 function radioVal(name) {
   const el = document.querySelector('input[name="' + name + '"]:checked');
   return el ? el.value : "---";
 }
 
 function generatePDF(type) {
+  const radioName = type === "jeunes" ? "catJ" : "catS";
+  if (!document.querySelector('input[name="' + radioName + '"]:checked')) {
+    alert("Veuillez sélectionner un type de licence avant de générer le PDF.");
+    return;
+  }
+
+  const reqFields = type === "jeunes"
+    ? [{id:"j_nom",lbl:"NOM"},{id:"j_prenom",lbl:"Prénom"},{id:"j_ddn",lbl:"Date de naissance"},{id:"j_nat",lbl:"Nationalité"},{id:"j_tel",lbl:"Téléphone"},{id:"j_email",lbl:"Email"},{id:"j_adresse",lbl:"Adresse"},{id:"j_cp",lbl:"Code postal"},{id:"j_ville",lbl:"Ville"},{id:"j_tshirt",lbl:"Taille maillot"},{id:"j_short",lbl:"Taille short"},{id:"j_rl_nom",lbl:"Nom du responsable légal"},{id:"j_fait_a",lbl:"Fait à"},{id:"j_date_sign",lbl:"Date de signature"}]
+    : [{id:"s_nom",lbl:"NOM"},{id:"s_prenom",lbl:"Prénom"},{id:"s_ddn",lbl:"Date de naissance"},{id:"s_nat",lbl:"Nationalité"},{id:"s_tel",lbl:"Téléphone"},{id:"s_email",lbl:"Email"},{id:"s_adresse",lbl:"Adresse"},{id:"s_cp",lbl:"Code postal"},{id:"s_ville",lbl:"Ville"},{id:"s_tshirt",lbl:"Taille maillot"},{id:"s_short",lbl:"Taille short"},{id:"s_fait_a",lbl:"Fait à"},{id:"s_date_sign",lbl:"Date de signature"}];
+
+  const reqChecks = type === "jeunes"
+    ? [{id:"j_aut1",lbl:"Autorisation participation"},{id:"j_aut2",lbl:"Autorisation médicale"},{id:"j_aut3",lbl:"Autorisation image"},{id:"j_aut4",lbl:"Autorisation données personnelles"},{id:"j_eng",lbl:"Engagement (règlement intérieur)"}]
+    : [{id:"s_eng1",lbl:"Engagement règlement intérieur"},{id:"s_eng2",lbl:"Autorisation données personnelles"},{id:"s_eng3",lbl:"Autorisation image"},{id:"s_eng4",lbl:"Engagement adhésion"}];
+
+  const sigPrefix = type === "jeunes" ? "j" : "s";
+  const panelId = "form-" + (type === "jeunes" ? "jeunes" : "seniors");
+  const signArea = document.querySelector("#" + panelId + " .sign-area");
+
+  // Reset
+  reqFields.forEach(f => { const el = document.getElementById(f.id); if (el) el.classList.remove("field-error"); });
+  reqChecks.forEach(c => { const el = document.getElementById(c.id); if (el) el.closest(".check-item").classList.remove("field-error"); });
+  if (signArea) signArea.classList.remove("field-error");
+
+  const missingFields = reqFields.filter(f => !v(f.id).trim());
+  const missingChecks = reqChecks.filter(c => !document.getElementById(c.id)?.checked);
+  const missingSign   = !canvases[sigPrefix]?.hasContent;
+
+  missingFields.forEach(f => { const el = document.getElementById(f.id); if (el) el.classList.add("field-error"); });
+  missingChecks.forEach(c => { const el = document.getElementById(c.id); if (el) el.closest(".check-item").classList.add("field-error"); });
+  if (missingSign && signArea) signArea.classList.add("field-error");
+
+  const errors = [
+    ...missingFields.map(f => "• " + f.lbl),
+    ...missingChecks.map(c => "• " + c.lbl),
+    ...(missingSign ? ["• Signature obligatoire"] : [])
+  ];
+  if (errors.length > 0) {
+    alert("Veuillez compléter les éléments suivants :\n" + errors.join("\n"));
+    return;
+  }
+
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
@@ -122,7 +164,7 @@ function generatePDF(type) {
   const band = (txt) => {
     doc.setFillColor(...VS); doc.rect(M, y, CW, 7, "F");
     doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(...BL);
-    doc.text(txt, M + 3, y + 5); y += 9;
+    doc.text(txt, M + 3, y + 5); y += 12;
   };
 
   const field = (lbl, val, x, fw, ly) => {
@@ -136,50 +178,51 @@ function generatePDF(type) {
   const t3W = CW / 3;
   const catDefs = type === "jeunes"
     ? [{ id:"j_m7",  lbl:"M7 - Baby Volley", ann:"Ne en 2020-2021+",     prix:"140+47 EUR (maillot+short)", ch:"2 cheques" },
-       { id:"j_m9",  lbl:"M9 a M15",          ann:"Ne entre 2012-2019",    prix:"160+47 EUR (maillot+short)", ch:"2 cheques" },
-       { id:"j_m18", lbl:"M18 et M21",         ann:"Ne entre 2006-2011",    prix:"190+47 EUR (maillot+short)", ch:"2 cheques" }]
+        { id:"j_m9",  lbl:"M9 a M15",          ann:"Ne entre 2012-2019",    prix:"160+47 EUR (maillot+short)", ch:"2 cheques" },
+        { id:"j_m18", lbl:"M18 et M21",         ann:"Ne entre 2006-2011",    prix:"190+47 EUR (maillot+short)", ch:"2 cheques" }]
     : [{ id:"s_comp",   lbl:"Seniors",         ann:"Ne en 2005 et avant", prix:"200+47 EUR (maillot+short)", ch:"2 cheques" },
-       { id:"s_loisirs",lbl:"Seniors Loisirs", ann:"",                    prix:"100+47 EUR (maillot+short)", ch:"Maillot non oblig." },
-       { id:"s_lib",    lbl:"Compet Lib",       ann:"",                    prix:"130+47 EUR (maillot+short)", ch:"Maillot non oblig." }];
+        { id:"s_loisirs",lbl:"Seniors Loisirs", ann:"",                    prix:"100+47 EUR (maillot+short)", ch:"Maillot non oblig." },
+        { id:"s_lib",    lbl:"Compet Lib",       ann:"",                    prix:"130+47 EUR (maillot+short)", ch:"Maillot non oblig." }];
 
   catDefs.forEach((cat, i) => {
     const x = M + i * t3W, sel = document.getElementById(cat.id)?.checked;
-    doc.setFillColor(...(sel ? VS : VD)); doc.rect(x, y, t3W, 9, "F");
-    doc.setDrawColor(...VD); doc.setLineWidth(0.3); doc.rect(x, y, t3W, 9);
-    doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(...VP);
-    doc.text((sel ? "[X] " : "[ ] ") + cat.lbl, x + 3, y + 6);
-    doc.setFillColor(...VL); doc.rect(x, y + 9, t3W, 14, "F"); doc.rect(x, y + 9, t3W, 14);
+    doc.setFillColor(...(sel ? VS : VL)); doc.rect(x, y, t3W, 10, "F");
+    doc.setDrawColor(...(sel ? VS : VD)); doc.setLineWidth(sel ? 1.0 : 0.3); doc.rect(x, y, t3W, 10);
+    doc.setFontSize(sel ? 9.5 : 8); doc.setFont("helvetica", "bold"); doc.setTextColor(...(sel ? BL : VD));
+    doc.text((sel ? "[X] " : "[ ] ") + cat.lbl, x + 3, y + 7);
+    doc.setFillColor(...VL); doc.rect(x, y + 10, t3W, 14, "F");
+    doc.setDrawColor(...(sel ? VS : VD)); doc.setLineWidth(sel ? 1.0 : 0.3); doc.rect(x, y + 10, t3W, 14);
     doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(80, 80, 80);
-    if (cat.ann) doc.text(cat.ann, x + 3, y + 14);
-    doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); doc.setTextColor(...VD);
-    doc.text(cat.prix, x + 3, cat.ann ? y + 18.5 : y + 14);
+    if (cat.ann) doc.text(cat.ann, x + 3, y + 15);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); doc.setTextColor(...(sel ? VS : VD));
+    doc.text(cat.prix, x + 3, cat.ann ? y + 19.5 : y + 15);
     doc.setFont("helvetica", "normal"); doc.setFontSize(6.5); doc.setTextColor(100, 100, 100);
-    doc.text(cat.ch, x + 3, cat.ann ? y + 22 : y + 18);
+    doc.text(cat.ch, x + 3, cat.ann ? y + 23 : y + 19);
   });
-  y += 26;
+  y += 27;
 
   const lW = CW * 0.60, rW = CW * 0.40, yId = y, fh = 9;
 
   if (type === "jeunes") {
-    band("IDENTITE DU LICENCIE");
+    band("IDENTITE DU LICENCIE"); y += 3;
     const hW = lW / 2;
     field("NOM", v("j_nom").toUpperCase(), M, hW-2, y); field("PRENOM", v("j_prenom"), M+hW, hW-2, y); y+=fh;
-    field("DATE DE NAISSANCE", v("j_ddn"), M, hW-2, y); field("NATIONALITE", v("j_nat"), M+hW, hW-2, y); y+=fh;
+    field("DATE DE NAISSANCE", fmtDate(v("j_ddn")), M, hW-2, y); field("NATIONALITE", v("j_nat"), M+hW, hW-2, y); y+=fh;
     field("TELEPHONE", v("j_tel"), M, hW-2, y); field("EMAIL", v("j_email"), M+hW, hW-2, y); y+=fh;
     field("ADRESSE", v("j_adresse"), M, lW-2, y); y+=fh;
-    const vW=lW*.46,tW=lW*.27,sW=lW-vW-tW;
-    field("CP/VILLE",v("j_ville"),M,vW-2,y); field("MAILLOT",v("j_tshirt"),M+vW,tW-2,y); field("SHORT",v("j_short"),M+vW+tW,sW-2,y); y+=fh;
-    band("RESPONSABLE LEGAL");
+    const cpW=lW*.15,viW=lW*.31,tW=lW*.27,soW=lW-cpW-viW-tW;
+    field("CODE POSTAL",v("j_cp"),M,cpW-2,y); field("VILLE",v("j_ville"),M+cpW,viW-2,y); field("MAILLOT",v("j_tshirt"),M+cpW+viW,tW-2,y); field("SHORT",v("j_short"),M+cpW+viW+tW,soW-2,y); y+=fh;
+    band("RESPONSABLE LEGAL"); y += 8;
     field("NOM ET PRENOM", v("j_rl_nom"), M, lW-2, y); y+=fh;
     field("TEL.PERE",v("j_tel_pere"),M,hW-2,y); field("EMAIL PERE",v("j_email_pere"),M+hW,hW-2,y); y+=fh;
     field("TEL.MERE",v("j_tel_mere"),M,hW-2,y); field("EMAIL MERE",v("j_email_mere"),M+hW,hW-2,y); y+=fh;
   } else {
-    band("IDENTITE DU LICENCIE");
+    band("IDENTITE DU LICENCIE"); y += 3;
     const hW = lW / 2;
     field("NOM",v("s_nom").toUpperCase(),M,hW-2,y); field("PRENOM",v("s_prenom"),M+hW,hW-2,y); y+=fh;
-    field("DATE NAISSANCE",v("s_ddn"),M,hW-2,y); field("NATIONALITE",v("s_nat"),M+hW,hW-2,y); y+=fh;
+    field("DATE NAISSANCE",fmtDate(v("s_ddn")),M,hW-2,y); field("NATIONALITE",v("s_nat"),M+hW,hW-2,y); y+=fh;
     field("ADRESSE",v("s_adresse"),M,lW-2,y); y+=fh;
-    field("CODE POSTAL/VILLE",v("s_ville"),M,lW-2,y); y+=fh;
+    const cpW=lW*0.25; field("CODE POSTAL",v("s_cp"),M,cpW-2,y); field("VILLE",v("s_ville"),M+cpW,lW-cpW-2,y); y+=fh;
     field("TELEPHONE",v("s_tel"),M,hW-2,y); field("EMAIL",v("s_email"),M+hW,hW-2,y); y+=fh;
     const tW2=lW/2;
     field("TAILLE MAILLOT",v("s_tshirt"),M,tW2-2,y); field("TAILLE SHORT",v("s_short"),M+tW2,tW2-2,y); y+=fh;
@@ -241,7 +284,7 @@ function generatePDF(type) {
   }
 
   const fa=type==="jeunes"?v("j_fait_a"):v("s_fait_a");
-  const ds=type==="jeunes"?v("j_date_sign"):v("s_date_sign");
+  const ds=type==="jeunes"?fmtDate(v("j_date_sign")):fmtDate(v("s_date_sign"));
   const sl=type==="jeunes"?"SIGNATURE DU REPRESENTANT LEGAL":"SIGNATURE DU LICENCIE";
   const sw=CW/3;
   field("FAIT A",fa,M,sw-4,y+9); field("LE",ds,M+sw,sw-4,y+9);

@@ -121,8 +121,9 @@
                         <div class="fields-grid cols-1 spacer">
                             <div class="field"><label>Adresse</label><input id="j_adresse" type="text" placeholder="Numéro et nom de rue"></div>
                         </div>
-                        <div class="fields-grid cols-3">
-                            <div class="field"><label>Code postal / Ville</label><input id="j_ville" type="text" placeholder="83190 Ollioules"></div>
+                        <div class="fields-grid cols-4">
+                            <div class="field"><label>Code postal</label><input id="j_cp" type="text" placeholder="83190" maxlength="5"></div>
+                            <div class="field"><label>Ville</label><input id="j_ville" type="text" placeholder="Ollioules"></div>
                             <div class="field"><label>Taille maillot</label>
                                 <select id="j_tshirt">
                                     <option value="">—</option>
@@ -148,11 +149,20 @@
                         <div class="fields-grid cols-1 spacer">
                             <div class="field"><label>Nom et prénom</label><input id="j_rl_nom" type="text" placeholder="Nom et prénom du responsable légal"></div>
                         </div>
-                        <div class="fields-grid">
-                            <div class="field"><label>Téléphone père</label><input id="j_tel_pere" type="tel" placeholder="06 xx xx xx xx"></div>
-                            <div class="field"><label>Email père</label><input id="j_email_pere" type="email" placeholder="email@exemple.fr"></div>
-                            <div class="field"><label>Téléphone mère</label><input id="j_tel_mere" type="tel" placeholder="06 xx xx xx xx"></div>
-                            <div class="field"><label>Email mère</label><input id="j_email_mere" type="email" placeholder="email@exemple.fr"></div>
+                        <p class="parent-note">Au moins un parent doit être renseigné</p>
+                        <div class="parent-block">
+                            <div class="parent-block-title">Père</div>
+                            <div class="fields-grid">
+                                <div class="field"><label>Téléphone</label><input id="j_tel_pere" type="tel" placeholder="06 xx xx xx xx"></div>
+                                <div class="field"><label>Email</label><input id="j_email_pere" type="email" placeholder="email@exemple.fr"></div>
+                            </div>
+                        </div>
+                        <div class="parent-block">
+                            <div class="parent-block-title">Mère</div>
+                            <div class="fields-grid">
+                                <div class="field"><label>Téléphone</label><input id="j_tel_mere" type="tel" placeholder="06 xx xx xx xx"></div>
+                                <div class="field"><label>Email</label><input id="j_email_mere" type="email" placeholder="email@exemple.fr"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -296,8 +306,9 @@
                         <div class="fields-grid cols-1 spacer">
                             <div class="field"><label>Adresse</label><input id="s_adresse" type="text" placeholder="Numéro et nom de rue"></div>
                         </div>
-                        <div class="fields-grid cols-3 spacer">
-                            <div class="field"><label>Code postal / Ville</label><input id="s_ville" type="text" placeholder="83190 Ollioules"></div>
+                        <div class="fields-grid cols-4 spacer">
+                            <div class="field"><label>Code postal</label><input id="s_cp" type="text" placeholder="83190" maxlength="5"></div>
+                            <div class="field"><label>Ville</label><input id="s_ville" type="text" placeholder="Ollioules"></div>
                             <div class="field"><label>Taille maillot</label>
                                 <select id="s_tshirt">
                                     <option value="">—</option>
@@ -399,7 +410,7 @@
     <div id="footer"></div>
 
     <script src="/js/main.js"></script>
-    <script src="/js/inscription.js"></script>
+    <script src="/js/inscription.js?v=3"></script>
     <script>
         loadHTML('/commun/menu.html', 'menu');
         loadHTML('/commun/footer.html', 'footer');
