@@ -1,157 +1,207 @@
-body {
-    font-family: 'Ubuntu', sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    height: 100vh;
-    margin: 0;
-    background-color: #acc2ab;
+/* ── Wrapper ───────────────────────────────────────────────────── */
+
+.medical-main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 1.5rem 4rem;
 }
 
-.container {
-    background: #e3eae1;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.8);
+/* ── Titres de section ─────────────────────────────────────────── */
+
+.medical-main h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+    border-bottom: 3px solid var(--primary-color);
+    padding-bottom: .45rem;
+    margin: 0 0 1.2rem;
+    display: inline-block;
+}
+
+/* ── Intro ─────────────────────────────────────────────────────── */
+
+.med-intro {
+    padding: 2rem 0 1.5rem;
+}
+
+.med-intro p {
+    line-height: 1.75;
+    color: #444;
+    font-size: .95rem;
+    margin: 0 0 .8rem;
+}
+
+.med-intro strong { color: var(--secondary-color); }
+
+.logo-hopital {
+    display: block;
+    max-width: 220px;
+    height: auto;
+    margin: 1.4rem 0 0;
+    border-radius: 8px;
+    border: 1px solid #dde8dd;
+}
+
+/* ── Grille photo + contact ────────────────────────────────────── */
+
+.med-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 2rem;
+    align-items: start;
+    padding: 1rem 0 2rem;
+}
+
+/* Photo ─────────────────────────────────────────────────── */
+
+.med-photo-wrap {
+    border-radius: 14px;
     overflow: hidden;
-    width: 500px;
-    margin: 20px 0;
-    display: flex;
-    flex-direction: column;
+    box-shadow: 0 2px 16px rgba(0,0,0,.1);
 }
 
-.couverture img {
-    width: 50%;
-    height: 350px;
+.med-photo-wrap img {
+    width: 100%;
+    height: 340px;
     object-fit: cover;
     display: block;
-    margin: 20px auto;
-    border-radius: 10px;
-    border: 2px solid #223224;
 }
 
-.partenariat {
-    text-align: center;
-    font-size: 1.2rem;
-    margin-bottom: 20px;
-    color: #333;
-    margin: 0 20px;
+/* Carte contact ─────────────────────────────────────────── */
+
+.med-contact-card {
+    background: #fff;
+    border-radius: 14px;
+    border-bottom: 4px solid var(--primary-color);
+    box-shadow: 0 2px 12px rgba(0,0,0,.07);
+    padding: 1.6rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
-.card {
-    padding: 20px;
-    text-align: center;
-}
-
-.metier {
-    font-size: 1.2rem;
-    color: #555;
-    margin-bottom: 10px;
-}
-
-.postadress, .contact-info, .dl {
-    margin-bottom: 5px;
-    font-size: 1.2rem;
-}
-
-.contact-info, .postadress {
+.med-contact-name {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 10px;
+    gap: .75rem;
+    flex-wrap: wrap;
 }
 
-.contact-info img, .postadress img {
-    width: 24px;
-    height: 24px;
+.med-contact-name h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+    margin: 0;
 }
 
-.btn {
+.med-badge {
+    font-size: .75rem;
+    font-weight: 600;
+    background: var(--primary-color);
+    color: var(--secondary-color);
+    padding: .2rem .7rem;
+    border-radius: 20px;
+}
+
+.med-contact-row {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+}
+
+.med-contact-row img {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    opacity: .75;
+}
+
+.med-contact-row p {
+    margin: 0;
+    font-size: .9rem;
+    color: #444;
+    line-height: 1.4;
+}
+
+/* Boutons ───────────────────────────────────────────────── */
+
+.med-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .6rem;
+    margin-top: .4rem;
+}
+
+.med-btn {
     display: inline-block;
-    padding: 10px 20px;
-    background-color: #acc2ab;
-    color: #223224;
-    font-size: 1.2rem;
-    font-weight: bold;
+    text-decoration: none;
+    font-size: .85rem;
+    font-weight: 600;
+    border-radius: 22px;
+    padding: .5rem 1.2rem;
+    transition: background .2s, transform .15s;
+    white-space: nowrap;
+}
+
+.med-btn-secondary {
+    background: #f0f5f0;
+    color: var(--secondary-color);
+    border: 1.5px solid var(--primary-color);
+}
+.med-btn-secondary:hover {
+    background: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.med-btn-primary {
+    background: var(--secondary-color);
+    color: #fff;
     border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    text-align: center;
-    margin: 10px 0;
-    text-decoration: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,.15);
+}
+.med-btn-primary:hover {
+    background: var(--bg-dark);
+    transform: translateY(-2px);
+    color: #fff;
 }
 
-.btn:hover {
-    background-color: #8fae8f;
+/* ── Spécialités ───────────────────────────────────────────────── */
+
+.med-specialites {
+    padding: .5rem 0 1rem;
 }
 
-.retour {
-    display: flex; 
-    justify-content: center;
-    align-items: center;
-    margin: 20px 0;
-}
-
-.retour a {
+.specialites-grid {
     display: flex;
-    align-items: center;
-    text-decoration: none;
-    color: #223224;
-    font-weight: bold;
-    font-size: 1.2rem;
-    padding: 10px 20px;
-    background-color: #acc2ab;
-    border-radius: 5px; 
-    transition: background-color 0.3s, color 0.3s;
+    flex-wrap: wrap;
+    gap: .6rem;
+    margin-top: .5rem;
 }
 
-.retour a:hover {
-    background-color: #8fae8f;
+.spec-tag {
+    background: #fff;
+    color: var(--secondary-color);
+    border: 1.5px solid var(--primary-color);
+    border-radius: 20px;
+    padding: .35rem 1rem;
+    font-size: .83rem;
+    font-weight: 500;
+    transition: background .18s;
 }
 
-.retour img {
-    margin-right: 10px;
-    width: 20px;
-    height: auto;
+.spec-tag:hover {
+    background: var(--primary-color);
 }
 
-.img-hopital {
-    display: block;
-    margin: 20px auto 20px auto;
-    max-width: 50%;
-    height: auto;
-    border-radius: 10px;
-    border: 2px solid #223224;
-}
+/* ── Responsive ────────────────────────────────────────────────── */
 
-
-@media (max-width: 600px) {
-    .container {
-        width: 90%;
-        margin: 20px auto;
+@media (max-width: 700px) {
+    .med-grid {
+        grid-template-columns: 1fr;
+        gap: 1.2rem;
     }
 
-    .couverture img {
-        height: auto;
-    }
+    .med-photo-wrap img { height: 240px; }
 
-    .social-links .link-wrapper {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-    }
-
-    .social-links div {
-        margin: 10px 0;
-    }
-
-    .retour a {
-        justify-content: center;
-        width: 100%;
-    }
-
-    .retour img {
-        margin-right: 8px;
-        width: 20px;
-    }
+    .medical-main { padding: 0 1rem 3rem; }
 }
