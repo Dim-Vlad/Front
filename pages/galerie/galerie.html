@@ -1,121 +1,120 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Galerie - VBO</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper @11/swiper-bundle.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/swiper @11/swiper-bundle.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css " />
     <link href="/css/styles.css?v=20260622" rel="stylesheet">
     <link rel="stylesheet" href="/css/galerie/galerie.css">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
-    <link href=" https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    </head>
-
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
 <body>
     <div id="menu"></div>
 
     <div id="content">
         <div class="header-content">
-            <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club" class="club-logo">
+            <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club">
             <div class="text-content">
                 <h1>Galerie</h1>
-                <p>Vous pouvez nous partager vos photos pour qu'elles soient ensuite publiées ici sur le site et sur nos réseaux.</p>
+                <p>Découvrez les photos de la saison et partagez les vôtres avec le club.</p>
             </div>
         </div>
     </div>
 
-<section class="gallery-section">
-    <h2>Saison 2025-2026</h2>
-        <div class="photo-grid">
-            <a href="/photos/saison-25-26/DepF LOL.jpg" target="_blank"><img src="/photos/saison-25-26/DepF LOL.jpg" alt=""></a>
-        <a href="/photos/saison-25-26/DepF LOL2.jpg" target="_blank"><img src="/photos/saison-25-26/DepF LOL2.jpg" alt=""></a>
-        <a href="/photos/saison-25-26/DepF Off.jpg" target="_blank"><img src="/photos/saison-25-26/DepF Off.jpg" alt=""></a>
-        <a href="/photos/saison-25-26/M11F-Off.jpg" target="_blank"><img src="/photos/saison-25-26/M11F-Off.jpg" alt=""></a>
-        <a href="/photos/saison-25-26/M11M-Off.jpg" target="_blank"><img src="/photos/saison-25-26/M11M-Off.jpg" alt=""></a>
-        <a href="/photos/saison-25-26/M13M-Off.jpg" target="_blank"><img src="/photos/saison-25-26/M13M-Off.jpg" alt=""></a>
-        <a href="/photos/saison-25-26/M15M-Off.jpg" target="_blank"><img src="/photos/saison-25-26/M15M-Off.jpg" alt=""></a>
-        <a href="/photos/saison-25-26/M15M-lol.jpg" target="_blank"><img src="/photos/saison-25-26/M15M-lol.jpg" alt=""></a>
-        <a href="/photos/saison-25-26/N3F Off LOL.jpg" target="_blank"><img src="/photos/saison-25-26/N3F Off LOL.jpg" alt=""></a>
-        <a href="/photos/saison-25-26/N3F Off.jpg" target="_blank"><img src="/photos/saison-25-26/N3F Off.jpg" alt=""></a>
-        <a href="/photos/saison-25-26/N3F Rose.jpg" target="_blank"><img src="/photos/saison-25-26/N3F Rose.jpg" alt=""></a>
-        <a href="/photos/saison-25-26/N3F-25-26.jpeg" target="_blank"><img src="/photos/saison-25-26/N3F-25-26.jpeg" alt=""></a>
-        <a href="/photos/saison-25-26/N3M Off.jpg" target="_blank"><img src="/photos/saison-25-26/N3M Off.jpg" alt=""></a>
-        <a href="/photos/saison-25-26/PNM-LOL.jpg" target="_blank"><img src="/photos/saison-25-26/PNM-LOL.jpg" alt=""></a>
-        <a href="https://www.flickr.com/gp/vbollioulais/mUEP7pqC8E" target="_blank" class="more">Voir plus -><img src="/photos/saison-25-26/PNM-Off.jpg" alt=""></a>
-        </div>
-</section>
+    <main class="gal-main">
 
-<hr class="separator">
+        <!-- ── Saison en cours ── -->
+        <section class="gal-section">
+            <div class="gal-section-header">
+                <h2 id="gal-saison-title">Saison en cours</h2>
+            </div>
+            <div id="gal-active-photos" class="photo-grid">
+                <p class="gal-empty">Chargement…</p>
+            </div>
+        </section>
 
-<section class="archives-section">
-    <h2>Archives</h2>
-        <select id="season-select">
-            <option value="" disabled selected>Faites votre sélection</option>
-            <option value="2025">2025-2026</option>
-            <option value="2024">2024-2025</option>
-            <option value="2023">2023-2024</option>
-            <option value="events">Évènements</option>
-        </select>
-    <div id="archive-gallery">
-    <!-- Chargement dynamique via JS ou redirection -->
-    </div>
-</section>
+        <hr class="gal-separator">
 
-<hr class="separator">
+        <!-- ── Archives ── -->
+        <section class="gal-section">
+            <div class="gal-section-header">
+                <h2>Archives</h2>
+            </div>
+            <div id="gal-archive-nav" class="archive-nav">
+                <!-- Saisons chargées depuis la DB par galerie.js -->
+                <a href="/pages/galerie/galerie-evenement.html" class="archive-card archive-card-evenement">
+                    <span class="archive-card-icon">🏆</span>
+                    <span class="archive-card-year">Évènements</span>
+                    <span class="archive-card-label">Tournois, galas, sorties…</span>
+                </a>
+            </div>
+        </section>
 
-<h2>Envoyez-nous vos photos</h2>
-<section class="form-section">
-    <form action="/php/galerie2.php" method="post" enctype="multipart/form-data">
-    <label>Prénom et NOM :
-        <input type="text" name="name" required>
-    </label>
-    <label>Email :
-        <input type="email" name="email" required>
-    </label>
-    <label>Catégorie :
-        <select name="category" required>
-        <option value="" disabled selected>Choisissez la catégorie</option>
-        <option value="Baby">Baby, M7, M9</option>
-        <option value="M11">M11</option>
-        <option value="M13">M13</option>
-        <option value="M15">M15</option>
-        <option value="M18">M18</option>
-        <option value="M21">M21</option>
-        <option value="Senior">Sénior</option>
-        </select>
-    </label>
-    <label>Photo :
-        <input type="file" name="photos[]" accept="image/*" multiple required>
-    </label>
-    <label>Légende (optionnel) :
-        <textarea name="caption"></textarea>
-    </label>
-    <button type="submit">Envoyer</button>
-    </form>
-</section>
+        <hr class="gal-separator">
 
-<div id="footer"></div>
+        <!-- ── Formulaire d'envoi ── -->
+        <section class="gal-section">
+            <div class="gal-section-header">
+                <h2>Partagez vos photos</h2>
+            </div>
+            <div class="gal-form-wrap">
 
-<script>
-    loadHTML('/commun/menu.html', 'menu');
-    loadHTML('/commun/footer.html', 'footer');
-</script>
+                <div class="gal-form-panel">
+                    <div class="gal-form-panel-icon">📸</div>
+                    <h3 class="gal-form-panel-title">Partagez vos photos</h3>
+                    <p class="gal-form-panel-desc">Vos photos seront examinées par un modérateur avant d'être publiées. Vous recevrez un email pour vous informer de la décision.</p>
+                    <ul class="gal-form-panel-rules">
+                        <li><span>📁</span> JPG, PNG, WEBP</li>
+                        <li><span>⚖️</span> 15 Mo max par photo</li>
+                        <li><span>🔢</span> 10 photos par envoi</li>
+                    </ul>
+                </div>
 
-<script src="https://unpkg.com/swiper/swiper-bundle.min.js "></script>
-<script src="/js/main.js"></script>
-<script src="/js/galerie.js"></script>
+                <form id="gal-submit-form" class="gal-form-fields" enctype="multipart/form-data">
+                    <div class="gal-form-row gal-form-row-2col">
+                        <div>
+                            <label for="gal-name">Prénom et NOM</label>
+                            <input type="text" id="gal-name" name="name" required placeholder="Jean DUPONT">
+                        </div>
+                        <div>
+                            <label for="gal-email">Email <span class="gal-form-hint">(pour recevoir la réponse)</span></label>
+                            <input type="email" id="gal-email" name="email" required placeholder="votre@email.fr">
+                        </div>
+                    </div>
+                    <div class="gal-form-row">
+                        <label for="gal-cat">Catégorie</label>
+                        <select id="gal-cat" name="category" required>
+                            <option value="" disabled selected>Choisissez la catégorie</option>
+                            <option value="Baby">Baby, M7, M9</option>
+                            <option value="M11">M11</option>
+                            <option value="M13">M13</option>
+                            <option value="M15">M15</option>
+                            <option value="M18">M18</option>
+                            <option value="M21">M21</option>
+                            <option value="Senior">Sénior</option>
+                        </select>
+                    </div>
+                    <div class="gal-form-row">
+                        <label for="gal-photos">Vos photos</label>
+                        <input type="file" id="gal-photos" name="photos[]" accept="image/jpeg,image/png,image/webp" multiple required>
+                    </div>
+                    <div class="gal-form-row">
+                        <label for="gal-caption">Légende <span class="gal-form-hint">(optionnel)</span></label>
+                        <textarea id="gal-caption" name="caption" placeholder="Décrivez la photo, le contexte, l'équipe…"></textarea>
+                    </div>
+                    <div id="gal-form-msg"></div>
+                    <button type="submit" class="gal-btn-submit">📤 Envoyer mes photos</button>
+                </form>
+            </div>
+        </section>
 
-<!-- Initialisation du carrousel -->
-<script>
-    const swiper = new Swiper('.swiper-container', {
-    loop: true,
-    autoplay: { delay: 3000 },
-    pagination: { el: '.swiper-pagination' },
-    navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' }
-    });
-</script>
+    </main>
 
+    <div id="footer"></div>
+    <script src="/js/main.js"></script>
+    <script src="/js/galerie.js"></script>
 </body>
 </html>

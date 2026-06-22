@@ -626,3 +626,106 @@ body {
     padding: 3px 8px;
   }
 }
+
+/* ── Lightbox ────────────────────────────────────────────────────── */
+
+#lb-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .92);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity .25s;
+}
+#lb-overlay.lb-visible { opacity: 1; }
+
+.lb-img-wrap {
+  max-width: calc(100vw - 120px);
+  max-height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+}
+.lb-img-wrap:active { cursor: grabbing; }
+
+#lb-img {
+  max-width: 100%;
+  max-height: calc(100vh - 80px);
+  object-fit: contain;
+  border-radius: 6px;
+  display: block;
+  transition: opacity .25s;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.lb-close {
+  position: fixed;
+  top: 1rem;
+  right: 1.2rem;
+  background: rgba(255, 255, 255, .15);
+  border: none;
+  color: #fff;
+  font-size: 1.4rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .2s;
+  z-index: 2001;
+  line-height: 1;
+}
+.lb-close:hover { background: rgba(255, 255, 255, .3); }
+
+.lb-nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, .15);
+  border: none;
+  color: #fff;
+  font-size: 2.4rem;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .2s;
+  z-index: 2001;
+  line-height: 1;
+  padding-bottom: 3px;
+}
+.lb-nav:hover { background: rgba(255, 255, 255, .3); }
+.lb-prev { left: 1rem; }
+.lb-next { right: 1rem; }
+
+.lb-counter {
+  position: fixed;
+  bottom: 1.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, .7);
+  font-size: .85rem;
+  font-family: var(--font-poppins, sans-serif);
+  background: rgba(0, 0, 0, .4);
+  padding: .3rem .9rem;
+  border-radius: 20px;
+  pointer-events: none;
+}
+
+@media (max-width: 600px) {
+  .lb-img-wrap { max-width: 100vw; max-height: calc(100vh - 100px); }
+  #lb-img { max-height: calc(100vh - 100px); border-radius: 0; }
+  .lb-nav { width: 40px; height: 40px; font-size: 1.8rem; }
+  .lb-prev { left: .4rem; }
+  .lb-next { right: .4rem; }
+}

@@ -460,6 +460,110 @@ async function saveLogo() {
     }
 }
 
+/* ── Lightbox galerie ────────────────────────────────────────────── */
+
+(function () {
+    var _lbPhotos  = [];
+    var _lbIdx     = 0;
+    var _lbTouchX  = null;
+
+    document.addEventListener('click', function (e) {
+        var link = e.target.closest('.photo-grid a, .archive-gallery a');
+        if (!link) return;
+        if (link.classList.contains('gal-more-tile') || link.classList.contains('more')) return;
+        // Skip delete button clicks inside the link
+        if (e.target.classList.contains('gal-photo-delete')) return;
+
+        e.preventDefault();
+
+        var grid     = link.closest('.photo-grid, .archive-gallery');
+        var allLinks = Array.from(grid.querySelectorAll('a:not(.gal-more-tile):not(.more)'));
+
+        _lbPhotos = allLinks.map(function (a) {
+            var img = a.querySelector('img');
+            return { src: a.getAttribute('href'), alt: img ? (img.alt || '') : '' };
+        });
+        _lbIdx = allLinks.indexOf(link);
+
+        _lbOpen();
+    });
+
+    function _lbOpen() {
+        if (document.getElementById('lb-overlay')) _lbClose(true);
+
+        var overlay       = document.createElement('div');
+        overlay.id        = 'lb-overlay';
+        overlay.innerHTML =
+            '<button class="lb-close" id="lb-close" aria-label="Fermer">✕</button>'
+            + '<button class="lb-nav lb-prev" id="lb-prev" aria-label="Photo précédente">‹</button>'
+            + '<div class="lb-img-wrap" id="lb-img-wrap"><img id="lb-img" src="" alt=""></div>'
+            + '<button class="lb-nav lb-next" id="lb-next" aria-label="Photo suivante">›</button>'
+            + '<div class="lb-counter" id="lb-counter"></div>';
+
+        document.body.appendChild(overlay);
+        document.body.style.overflow = 'hidden';
+
+        document.getElementById('lb-close').addEventListener('click', function () { _lbClose(false); });
+        document.getElementById('lb-prev').addEventListener('click', _lbPrev);
+        document.getElementById('lb-next').addEventListener('click', _lbNext);
+        overlay.addEventListener('click', function (e) { if (e.target === overlay) _lbClose(false); });
+        document.addEventListener('keydown', _lbKey);
+
+        var wrap = document.getElementById('lb-img-wrap');
+        wrap.addEventListener('touchstart', function (e) { _lbTouchX = e.touches[0].clientX; }, { passive: true });
+        wrap.addEventListener('touchend',   function (e) {
+            if (_lbTouchX === null) return;
+            var dx = e.changedTouches[0].clientX - _lbTouchX;
+            _lbTouchX = null;
+            if (Math.abs(dx) > 45) { if (dx < 0) _lbNext(); else _lbPrev(); }
+        }, { passive: true });
+
+        requestAnimationFrame(function () { overlay.classList.add('lb-visible'); });
+        _lbShow();
+    }
+
+    function _lbClose(instant) {
+        var overlay = document.getElementById('lb-overlay');
+        if (!overlay) return;
+        document.removeEventListener('keydown', _lbKey);
+        document.body.style.overflow = '';
+        if (instant) { overlay.remove(); return; }
+        overlay.classList.remove('lb-visible');
+        setTimeout(function () { if (overlay.parentNode) overlay.remove(); }, 250);
+    }
+
+    function _lbShow() {
+        var p    = _lbPhotos[_lbIdx];
+        var img  = document.getElementById('lb-img');
+        var ctr  = document.getElementById('lb-counter');
+        if (!img || !p) return;
+
+        img.style.opacity = '0';
+        img.onload = function () {
+            img.style.transition = 'opacity .25s';
+            img.style.opacity    = '1';
+        };
+        img.src = p.src;
+        img.alt = p.alt;
+
+        if (ctr) ctr.textContent = (_lbIdx + 1) + ' / ' + _lbPhotos.length;
+
+        var prev = document.getElementById('lb-prev');
+        var next = document.getElementById('lb-next');
+        if (prev) prev.style.visibility = _lbIdx > 0                       ? 'visible' : 'hidden';
+        if (next) next.style.visibility = _lbIdx < _lbPhotos.length - 1    ? 'visible' : 'hidden';
+    }
+
+    function _lbNext() { if (_lbIdx < _lbPhotos.length - 1) { _lbIdx++; _lbShow(); } }
+    function _lbPrev() { if (_lbIdx > 0)                    { _lbIdx--; _lbShow(); } }
+
+    function _lbKey(e) {
+        if      (e.key === 'ArrowRight') _lbNext();
+        else if (e.key === 'ArrowLeft')  _lbPrev();
+        else if (e.key === 'Escape')     _lbClose(false);
+    }
+})();
+
 /* ── Initialisation ──────────────────────────────────────────────── */
 
 fetchLogoActif();
