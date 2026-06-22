@@ -32,6 +32,8 @@
     flex-wrap: wrap;
     gap: 1.2rem;
     margin: 1.2rem 0;
+    width: 100%;
+    max-width: 100%;
 }
 
 /* ── En-têtes de section ───────────────────────────────────────── */

@@ -20,6 +20,16 @@
   --950: #121c13;
 }
 
+/* === Reset boîte et débordement horizontal === */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
 /* === Styles généraux === */
 body {
   font-family: var(--font-poppins);
@@ -58,78 +68,85 @@ body {
 
 /* === Navbar === */
 .navbar {
-  background-color: var(--primary-color);
-  padding: 10px;
+  background-color: var(--bg-dark);
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   z-index: 1010;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 16px rgba(0,0,0,.4);
 }
 
 .navbar-container-menu {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  max-width: 1500px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 0 5px;
+  padding: 0 24px;
+  height: 64px;
 }
 
 .navbar-brand {
   display: flex;
   align-items: center;
-  color: var(--secondary-color);
+  color: #fff;
   text-decoration: none;
-  font-size: 1.5rem;
-  font-weight: bold;
+  font-size: 1rem;
+  font-weight: 700;
   font-family: var(--font-poppins);
-  margin-left: 0;
+  letter-spacing: .04em;
+  gap: 10px;
+  white-space: nowrap;
 }
 
 .navbar-logo {
-  height: 50px;
-  margin-right: 10px;
+  height: 42px;
 }
 
-/* === Menu burger (mobile) === */
+/* === Menu burger (masqué desktop) === */
 .navbar-toggler {
   background: none;
   border: none;
-  color: white;
+  color: #fff;
   font-size: 1.5rem;
   cursor: pointer;
   display: none;
-  margin-left: auto;
-  margin-right: 20px;
-  width: 30px;
-  height: 25px;
+  padding: 4px 8px;
+  line-height: 1;
+  border-radius: 6px;
+  transition: background .2s;
 }
+.navbar-toggler:hover { background: rgba(255,255,255,.12); }
 
-/* === Liens du menu === */
+/* === Liens desktop === */
 .navbar-links {
   display: flex;
-  gap: 10px;
-  justify-content: flex-end;
+  gap: 2px;
+  justify-content: center;
+  align-items: center;
 }
 
 .navbar-links a,
 .dropdown button {
-  color: var(--secondary-color);
+  color: rgba(255,255,255,.85);
   text-decoration: none;
-  padding: 12px 10px;
+  padding: 8px 13px;
   font-family: var(--font-poppins);
-  transition: background-color 0.3s ease, color 0.3s ease;
-  background-color: var(--primary-color);
-  cursor: url('/images/icones/volley-cursor32.png'), auto;
+  font-size: 0.92rem;
+  font-weight: 500;
   border: none;
-  font-size: 1.2rem;
+  background: none;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background .2s, color .2s;
+  white-space: nowrap;
 }
 
 .navbar-links a:hover,
 .dropdown button:hover {
-  color: var(--secondary-color);
+  background: rgba(255,255,255,.1);
+  color: #fff;
 }
 
 .dropdown {
@@ -138,33 +155,54 @@ body {
 }
 
 .dropdown button::after {
-  content: "▼";
-  margin-left: 10px;
-  font-size: 15px;
+  content: "▾";
+  margin-left: 5px;
+  font-size: 10px;
+  opacity: .6;
 }
 
+/* Dropdown — carte blanche */
 .dropdown-content {
   display: none;
   position: absolute;
-  background-color: var(--primary-color);
-  min-width: 160px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-  z-index: 1;
-  border-radius: 10px;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  min-width: 185px;
+  box-shadow: 0 10px 28px rgba(0,0,0,.15);
+  z-index: 1050;
+  border-radius: 12px;
+  padding: 5px 0;
+  border: 1px solid rgba(0,0,0,.07);
+}
+
+/* Pont transparent pour que le survol reste actif entre le bouton et la carte */
+.dropdown-content::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
 }
 
 .dropdown-content a {
-  color: var(--secondary-color);
-  padding: 12px 16px;
+  color: var(--bg-dark);
+  padding: 10px 18px;
   text-decoration: none;
   display: block;
-  border-radius: 4px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: background .15s, color .15s;
+  border-radius: 0;
 }
+.dropdown-content a:first-child { border-radius: 12px 12px 0 0; }
+.dropdown-content a:last-child  { border-radius: 0 0 12px 12px; }
 
 .dropdown-content a:hover {
-  background-color: white;
+  background: var(--primary-color);
   color: var(--secondary-color);
-  border-radius: 10px;
 }
 
 .dropdown:hover .dropdown-content {
@@ -176,54 +214,60 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding-left: 12px;
-}
-
-.nav-btn-login {
-  background-color: var(--secondary-color);
-  color: white;
-  border-radius: 20px;
-  padding: 6px 18px;
-  font-weight: 600;
-  font-size: 1rem;
-  text-decoration: none;
-  font-family: var(--font-poppins);
-}
-
-.nav-btn-login:hover {
-  background-color: var(--bg-dark);
-  color: white;
+  padding-left: 16px;
 }
 
 .nav-btn-user {
-  color: var(--secondary-color);
-  font-weight: 600;
-  font-size: 1rem;
+  color: rgba(255,255,255,.8);
+  font-weight: 500;
+  font-size: 0.88rem;
   padding: 6px 10px;
   text-decoration: none;
   font-family: var(--font-poppins);
-  max-width: 120px;
+  max-width: 130px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   display: inline-block;
+  border-radius: 8px;
+  transition: background .2s, color .2s;
+}
+.nav-btn-user:hover { background: rgba(255,255,255,.1); color: #fff; }
+
+.nav-btn-login {
+  background: var(--primary-color);
+  color: var(--secondary-color);
+  border-radius: 20px;
+  padding: 6px 18px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  text-decoration: none;
+  font-family: var(--font-poppins);
+  transition: background .2s, transform .15s;
+  white-space: nowrap;
+}
+.nav-btn-login:hover {
+  background: #c5d6c4;
+  color: var(--secondary-color);
+  transform: translateY(-1px);
 }
 
 .nav-btn-logout {
-  background-color: transparent;
-  color: var(--secondary-color);
-  border: 2px solid var(--secondary-color);
+  background: transparent;
+  color: rgba(255,255,255,.7);
+  border: 1.5px solid rgba(255,255,255,.3);
   border-radius: 20px;
-  padding: 4px 14px;
-  font-size: 1rem;
+  padding: 5px 14px;
+  font-size: 0.88rem;
   text-decoration: none;
   font-family: var(--font-poppins);
+  transition: all .2s;
+  white-space: nowrap;
 }
-
 .nav-btn-logout:hover {
-  background-color: #c0392b;
-  border-color: #c0392b;
-  color: white;
+  background: rgba(200,50,50,.2);
+  border-color: #e57373;
+  color: #ffaaaa;
 }
 
 /* === Toggle mot de passe === */
@@ -322,26 +366,18 @@ body {
 }
 
 
-/* === Styles pour tablettes et petits écrans (<= 1300px) === */
+/* === Tablettes & mobiles (≤ 1300px) : panel latéral === */
 @media (max-width: 1300px) {
-  .navbar-links,
-  .navbar-brand
-  .text-content,
-  .dropdown button {
-    font-size: 1rem;
-  }
 
-  .logo-club {
-    width: 75%;
-    height: auto;
-    max-width: 200px;
-  }
+  .logo-club { width: 75%; height: auto; max-width: 200px; }
 
-  /* Repasse en flex pour le header mobile */
+  /* Conteneur en flex sur une ligne */
   .navbar-container-menu {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    height: 60px;
+    padding: 0 16px;
   }
 
   .navbar-brand { order: 1; }
@@ -349,26 +385,23 @@ body {
   #nav-auth {
     order: 2;
     margin-left: auto;
-    margin-right: 16px;
+    margin-right: 12px;
     padding-left: 0;
   }
 
   .navbar-toggler {
     order: 3;
     display: block;
-    margin-left: 0;
-    margin-bottom: 20px;
-    transform: scale(1.5);
+    margin: 0;
+    margin-bottom: 0;
+    transform: scale(1.3);
   }
 
   .navbar-links { order: 4; }
 
-  /* Auth buttons réduits sur tablette/mobile */
+  /* Auth réduits */
   .nav-btn-login,
-  .nav-btn-logout {
-    font-size: 0.78rem;
-    padding: 4px 10px;
-  }
+  .nav-btn-logout { font-size: 0.78rem; padding: 4px 10px; }
 
   .nav-btn-user {
     font-size: 0.78rem;
@@ -379,131 +412,177 @@ body {
     white-space: nowrap;
   }
 
-  .navbar-links.show {
-    transform: translateX(0);
-  }
-
+  /* ── Panel latéral slide-in ── */
   .navbar-links {
-    background-color: var(--primary-color);
-    opacity: 0.95;
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
     position: fixed;
     top: 60px;
     left: 0;
-    width: 100%;
-    max-width: 300px;
+    width: 270px;
+    height: calc(100vh - 60px);
+    background: var(--bg-dark);
+    border-right: 1px solid rgba(255,255,255,.08);
+    box-shadow: 6px 0 24px rgba(0,0,0,.45);
     z-index: 1001;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
     transform: translateX(-100%);
-    transition: transform 0.3s ease-in-out;
-    border-radius: 20px;
-    border: 1px solid var(--secondary-color);
-    padding-top: 30px;
-    height: auto;
-    min-height: fit-content;
-    max-height: 90vh;
+    transition: transform .3s ease;
     overflow-y: auto;
-  }
-}
-
-/* === Styles pour mobiles (<= 790px) === */
-@media (max-width: 790px) {
-  .navbar-toggler {
-    display: block;
-    margin-bottom: 20px;
-    transform: scale(1.5);
+    padding: 10px 0;
+    gap: 0;
   }
 
-  .navbar-links.show {
-    transform: translateX(0);
-  }
+  .navbar-links.show { transform: translateX(0); }
 
+  /* Liens dans le panel */
   .navbar-links a {
-    font-size: 1.2rem;
+    color: rgba(255,255,255,.85);
+    font-size: 1rem;
+    font-weight: 500;
+    padding: 14px 24px;
+    width: 100%;
     display: block;
-    padding: 12px 10px;
-    width: 90%;
-    text-align: center;
+    text-align: left;
+    border-radius: 0;
+    background: none;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    transition: background .15s, color .15s;
+    white-space: normal;
   }
 
-/* === Style spécial pour les dropdowns en mode mobile === */
+  .navbar-links a:hover {
+    background: rgba(255,255,255,.08);
+    color: #fff;
+  }
+
+  /* Dropdowns dans le panel */
   .dropdown {
-    position: relative;
     width: 100%;
-    text-align: center;
+    text-align: left;
   }
 
   .dropdown button {
-    font-size: 1.2rem;
+    color: rgba(255,255,255,.85);
+    font-size: 1rem;
+    font-weight: 500;
+    padding: 14px 24px;
     width: 100%;
-    padding: 15px 0;
-    margin: 0;
+    text-align: left;
     border-radius: 0;
+    background: none;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background .15s;
   }
 
-  .dropdown:hover button {
-    background-color: white;
+  .dropdown button::after {
+    content: "▾";
+    font-size: 11px;
+    opacity: .55;
+    margin-left: 0;
+    float: none;
+  }
+
+  .dropdown:hover button,
+  .dropdown.active button {
+    background: rgba(255,255,255,.06);
+    color: #fff;
   }
 
   .dropdown-content {
     display: none;
     position: static;
-    background-color: var(--primary-color);
-    width: 100%;
+    transform: none;
+    background: rgba(0,0,0,.22);
     box-shadow: none;
+    border: none;
+    border-radius: 0;
     padding: 0;
-    margin-top: 0;
+    min-width: auto;
+    width: 100%;
   }
 
   .dropdown-content a {
-    text-align: center;
-    padding: 12px 0;
-    font-size: 1rem;
+    color: rgba(255,255,255,.6);
+    padding: 12px 24px 12px 40px;
+    font-size: 0.9rem;
     border-radius: 0;
-    background-color: whitesmoke;
-    width: 100%;    
+    border-bottom: 1px solid rgba(255,255,255,.04);
+    background: none;
+  }
+  .dropdown-content a:first-child,
+  .dropdown-content a:last-child { border-radius: 0; }
+
+  .dropdown-content a:hover {
+    background: rgba(255,255,255,.07);
+    color: rgba(255,255,255,.9);
   }
 
   .dropdown:hover .dropdown-content,
   .dropdown.active .dropdown-content {
     display: block;
   }
+}
 
-  .dropdown-content a:hover {
-    background-color: white;
-    color: var(--secondary-color);
-    border-radius: 10px;
-    transition: color 0.3s;
-  }
+/* === Mobiles (≤ 790px) === */
+@media (max-width: 790px) {
+  .navbar-toggler { display: block; transform: scale(1.3); }
 
-  .footer-content {
-    flex-direction: column;
+  .footer-content { flex-direction: column; align-items: center; }
+  .adresse, .liens, .réseaux { padding: 10px 0; text-align: center; }
+  .text-content { margin: 0 10px; font-size: clamp(12px, 1vw + 10px, 14px); }
+  .logo-club { width: 70%; max-width: 200px; }
+}
+
+/* === Téléphones (≤ 600px) : navbar sur deux lignes === */
+@media (max-width: 600px) {
+  /* Conteneur : deux lignes */
+  .navbar-container-menu {
+    height: auto;
+    padding: 8px 14px 6px;
+    flex-wrap: wrap;
+    row-gap: 4px;
     align-items: center;
   }
 
-  .adresse,
-  .liens,
-  .réseaux {
-    padding: 10px 0;
-    text-align: center;
+  /* Ligne 1 : logo + nom du club (toute la largeur) */
+  .navbar-brand { flex: 0 0 100%; order: 1; }
+
+  /* Ligne 2 gauche : auth */
+  #nav-auth {
+    order: 2;
+    flex: 1;
+    margin-left: 0;
+    padding-left: 0;
+    margin-right: 0;
   }
 
-  .text-content {
-    margin: 0 10px;
-    font-size: clamp(12px, 1vw + 10px, 14px);
+  /* Ligne 2 droite : burger */
+  .navbar-toggler {
+    order: 3;
+    flex: 0 0 auto;
+    margin-right: 22px;
+    margin-bottom: 4px;
+    transform: scale(1.3);
   }
 
-  .logo-club {
-    width: 70%;
-    max-width: 200px;
+  /* Le panel part plus bas (navbar = ~100px en deux lignes) */
+  .navbar-links {
+    top: 100px;
+    height: calc(100vh - 100px);
   }
 }
 
 /* === Très petits écrans (<= 480px) === */
 @media (max-width: 480px) {
   .nav-btn-user {
-    display: none;
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    max-width: 110px;
   }
 
   .nav-btn-login,
