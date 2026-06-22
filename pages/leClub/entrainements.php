@@ -194,8 +194,8 @@ function renderCell(string $text): string {
                             <label for="birth-year">Année de naissance</label>
                             <select id="birth-year" name="birth-year" required>
                                 <option value="" disabled selected>Choisir…</option>
-                                <?php for ($y = $endYear - 2; $y >= $endYear - 22; $y--): ?>
-                                <option value="<?= $y ?>"><?= $y ?><?= $y === $endYear - 22 ? ' ou avant' : '' ?></option>
+                                <?php for ($y = $endYear - 4; $y >= $endYear - 40; $y--): ?>
+                                <option value="<?= $y ?>"><?= $y ?><?= $y === $endYear - 40 ? ' ou avant' : '' ?></option>
                                 <?php endfor; ?>
                             </select>
                         </div>
@@ -318,7 +318,7 @@ function renderCell(string $text): string {
     <div id="footer"></div>
 
     <script>
-        const END_YEAR    = <?= $endYear ?>;
+        let END_YEAR = <?= $endYear ?>;
         const CAN_EDIT    = <?= $canEdit ? 'true' : 'false' ?>;
         let   TABLE_VISIBLE = <?= $visible ? 'true' : 'false' ?>;
     </script>

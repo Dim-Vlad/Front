@@ -77,6 +77,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (json.success) {
                 document.querySelector('.table-section-header h2').textContent = 'Saison ' + json.valeur;
                 document.querySelector('.cat-saison').textContent = 'Saison ' + json.valeur;
+                const newEnd = parseInt((json.valeur || '').split('-')[1]);
+                if (newEnd && newEnd !== END_YEAR) {
+                    END_YEAR = newEnd;
+                    rebuildBirthYearSelect(END_YEAR);
+                }
                 status.textContent = 'Enregistré ✓'; status.className = 'modal-status success';
                 setTimeout(closeSaisonModal, 800);
             } else {
@@ -88,63 +93,101 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── Calculateur de catégorie ──────────────────────
 
-const categories = [
-    { max: 0, min: -1,   label: 'Baby',   desc: 'Les tout-petits commencent le volley !' },
-    { age: 7,            label: 'M7',     desc: '' },
-    { age: 9,            label: 'M9',     desc: '' },
-    { age: 11,           label: 'M11',    desc: '' },
-    { age: 13,           label: 'M13',    gendered: true, desc: '' },
-    { age: 15,           label: 'M15',    gendered: true, desc: '' },
-    { age: 18,           label: 'M18',    gendered: true, desc: '' },
-    { age: 21,           label: 'M21',    gendered: true, desc: '' },
+// Source : récapitulatif FFvolley des catégories d'âge (saison dynamique)
+const CAT_MAP = [
+    { age: 6,  label: 'M7(1)',         base: 'M7',  gendered: false },
+    { age: 7,  label: 'M7(2)',        base: 'M7',  gendered: false },
+    { age: 8,  label: 'M9(1)',        base: 'M9',  gendered: false },
+    { age: 9,  label: 'M9(2)',        base: 'M9',  gendered: false },
+    { age: 10, label: 'M11(1)',       base: 'M11', gendered: false },
+    { age: 11, label: 'M11(2)',       base: 'M11', gendered: false },
+    { age: 12, label: 'M13(1)',       base: 'M13', gendered: true  },
+    { age: 13, label: 'M13(2)',       base: 'M13', gendered: true  },
+    { age: 14, label: 'M15(1)',       base: 'M15', gendered: true  },
+    { age: 15, label: 'M15(2)',       base: 'M15', gendered: true  },
+    { age: 16, label: 'M18(1)',       base: 'M18', gendered: true  },
+    { age: 17, label: 'M18(2)',       base: 'M18', gendered: true  },
+    { age: 18, label: 'M18(3)',       base: 'M18', gendered: true  },
+    { age: 19, label: 'M21(1)',       base: 'M21', gendered: true  },
+    { age: 20, label: 'M21(2)',       base: 'M21', gendered: true  },
+    { age: 21, label: 'M21(3)',       base: 'M21', gendered: true  },
 ];
 
 function showCategory(birthYear, gender) {
     const result  = document.getElementById('cat-result');
     const contact = document.getElementById('cat-contact');
-    const endYear = typeof END_YEAR !== 'undefined' ? END_YEAR : new Date().getFullYear();
+    const endYear = END_YEAR;
     const age     = endYear - birthYear;
-    let label = '';
+    const genderLabel = gender === 'female' ? 'Féminin' : 'Masculin';
 
-    if (age <= 4)       label = 'Baby';
-    else if (age <= 6)  label = 'M7';   // correction: M7 = jusqu'à 6 ans inclus
-    else if (age <= 8)  label = 'M9';
-    else if (age <= 10) label = 'M11';
-    else if (age <= 12) label = 'M13';
-    else if (age <= 14) label = 'M15';
-    else if (age <= 17) label = 'M18';
-    else if (age <= 20) label = 'M21';
-    else                label = 'Sénior';
+    let catLabel = '', baseLabel = '', gendered = false;
 
-    // Ajouter le genre pour les catégories concernées
-    const gendered = ['M13','M15','M18','M21','Sénior'];
-    if (gendered.includes(label)) {
-        label += ' ' + (gender === 'female' ? 'Féminin' : 'Masculin');
+    const exact = CAT_MAP.find(c => c.age === age);
+    if (age >= 4 && age <= 5) {
+        catLabel  = 'BABY';
+        baseLabel = 'BABY';
+        gendered  = false;
+    } else if (exact) {
+        catLabel  = exact.label;
+        baseLabel = exact.base;
+        gendered  = exact.gendered;
+    } else if (age >= 22 && age < 40) {
+        catLabel  = 'Sénior';
+        baseLabel = 'Sénior';
+        gendered  = true;
+    } else if (age >= 40) {
+        catLabel  = 'Masters';
+        baseLabel = 'Masters';
+        gendered  = false;
+    } else {
+        result.innerHTML = '<p class="cat-info">Trop jeune pour les catégories officielles.</p>';
+        result.style.display  = 'block';
+        contact.style.display = 'none';
+        return;
     }
 
+    const displayLabel = gendered ? `${catLabel} ${genderLabel}` : catLabel;
     result.innerHTML = `
-        <div class="cat-badge">${escHtml(label)}</div>
-        <p class="cat-info">Consultez le planning ou contactez le club pour les horaires de la saison.</p>
+        <div class="cat-badge">${escHtml(displayLabel)}</div>
+        <p class="cat-info">Consultez le planning ou contactez le club pour avoir plus d'informations.</p>
     `;
     result.style.display  = 'block';
     contact.style.display = 'block';
 
-    // Tenter de mettre en évidence les lignes correspondantes
-    highlightRows(label);
+    highlightRows(baseLabel, gendered ? genderLabel : null);
 }
 
-function highlightRows(categoryLabel) {
-    // Reset highlights
+function highlightRows(base, genderLabel) {
     document.querySelectorAll('.entr-table tbody tr').forEach(tr => tr.classList.remove('row-highlighted'));
 
-    const key = categoryLabel.toLowerCase();
-    document.querySelectorAll('.entr-table tbody td').forEach(td => {
+    const searchBase   = base.toLowerCase();
+    const searchGender = genderLabel ? genderLabel.toLowerCase() : null;
+
+    document.querySelectorAll('.entr-table tbody td:not(.day-cell):not(.horaire-cell):not(.actions-cell)').forEach(td => {
         const text = td.textContent.toLowerCase();
-        if (text.includes(key.split(' ')[0]) && (key.split(' ').length < 2 || text.includes(key.split(' ')[1] || ''))) {
+        let matches = text.includes(searchBase);
+        if (matches && searchGender) matches = text.includes(searchGender);
+        if (matches) {
             const tr = td.closest('tr');
             if (tr) tr.classList.add('row-highlighted');
         }
     });
+}
+
+function rebuildBirthYearSelect(endYear) {
+    const sel = document.getElementById('birth-year');
+    if (!sel) return;
+    while (sel.options.length > 1) sel.remove(1);
+    for (let y = endYear - 4; y >= endYear - 40; y--) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y + (y === endYear - 40 ? ' ou avant' : '');
+        sel.appendChild(opt);
+    }
+    const result = document.getElementById('cat-result');
+    const contact = document.getElementById('cat-contact');
+    if (result)  { result.style.display = 'none'; result.innerHTML = ''; }
+    if (contact) contact.style.display = 'none';
 }
 
 // ── Modales ───────────────────────────────────────
