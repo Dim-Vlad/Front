@@ -36,7 +36,7 @@ try {
             <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club">
             <div class="text-content">
                 <h1>Nos équipes</h1>
-                <p>Cliquez sur une équipe pour voir l'entraîneur, le classement et nous contacter.</p>
+                <p>Cliquez sur une équipe pour voir l'entraîneur, le classement ou nous contacter.</p>
             </div>
         </div>
     </div>

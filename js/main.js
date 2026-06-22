@@ -48,6 +48,12 @@ function renderAuthButton(data) {
         logoutLink.href = '/php/logout.php';
         logoutLink.textContent = 'Déconnexion';
         logoutLink.className = 'nav-btn-logout';
+        logoutLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (confirm('Voulez-vous vraiment vous déconnecter ?')) {
+                window.location.href = '/php/logout.php';
+            }
+        });
 
         container.appendChild(userLink);
         container.appendChild(logoutLink);

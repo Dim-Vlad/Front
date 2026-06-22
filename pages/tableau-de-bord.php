@@ -92,7 +92,8 @@ $user = current_user();
 
         </div>
 
-        <a href="/php/logout.php" class="btn-logout">Se déconnecter</a>
+        <a href="/php/logout.php" class="btn-logout"
+           onclick="return confirm('Voulez-vous vraiment vous déconnecter ?')">Se déconnecter</a>
     </div>
 
     <div id="footer"></div>
