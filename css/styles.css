@@ -44,26 +44,48 @@ body {
   background-repeat: no-repeat;
 }
 
-/* === Header / Logo VBO === */
+/* === Header pages intérieures — style identique au hero de l'accueil === */
 .header-content {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 100px 100px 50px;
+  gap: 36px;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 24px;
+  padding: 44px 64px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
+  max-width: 680px;
+  text-align: left;
+  margin: 100px auto 56px;
 }
 
 .logo-club {
-  width: 50%;
+  width: 110px;
   height: auto;
-  max-width: 300px;
-  margin: 0 auto;
+  flex-shrink: 0;
   display: block;
 }
 
 .text-content {
   flex: 1;
   color: var(--bg-dark);
-  font-size: clamp(1.2rem, 2vw + 1rem, 1.5rem); /* Responsive font size */
+  text-align: left;
+}
+
+.text-content h1 {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  color: var(--bg-dark);
+  font-weight: 700;
+  margin: 0 0 8px;
+  line-height: 1.2;
+}
+
+.text-content p {
+  font-size: 1rem;
+  color: var(--500);
+  margin: 0;
+  line-height: 1.6;
 }
 
 /* === Navbar === */
@@ -369,7 +391,7 @@ body {
 /* === Tablettes & mobiles (≤ 1300px) : panel latéral === */
 @media (max-width: 1300px) {
 
-  .logo-club { width: 75%; height: auto; max-width: 200px; }
+  .logo-club { width: 90px; }
 
   /* Conteneur en flex sur une ligne */
   .navbar-container-menu {
@@ -534,8 +556,21 @@ body {
 
   .footer-content { flex-direction: column; align-items: center; }
   .adresse, .liens, .réseaux { padding: 10px 0; text-align: center; }
-  .text-content { margin: 0 10px; font-size: clamp(12px, 1vw + 10px, 14px); }
-  .logo-club { width: 70%; max-width: 200px; }
+  .logo-club { width: 80px; }
+}
+
+/* === Téléphones : header-content en colonne === */
+@media (max-width: 600px) {
+  .header-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 36px 28px;
+    gap: 20px;
+    margin: 84px 16px 40px;
+  }
+  .text-content { text-align: center; }
+  .text-content h1 { font-size: 1.6rem; }
 }
 
 /* === Téléphones (≤ 600px) : navbar sur deux lignes === */

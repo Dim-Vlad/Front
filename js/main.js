@@ -152,27 +152,14 @@ function initLogoManager() {
     const style = document.createElement('style');
     style.id = 'logo-manager-style';
     style.textContent = `
-        /* Wrapper autour du logo — respecte la taille d'origine de chaque classe */
-        .logo-edit-wrapper { position: relative; }
-
-        /* .logo-club : 50% / max 300px / centré */
-        .logo-edit-wrapper:has(> img.logo-club) {
-            display: block;
-            width: 50%;
-            max-width: 300px;
-            margin: 0 auto;
-        }
-        .logo-edit-wrapper > img.logo-club {
-            width: 100%; height: auto; max-width: 100%; margin: 0; display: block;
-        }
-
-        /* .hero-logo : 110px fixe, ne rétrécit pas */
-        .logo-edit-wrapper:has(> img.hero-logo) {
+        /* Wrapper autour du logo (logo-club et hero-logo ont tous deux 110px) */
+        .logo-edit-wrapper {
+            position: relative;
             display: inline-block;
             width: 110px;
             flex-shrink: 0;
         }
-        .logo-edit-wrapper > img.hero-logo {
+        .logo-edit-wrapper > img {
             width: 100%; height: auto; display: block;
         }
 
