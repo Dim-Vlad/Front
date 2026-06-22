@@ -297,10 +297,28 @@ function submitUpload() {
 
 /* ── Modal : modération ──────────────────────────────────────────── */
 
+var _galPendingPhotos = [];
+var _galModDecisions  = {}; // keyed by email: { nom, email, saison_label, approved, rejected, reasons[] }
+
+var _galRejectReasons = [
+    'Mauvaise qualité',
+    'Contenu non approprié',
+    'Photo en double',
+    'Hors sujet',
+    'Autre'
+];
+
 function openModalModeration() {
+    _galModDecisions = {};
+    _galPendingPhotos = [];
+
     _galOpenModal(
         '<h3>Photos en attente de modération</h3>'
         + '<div id="gal-mod-content"><p class="gal-empty">Chargement…</p></div>'
+        + '<div id="gal-mod-footer" class="gal-mod-footer" style="display:none">'
+        + '<button class="gal-admin-btn gal-btn-full" id="gal-btn-notify" onclick="galSendNotifications()">📧 Notifier les soumetteurs</button>'
+        + '<p class="gal-mod-footer-note" id="gal-mod-footer-note"></p>'
+        + '</div>'
     );
 
     fetch('/php/galerie/get_pending.php')
@@ -312,6 +330,7 @@ function openModalModeration() {
                 el.innerHTML = '<p class="gal-empty">Aucune photo en attente. ✓</p>';
                 return;
             }
+            _galPendingPhotos = data.photos;
             var html = '<div class="gal-mod-grid">';
             data.photos.forEach(function (p) {
                 var src = '/' + p.filepath;
@@ -334,38 +353,39 @@ function openModalModeration() {
         });
 }
 
-var _galRejectReasons = [
-    'Mauvaise qualité (photo floue, sombre ou trop petite)',
-    'Contenu non approprié',
-    'Photo en double',
-    'Hors sujet (ne concerne pas le club)',
-    'Autre'
-];
-
 function galShowRejectReason(photoId) {
-    var actEl = document.getElementById('gal-act-' + photoId);
-    if (!actEl) return;
+    // Remove any existing reject row for this card
+    var existing = document.getElementById('gal-rr-' + photoId);
+    if (existing) existing.remove();
 
     var opts = _galRejectReasons.map(function (r) {
         return '<option value="' + _he(r) + '">' + _he(r) + '</option>';
     }).join('');
 
-    actEl.innerHTML =
-        '<select id="gal-reason-' + photoId + '" class="gal-mod-reason-select">' + opts + '</select>'
-        + '<button class="gal-mod-btn gal-mod-ko"  onclick="galConfirmReject(' + photoId + ')">Confirmer</button>'
-        + '<button class="gal-mod-btn gal-mod-cancel" onclick="galCancelReject(' + photoId + ')">Annuler</button>';
+    var card = document.getElementById('gal-mc-' + photoId);
+    if (!card) return;
+
+    var row = document.createElement('div');
+    row.id        = 'gal-rr-' + photoId;
+    row.className = 'gal-mod-reject-row';
+    row.innerHTML =
+        '<label class="gal-mod-reject-label">Raison du refus</label>'
+        + '<select id="gal-reason-' + photoId + '" class="gal-mod-reason-select">' + opts + '</select>'
+        + '<div class="gal-mod-reject-btns">'
+        + '<button class="gal-mod-btn gal-mod-ko"     onclick="galConfirmReject(' + photoId + ')">Confirmer le rejet</button>'
+        + '<button class="gal-mod-btn gal-mod-cancel" onclick="galCancelReject(' + photoId + ')">Annuler</button>'
+        + '</div>';
+
+    card.appendChild(row);
 }
 
 function galCancelReject(photoId) {
-    var actEl = document.getElementById('gal-act-' + photoId);
-    if (!actEl) return;
-    actEl.innerHTML =
-        '<button class="gal-mod-btn gal-mod-ok" onclick="galModerate(' + photoId + ',\'approuver\')">✓ Approuver</button>'
-        + '<button class="gal-mod-btn gal-mod-ko" onclick="galShowRejectReason(' + photoId + ')">✕ Rejeter</button>';
+    var row = document.getElementById('gal-rr-' + photoId);
+    if (row) { row.style.transition = 'opacity .2s'; row.style.opacity = '0'; setTimeout(function () { row.remove(); }, 200); }
 }
 
 function galConfirmReject(photoId) {
-    var sel = document.getElementById('gal-reason-' + photoId);
+    var sel    = document.getElementById('gal-reason-' + photoId);
     var raison = sel ? sel.value : '';
     galModerate(photoId, 'rejeter', raison);
 }
@@ -381,6 +401,27 @@ function galModerate(photoId, action, raison) {
         .then(function (r) { return r.json(); })
         .then(function (data) {
             if (data.success) {
+                // Track decision for grouped email notification
+                var photo = _galPendingPhotos.find(function (p) { return p.id == photoId; });
+                if (photo && photo.soumise_par_email) {
+                    var key = photo.soumise_par_email;
+                    if (!_galModDecisions[key]) {
+                        _galModDecisions[key] = {
+                            nom: photo.soumise_par_nom || '',
+                            email: key,
+                            saison_label: photo.saison_label || '',
+                            approved: 0, rejected: 0, reasons: []
+                        };
+                    }
+                    if (action === 'approuver') {
+                        _galModDecisions[key].approved++;
+                    } else {
+                        _galModDecisions[key].rejected++;
+                        if (raison) _galModDecisions[key].reasons.push(raison);
+                    }
+                    _galUpdateNotifyBtn();
+                }
+
                 if (card) {
                     card.style.transition = 'opacity .3s';
                     card.style.opacity    = '0';
@@ -389,7 +430,7 @@ function galModerate(photoId, action, raison) {
                         var remaining = document.querySelectorAll('.gal-mod-card').length;
                         if (remaining === 0) {
                             var el = document.getElementById('gal-mod-content');
-                            if (el) el.innerHTML = '<p class="gal-empty">Toutes les photos ont été traitées. ✓</p>';
+                            if (el) el.innerHTML = '<p class="gal-empty">Toutes les photos ont été traitées.</p>';
                         }
                         loadPendingCount();
                         if (action === 'approuver') loadSaisonActive();
@@ -397,6 +438,43 @@ function galModerate(photoId, action, raison) {
                 }
             } else {
                 alert(data.error || 'Erreur');
+            }
+        });
+}
+
+function _galUpdateNotifyBtn() {
+    var footer   = document.getElementById('gal-mod-footer');
+    var noteEl   = document.getElementById('gal-mod-footer-note');
+    var keys     = Object.keys(_galModDecisions);
+    if (!footer || !keys.length) return;
+
+    footer.style.display = '';
+    var total = keys.reduce(function (s, k) { return s + _galModDecisions[k].approved + _galModDecisions[k].rejected; }, 0);
+    if (noteEl) noteEl.textContent = total + ' décision(s) pour ' + keys.length + ' soumetteur(s) — aucun email envoyé pour l\'instant.';
+}
+
+function galSendNotifications() {
+    var submitters = Object.values(_galModDecisions);
+    if (!submitters.length) return;
+
+    var btn = document.getElementById('gal-btn-notify');
+    if (btn) { btn.disabled = true; btn.textContent = 'Envoi en cours…'; }
+
+    fetch('/php/galerie/notify_submitters.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ submitters: submitters })
+    })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            var noteEl = document.getElementById('gal-mod-footer-note');
+            if (data.success) {
+                if (noteEl) noteEl.textContent = '✓ ' + data.sent + ' email(s) envoyé(s).';
+                _galModDecisions = {};
+                if (btn) { btn.disabled = true; btn.textContent = '✓ Notifications envoyées'; }
+            } else {
+                if (noteEl) noteEl.textContent = 'Erreur : ' + (data.error || 'inconnu');
+                if (btn) { btn.disabled = false; btn.textContent = '📧 Notifier les soumetteurs'; }
             }
         });
 }

@@ -556,15 +556,64 @@
 .gal-mod-ko     { background: #ef5350; color: #fff; }
 .gal-mod-cancel { background: #e0e0e0; color: #444; }
 
+/* Ligne de rejet — pleine largeur sous la carte */
+.gal-mod-reject-row {
+    grid-column: 1 / -1;
+    background: #fff5f5;
+    border-top: 2px solid #ef5350;
+    border-radius: 0 0 10px 10px;
+    padding: .7rem .9rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    animation: gal-slide-down .18s ease;
+}
+
+@keyframes gal-slide-down {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.gal-mod-reject-label {
+    font-size: .8rem;
+    font-weight: 700;
+    color: #c62828;
+    font-family: var(--font-poppins);
+}
+
 .gal-mod-reason-select {
     width: 100%;
-    padding: .3rem .5rem;
-    border: 1.5px solid #d5ddd5;
-    border-radius: 6px;
-    font-size: .78rem;
+    padding: .45rem .7rem;
+    border: 2px solid #ef9a9a;
+    border-radius: 7px;
+    font-size: .84rem;
     font-family: var(--font-poppins);
-    margin-bottom: .4rem;
     background: #fff;
+    color: #333;
+    cursor: pointer;
+}
+.gal-mod-reason-select:focus {
+    outline: none;
+    border-color: #ef5350;
+}
+
+.gal-mod-reject-btns {
+    display: flex;
+    gap: .5rem;
+}
+
+/* Footer modal modération */
+.gal-mod-footer {
+    border-top: 1px solid #eee;
+    padding-top: .9rem;
+    margin-top: .6rem;
+}
+.gal-mod-footer-note {
+    font-size: .78rem;
+    color: #888;
+    font-family: var(--font-poppins);
+    margin: .5rem 0 0;
+    text-align: center;
 }
 
 /* ── Responsive ──────────────────────────────────────────────────── */
