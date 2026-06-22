@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../../php/auth.php';
 
 $canEdit = is_logged_in() && has_any_role(['moderateur', 'admin']);
@@ -36,7 +36,7 @@ $dossierPath = file_exists($dossierDir . 'dossier-partenaires.pdf')
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nos partenaires - VBO</title>
-    <link href="/css/styles.css" rel="stylesheet">
+    <link href="/css/styles.css?v=20260622" rel="stylesheet">
     <link href="/css/partenaires/partenaires.css" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">

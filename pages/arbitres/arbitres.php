@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 if (!has_role('arbitre') && !has_role('admin') && !has_role('bureau')) {
@@ -12,7 +12,7 @@ if (!has_role('arbitre') && !has_role('admin') && !has_role('bureau')) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Arbitres et Marqueurs - VBO">
-    <link href="/css/styles.css" rel="stylesheet">
+    <link href="/css/styles.css?v=20260622" rel="stylesheet">
     <link href="/css/leClub/espace-entraineur.css" rel="stylesheet">
     <title>Arbitres &amp; Marqueurs - VBO</title>
     <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">

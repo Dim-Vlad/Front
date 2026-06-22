@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 ?>
@@ -9,7 +9,7 @@ require_login();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Le VBO te propose un espace dédié aux entraineurs.">
-    <link href="/css/styles.css" rel="stylesheet">
+    <link href="/css/styles.css?v=20260622" rel="stylesheet">
     <link href="/css/leClub/espace-entraineur.css" rel="stylesheet">
     <title>Ressources - VBO</title>
     <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
