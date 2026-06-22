@@ -105,6 +105,18 @@
                         <label for="gal-caption">Légende <span class="gal-form-hint">(optionnel)</span></label>
                         <textarea id="gal-caption" name="caption" placeholder="Décrivez la photo, le contexte, l'équipe…"></textarea>
                     </div>
+                    <div class="gal-form-row gal-form-check">
+                        <label class="gal-check-label">
+                            <input type="checkbox" name="consent_image" required>
+                            <span>Je certifie avoir obtenu l'accord des personnes photographiées (ou de leurs parents pour les mineurs) pour la publication de ces photos sur le site du VBO.</span>
+                        </label>
+                    </div>
+                    <div class="gal-form-row gal-form-check">
+                        <label class="gal-check-label">
+                            <input type="checkbox" name="consent_rgpd" required>
+                            <span>J'accepte que mon nom et mon adresse email soient utilisés uniquement pour me notifier du résultat de la modération, conformément à la <a href="/pages/politique-confidentialite.html" target="_blank">politique de confidentialité</a>.</span>
+                        </label>
+                    </div>
                     <div id="gal-form-msg"></div>
                     <button type="submit" class="gal-btn-submit">📤 Envoyer mes photos</button>
                 </form>
