@@ -1,4 +1,4 @@
-/* ── Modale ajout ──────────────────────────────────────────────── */
+﻿/* ── Modale ajout ──────────────────────────────────────────────── */
 
 function openAddModal() {
     document.getElementById('event-form').reset();
@@ -18,7 +18,7 @@ document.getElementById('event-form')?.addEventListener('submit', async function
 
     const fd = new FormData(this);
     try {
-        const res  = await fetch('/php/add_evenement.php', { method: 'POST', body: fd });
+        const res  = await fetch('/php/evenements/add_evenement.php', { method: 'POST', body: fd });
         const data = await res.json();
         if (data.success) {
             location.reload();
@@ -39,7 +39,7 @@ async function deleteEvent(id) {
     const fd = new FormData();
     fd.append('id', id);
     try {
-        const res  = await fetch('/php/delete_evenement.php', { method: 'POST', body: fd });
+        const res  = await fetch('/php/evenements/delete_evenement.php', { method: 'POST', body: fd });
         const data = await res.json();
         if (data.success) {
             document.querySelector(`.ev-card[data-id="${id}"]`)?.remove();
@@ -57,7 +57,7 @@ async function toggleTermine(id) {
     const fd = new FormData();
     fd.append('id', id);
     try {
-        const res  = await fetch('/php/toggle_evenement_termine.php', { method: 'POST', body: fd });
+        const res  = await fetch('/php/evenements/toggle_evenement_termine.php', { method: 'POST', body: fd });
         const data = await res.json();
         if (data.success) {
             location.reload();

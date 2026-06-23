@@ -1,16 +1,17 @@
-<?php
+﻿<?php
+ob_start();
 require_once __DIR__ . '/../auth.php';
 require_once __DIR__ . '/../journal_log.php';
 header('Content-Type: application/json');
 
 if (!has_any_role(['admin', 'moderateur'])) {
     http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'Accès refusé']);
+    ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Accès refusé']);
     exit;
 }
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'Méthode non autorisée']);
+    ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Méthode non autorisée']);
     exit;
 }
 
@@ -28,13 +29,13 @@ try {
     }
 
     if (!$saison) {
-        echo json_encode(['success' => false, 'error' => 'Saison introuvable ou aucune saison active']);
+        ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Saison introuvable ou aucune saison active']);
         exit;
     }
 
     $files = $_FILES['photos'] ?? null;
     if (!$files || empty($files['name'][0])) {
-        echo json_encode(['success' => false, 'error' => 'Aucune photo sélectionnée']);
+        ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Aucune photo sélectionnée']);
         exit;
     }
 
@@ -99,8 +100,8 @@ try {
         log_activite($pdo, 'UPLOAD', 'photos_galerie', "$saved photo(s) ajoutée(s) à la saison {$saison['label']}");
     }
 
-    echo json_encode(['success' => true, 'count' => $saved, 'errors' => $errors]);
+    ob_end_clean(); echo json_encode(['success' => true, 'count' => $saved, 'errors' => $errors]);
 
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'error' => 'Erreur serveur']);
+    ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Erreur serveur']);
 }

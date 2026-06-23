@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once '../../php/auth.php';
 
 $slug = preg_replace('/[^a-z0-9\-]/', '', strtolower($_GET['slug'] ?? ''));
@@ -39,8 +39,8 @@ function he(string $s): string {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Galerie <?= he($saison['label']) ?> - VBO</title>
-    <link rel="stylesheet" href="/css/styles.css?v=20260622">
-    <link rel="stylesheet" href="/css/galerie/galerie-archive.css">
+    <link rel="stylesheet" href="/css/styles.css?v=20260623">
+    <link rel="stylesheet" href="/css/galerie/galerie-archive.css?v=20260623">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

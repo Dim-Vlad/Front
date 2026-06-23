@@ -51,8 +51,8 @@ function cardAttrs(array $m): string {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Le staff - VBO</title>
-    <link href="/css/styles.css?v=20260622" rel="stylesheet">
-    <link href="/css/leClub/staff.css" rel="stylesheet">
+    <link href="/css/styles.css?v=20260623" rel="stylesheet">
+    <link href="/css/leClub/staff.css?v=20260623" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -199,9 +199,13 @@ function cardAttrs(array $m): string {
         <div class="button-container" id="pvag-container">
             <?php foreach ($pvag as $doc): ?>
             <div class="pvag-item" data-id="<?= $doc['id'] ?>">
-                <a href="<?= h($doc['path']) ?>" target="_blank" class="btn"><?= h($doc['label']) ?><br><u>Télécharger</u></a>
+                <button class="btn" onclick="openPdfModal('<?= h($doc['path']) ?>', '<?= h($doc['label']) ?>')"><?= h($doc['label']) ?><br><u>Consulter</u></button>
                 <?php if ($canEdit): ?>
-                <button class="btn-pvag-delete" onclick="deleteDocument(<?= $doc['id'] ?>, 'pvag')" title="Supprimer">🗑</button>
+                <div class="doc-admin-btns">
+                    <button class="btn-doc-move" onclick="moveDoc(this,-1)" title="Monter">▲</button>
+                    <button class="btn-doc-move" onclick="moveDoc(this,1)" title="Descendre">▼</button>
+                    <button class="btn-pvag-delete" onclick="deleteDocument(<?= $doc['id'] ?>, 'pvag')" title="Supprimer">🗑</button>
+                </div>
                 <?php endif; ?>
             </div>
             <?php endforeach; ?>
@@ -212,10 +216,24 @@ function cardAttrs(array $m): string {
 
     <!-- ══ STATUTS & RÈGLEMENT INTÉRIEUR ════════════════════════════ -->
     <section class="pvag">
-        <h2>Statuts<br>Règlement Intérieur</h2>
-        <div class="statuts-reglement">
+        <div class="staff-section-header">
+            <h2>Statuts<br>Règlement Intérieur</h2>
+            <?php if ($canEdit): ?>
+            <button class="btn-add-staff" onclick="openDocModal('statuts')" title="Ajouter un document">＋ Ajouter</button>
+            <?php endif; ?>
+        </div>
+        <div id="statuts-container">
             <?php foreach ($statuts as $doc): ?>
-            <a href="<?= h($doc['path']) ?>" target="_blank" class="btn"><?= h($doc['label']) ?><br><u>Télécharger</u></a>
+            <div class="pvag-item" data-id="<?= $doc['id'] ?>">
+                <button class="btn" onclick="openPdfModal('<?= h($doc['path']) ?>', '<?= h($doc['label']) ?>')"><?= h($doc['label']) ?><br><u>Consulter</u></button>
+                <?php if ($canEdit): ?>
+                <div class="doc-admin-btns">
+                    <button class="btn-doc-move" onclick="moveDoc(this,-1)" title="Monter">▲</button>
+                    <button class="btn-doc-move" onclick="moveDoc(this,1)" title="Descendre">▼</button>
+                    <button class="btn-pvag-delete" onclick="deleteDocument(<?= $doc['id'] ?>, 'statuts')" title="Supprimer">🗑</button>
+                </div>
+                <?php endif; ?>
+            </div>
             <?php endforeach; ?>
         </div>
     </section>
@@ -333,6 +351,25 @@ function cardAttrs(array $m): string {
         </div>
     </div>
     <?php endif; ?>
+
+    <!-- ══ MODALE VISIONNEUSE PDF ═══════════════════════════════════ -->
+    <div id="pdfModal" class="pdf-modal" onclick="if(event.target===this)closePdfModal()">
+        <div class="pdf-modal-content">
+            <div class="pdf-modal-header">
+                <span class="pdf-modal-title" id="pdf-modal-title"></span>
+                <div class="pdf-modal-btns">
+                    <button class="btn-pdf-action" onclick="printPdf()">🖨 Imprimer</button>
+                    <a id="pdf-download-btn" href="#" download class="btn-pdf-action">⬇ Télécharger</a>
+                    <button class="btn-pdf-close" onclick="closePdfModal()" title="Fermer">✕</button>
+                </div>
+            </div>
+            <iframe id="pdf-iframe" src="" title="Visionneuse PDF"></iframe>
+            <div id="pdf-fallback">
+                <p>L'aperçu PDF n'est pas disponible sur cet appareil.</p>
+                <a id="pdf-open-link" href="#" target="_blank">Ouvrir le PDF ↗</a>
+            </div>
+        </div>
+    </div>
 
     <div id="footer"></div>
 

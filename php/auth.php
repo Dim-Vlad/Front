@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -21,7 +21,7 @@ function is_logged_in(): bool {
     return !empty($_SESSION['user_id']);
 }
 
-function require_login(string $redirect = '/pages/connexion.php'): void {
+function require_login(string $redirect = '/pages/auth/connexion.php'): void {
     if (!is_logged_in()) {
         header('Location: ' . $redirect);
         exit;

@@ -1,11 +1,12 @@
-<?php
+﻿<?php
+ob_start();
 require_once __DIR__ . '/../auth.php';
 header('Content-Type: application/json');
 header('Cache-Control: no-cache, no-store');
 
 $slug = $_GET['slug'] ?? '';
 if (!preg_match('/^[a-z0-9\-]+$/', $slug)) {
-    echo json_encode(['success' => false, 'error' => 'Slug invalide']);
+    ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Slug invalide']);
     exit;
 }
 
@@ -16,7 +17,7 @@ try {
     $saison = $stmt->fetch();
 
     if (!$saison) {
-        echo json_encode(['success' => false, 'error' => 'Saison introuvable']);
+        ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Saison introuvable']);
         exit;
     }
 
@@ -26,7 +27,7 @@ try {
     $stmt->execute([$saison['id']]);
     $photos = $stmt->fetchAll();
 
-    echo json_encode(['success' => true, 'saison' => $saison, 'photos' => $photos]);
+    ob_end_clean(); echo json_encode(['success' => true, 'saison' => $saison, 'photos' => $photos]);
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'error' => 'Erreur serveur']);
+    ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Erreur serveur']);
 }

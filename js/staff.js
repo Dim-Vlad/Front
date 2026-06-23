@@ -1,4 +1,4 @@
-// ── Utilitaires ───────────────────────────────────────────────────
+﻿// ── Utilitaires ───────────────────────────────────────────────────
 
 function escHtml(s) {
     return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -120,7 +120,7 @@ async function uploadPhotoPreview(input) {
     const fd = new FormData();
     fd.append('photo', input.files[0]);
     try {
-        const res  = await fetch('/php/upload_staff_photo.php', { method:'POST', body: fd });
+        const res  = await fetch('/php/staff/upload_staff_photo.php', { method:'POST', body: fd });
         const json = await res.json();
         if (json.success) {
             document.getElementById('mb-photo').value = json.path;
@@ -187,7 +187,7 @@ async function deleteMember() {
     status.textContent = 'Suppression…'; status.className = 'modal-status';
     const fd = new FormData(); fd.append('id', id);
     try {
-        const res  = await fetch('/php/delete_staff_membre.php', { method:'POST', body: fd });
+        const res  = await fetch('/php/staff/delete_staff_membre.php', { method:'POST', body: fd });
         const json = await res.json();
         if (json.success) {
             document.querySelector(`.position[data-id="${id}"]`)?.remove();
@@ -206,7 +206,7 @@ async function toggleCoachVisible(card) {
     const fd  = new FormData(); fd.append('id', id);
     const btn = card.querySelector('.btn-coach-toggle');
     try {
-        const res  = await fetch('/php/toggle_staff_visible.php', { method:'POST', body: fd });
+        const res  = await fetch('/php/staff/toggle_staff_visible.php', { method:'POST', body: fd });
         const json = await res.json();
         if (!json.success) return;
         const visible = json.visible;
@@ -223,6 +223,50 @@ async function toggleCoachVisible(card) {
     } catch {}
 }
 
+// ── Modale PDF (visionneuse) ─────────────────────────────────────
+
+const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+function openPdfModal(path, label) {
+    document.getElementById('pdf-modal-title').textContent = label;
+    document.getElementById('pdf-download-btn').href       = path;
+    document.getElementById('pdf-download-btn').setAttribute('download', label + '.pdf');
+
+    const iframe    = document.getElementById('pdf-iframe');
+    const fallback  = document.getElementById('pdf-fallback');
+    const openLink  = document.getElementById('pdf-open-link');
+
+    if (IS_IOS) {
+        iframe.src             = '';
+        iframe.style.display   = 'none';
+        fallback.style.display = 'flex';
+        openLink.href          = path;
+    } else {
+        iframe.src             = path;
+        iframe.style.display   = 'block';
+        fallback.style.display = 'none';
+    }
+
+    document.getElementById('pdfModal').classList.add('open');
+    document.body.classList.add('modal-open');
+}
+
+function closePdfModal() {
+    document.getElementById('pdfModal').classList.remove('open');
+    document.body.classList.remove('modal-open');
+    document.getElementById('pdf-iframe').src = '';
+}
+
+function printPdf() {
+    if (IS_IOS) {
+        window.open(document.getElementById('pdf-download-btn').href, '_blank');
+        return;
+    }
+    const iframe = document.getElementById('pdf-iframe');
+    try { iframe.contentWindow.print(); } catch { window.open(iframe.src, '_blank'); }
+}
+
 // ── Modale Document (ajout PV AG) ────────────────────────────────
 
 function openDocModal(type) {
@@ -230,7 +274,8 @@ function openDocModal(type) {
     document.getElementById('doc-label').value = '';
     document.getElementById('doc-fichier').value = '';
     document.getElementById('doc-status').textContent = '';
-    document.getElementById('doc-modal-title').textContent = type === 'pvag' ? 'Ajouter un PV d\'AG' : 'Ajouter un document';
+    const titles = { pvag: 'Ajouter un PV d\'AG', statuts: 'Ajouter un statut / règlement' };
+    document.getElementById('doc-modal-title').textContent = titles[type] || 'Ajouter un document';
     document.getElementById('docModal').classList.add('open');
 }
 function closeDocModal() {
@@ -241,14 +286,48 @@ async function deleteDocument(id, type) {
     if (!confirm('Supprimer ce document ?')) return;
     const fd = new FormData(); fd.append('id', id);
     try {
-        const res  = await fetch('/php/delete_staff_document.php', { method:'POST', body: fd });
+        const res  = await fetch('/php/staff/delete_staff_document.php', { method:'POST', body: fd });
         const json = await res.json();
         if (json.success) {
-            document.querySelector(`.pvag-item[data-id="${id}"]`)?.remove();
+            const item      = document.querySelector(`.pvag-item[data-id="${id}"]`);
+            const container = item?.parentElement;
+            item?.remove();
+            if (container) _refreshMoveButtons(container);
         } else {
             alert(json.error || 'Erreur lors de la suppression.');
         }
     } catch { alert('Erreur réseau.'); }
+}
+
+// ── Réordonnancement documents ────────────────────────────────────
+
+function _refreshMoveButtons(container) {
+    const items = [...container.querySelectorAll('.pvag-item')];
+    items.forEach((item, i) => {
+        const btns = item.querySelectorAll('.btn-doc-move');
+        if (btns.length < 2) return;
+        btns[0].disabled = (i === 0);
+        btns[1].disabled = (i === items.length - 1);
+    });
+}
+
+async function moveDoc(btn, direction) {
+    const item      = btn.closest('.pvag-item');
+    const container = item.parentElement;
+    const sibling   = direction === -1 ? item.previousElementSibling : item.nextElementSibling;
+    if (!sibling) return;
+
+    if (direction === -1) container.insertBefore(item, sibling);
+    else                  container.insertBefore(sibling, item);
+
+    _refreshMoveButtons(container);
+
+    const ids = [...container.querySelectorAll('.pvag-item')].map(el => el.dataset.id);
+    const fd  = new FormData();
+    ids.forEach(id => fd.append('ids[]', id));
+    try {
+        await fetch('/php/staff/reorder_documents.php', { method: 'POST', body: fd });
+    } catch {}
 }
 
 // ── Soumission formulaires ─────────────────────────────────────────
@@ -263,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const fd = new FormData(e.target);
         const id = fd.get('id');
-        const url = id ? '/php/update_staff_membre.php' : '/php/add_staff_membre.php';
+        const url = id ? '/php/staff/update_staff_membre.php' : '/php/staff/add_staff_membre.php';
         try {
             const res  = await fetch(url, { method:'POST', body: fd });
             const json = await res.json();
@@ -288,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
         status.textContent = 'Envoi…'; status.className = 'modal-status';
         const fd = new FormData(e.target);
         try {
-            const res  = await fetch('/php/add_staff_document.php', { method:'POST', body: fd });
+            const res  = await fetch('/php/staff/add_staff_document.php', { method:'POST', body: fd });
             const json = await res.json();
             if (json.success) {
                 addDocToDOM(json.data);
@@ -300,9 +379,15 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch { status.textContent = 'Erreur réseau.'; status.className = 'modal-status error'; }
     });
 
+    // État initial des boutons ▲▼
+    ['pvag-container','statuts-container'].forEach(id => {
+        const c = document.getElementById(id);
+        if (c) _refreshMoveButtons(c);
+    });
+
     // Fermeture clavier
     document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') { closeViewModal(); closeMemberModal(); closeDocModal(); }
+        if (e.key === 'Escape') { closeViewModal(); closeMemberModal(); closeDocModal(); closePdfModal(); }
     });
 
     // Fermeture clic fond
@@ -398,12 +483,19 @@ function updateCardInDOM(d) {
 }
 
 function addDocToDOM(d) {
-    const container = document.getElementById('pvag-container');
+    const containerId = d.type === 'statuts' ? 'statuts-container' : 'pvag-container';
+    const container = document.getElementById(containerId);
     if (!container) return;
+    const docEl = `<button class="btn" onclick="openPdfModal('${escHtml(d.path)}','${escHtml(d.label)}')">${escHtml(d.label)}<br><u>Consulter</u></button>`;
     container.insertAdjacentHTML('afterbegin',
         `<div class="pvag-item" data-id="${d.id}">
-            <a href="${escHtml(d.path)}" target="_blank" class="btn">${escHtml(d.label)}<br><u>Télécharger</u></a>
-            <button class="btn-pvag-delete" onclick="deleteDocument(${d.id},'pvag')" title="Supprimer">🗑</button>
+            ${docEl}
+            <div class="doc-admin-btns">
+                <button class="btn-doc-move" onclick="moveDoc(this,-1)" title="Monter">▲</button>
+                <button class="btn-doc-move" onclick="moveDoc(this,1)" title="Descendre">▼</button>
+                <button class="btn-pvag-delete" onclick="deleteDocument(${d.id},'${d.type}')" title="Supprimer">🗑</button>
+            </div>
          </div>`
     );
+    _refreshMoveButtons(container);
 }

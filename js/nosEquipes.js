@@ -1,4 +1,4 @@
-document.getElementById('infoModal').addEventListener('click', function(event) {
+﻿document.getElementById('infoModal').addEventListener('click', function(event) {
     if (event.target === this) closeModal();
 });
 
@@ -98,7 +98,7 @@ async function deleteEquipe() {
     try {
         const fd = new FormData();
         fd.append('id', id);
-        const res  = await fetch('/php/delete_equipe.php', { method: 'POST', body: fd });
+        const res  = await fetch('/php/equipes/delete_equipe.php', { method: 'POST', body: fd });
         const json = await res.json();
         if (json.success) {
             document.querySelector(`.team-card[data-id="${id}"]`)?.remove();
@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
         status.style.color = 'var(--secondary-color)';
         status.textContent = 'Enregistrement en cours…';
         try {
-            const res  = await fetch('/php/update_equipe.php', { method: 'POST', body: new FormData(this) });
+            const res  = await fetch('/php/equipes/update_equipe.php', { method: 'POST', body: new FormData(this) });
             const json = await res.json();
             if (json.success) {
                 status.textContent = 'Modifications enregistrées !';
@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
         status.style.color = 'var(--secondary-color)';
         status.textContent = 'Ajout en cours…';
         try {
-            const res  = await fetch('/php/add_equipe.php', { method: 'POST', body: new FormData(this) });
+            const res  = await fetch('/php/equipes/add_equipe.php', { method: 'POST', body: new FormData(this) });
             const json = await res.json();
             if (json.success) {
                 status.textContent = 'Équipe ajoutée !';

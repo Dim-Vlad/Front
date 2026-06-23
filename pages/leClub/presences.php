@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 if (has_role('arbitre')) {
-    header('Location: /pages/tableau-de-bord.php');
+    header('Location: /pages/auth/tableau-de-bord.php');
     exit;
 }
 ?>
@@ -12,8 +12,8 @@ if (has_role('arbitre')) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Pointage des présences - VBO">
-    <link href="/css/styles.css?v=20260622" rel="stylesheet">
-    <link href="/css/leClub/espace-entraineur.css" rel="stylesheet">
+    <link href="/css/styles.css?v=20260623" rel="stylesheet">
+    <link href="/css/leClub/espace-entraineur.css?v=20260623" rel="stylesheet">
     <title>Pointage Présences - VBO</title>
     <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -60,7 +60,7 @@ if (has_role('arbitre')) {
     </div>
 
     <div class="sheet-wrapper">
-        <a href="/pages/tableau-de-bord.php" class="sheet-back">← Retour au tableau de bord</a>
+        <a href="/pages/auth/tableau-de-bord.php" class="sheet-back">← Retour au tableau de bord</a>
         <iframe
             class="sheet-frame"
             src="COLLER_ICI_URL_EMBED_GOOGLE_SHEET_PRESENCES"

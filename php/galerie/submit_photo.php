@@ -1,11 +1,12 @@
-<?php
+﻿<?php
+ob_start();
 require_once __DIR__ . '/../auth.php';
 require_once __DIR__ . '/../journal_log.php';
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'Méthode non autorisée']);
+    ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Méthode non autorisée']);
     exit;
 }
 
@@ -14,7 +15,7 @@ try {
 
     $saison = $pdo->query("SELECT * FROM saisons_galerie WHERE est_active = 1 LIMIT 1")->fetch();
     if (!$saison) {
-        echo json_encode(['success' => false, 'error' => 'Aucune saison active en ce moment.']);
+        ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Aucune saison active en ce moment.']);
         exit;
     }
 
@@ -24,13 +25,13 @@ try {
     $legende  = htmlspecialchars(trim($_POST['caption'] ?? ''), ENT_QUOTES, 'UTF-8');
 
     if (!$nom || !$email) {
-        echo json_encode(['success' => false, 'error' => 'Prénom/Nom et email sont requis.']);
+        ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Prénom/Nom et email sont requis.']);
         exit;
     }
 
     $files = $_FILES['photos'] ?? null;
     if (!$files || empty($files['name'][0])) {
-        echo json_encode(['success' => false, 'error' => 'Aucune photo sélectionnée.']);
+        ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Aucune photo sélectionnée.']);
         exit;
     }
 
@@ -91,16 +92,16 @@ try {
     }
 
     if ($saved === 0) {
-        echo json_encode(['success' => false, 'error' => 'Aucune photo valide envoyée.', 'details' => $errors]);
+        ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Aucune photo valide envoyée.', 'details' => $errors]);
         exit;
     }
 
     _notifier_admins($pdo, $nom, $email, $categorie, $saved, $saison['label']);
 
-    echo json_encode(['success' => true, 'count' => $saved, 'errors' => $errors]);
+    ob_end_clean(); echo json_encode(['success' => true, 'count' => $saved, 'errors' => $errors]);
 
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'error' => 'Erreur serveur.']);
+    ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Erreur serveur.']);
 }
 
 function _notifier_admins(PDO $pdo, string $nom, string $email, string $categorie, int $count, string $saison): void {

@@ -1,16 +1,17 @@
-<?php
+﻿<?php
+ob_start();
 require_once __DIR__ . '/../auth.php';
 require_once __DIR__ . '/../journal_log.php';
 header('Content-Type: application/json');
 
 if (!has_any_role(['admin', 'moderateur'])) {
     http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'Accès refusé']);
+    ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Accès refusé']);
     exit;
 }
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'Méthode non autorisée']);
+    ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Méthode non autorisée']);
     exit;
 }
 
@@ -19,7 +20,7 @@ $action  = $_POST['action'] ?? '';
 $raison  = htmlspecialchars(trim($_POST['raison'] ?? ''), ENT_QUOTES, 'UTF-8');
 
 if ($photoId <= 0 || !in_array($action, ['approuver', 'rejeter'], true)) {
-    echo json_encode(['success' => false, 'error' => 'Paramètres invalides']);
+    ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Paramètres invalides']);
     exit;
 }
 
@@ -37,7 +38,7 @@ try {
     $photo = $stmt->fetch();
 
     if (!$photo) {
-        echo json_encode(['success' => false, 'error' => 'Photo introuvable ou déjà traitée']);
+        ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Photo introuvable ou déjà traitée']);
         exit;
     }
 
@@ -74,8 +75,8 @@ try {
         log_activite($pdo, 'REJECT', 'photos_galerie', $logDetail);
     }
 
-    echo json_encode(['success' => true]);
+    ob_end_clean(); echo json_encode(['success' => true]);
 
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'error' => 'Erreur serveur']);
+    ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Erreur serveur']);
 }

@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nous contacter - VBO</title>
-    <link href="/css/styles.css?v=20260622" rel="stylesheet">
-    <link rel="stylesheet" href="/css/nousContacter.css">
+    <link href="/css/styles.css?v=20260623" rel="stylesheet">
+    <link rel="stylesheet" href="/css/nousContacter.css?v=20260623">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,7 +32,7 @@
             <!-- ── Formulaire ── -->
             <section class="contact-card">
                 <h2 class="contact-card-title">Formulaire de contact</h2>
-                <form id="contact-form" action="/php/send_mail_contact.php" method="post">
+                <form id="contact-form" action="/php/contact/send_mail_contact.php" method="post">
                     <div class="form-field">
                         <label for="fname">Nom</label>
                         <input type="text" id="fname" name="lastname" placeholder="Mon nom…" required>
@@ -121,7 +121,7 @@
             status.style.display = 'none';
 
             try {
-                const res = await fetch('/php/send_mail_contact.php', {
+                const res = await fetch('/php/contact/send_mail_contact.php', {
                     method: 'POST',
                     body: new FormData(this)
                 });

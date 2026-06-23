@@ -9,8 +9,8 @@ require_login();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Le VBO te propose un espace dédié aux entraineurs.">
-    <link href="/css/styles.css?v=20260622" rel="stylesheet">
-    <link href="/css/leClub/espace-entraineur.css" rel="stylesheet">
+    <link href="/css/styles.css?v=20260623" rel="stylesheet">
+    <link href="/css/leClub/espace-entraineur.css?v=20260623" rel="stylesheet">
     <title>Ressources - VBO</title>
     <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -36,7 +36,7 @@ require_login();
         </div>
     </div>
 
-    <a href="/pages/tableau-de-bord.php" class="sheet-back">← Retour au tableau de bord</a>
+    <a href="/pages/auth/tableau-de-bord.php" class="sheet-back">← Retour au tableau de bord</a>
     
     <div class="container">
         <div class="doc-entraineurs">

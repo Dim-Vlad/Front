@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 if (!has_role('admin')) {
-    header('Location: /pages/tableau-de-bord.php');
+    header('Location: /pages/auth/tableau-de-bord.php');
     exit;
 }
 $user = current_user();
@@ -13,8 +13,8 @@ $user = current_user();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administration - VBO</title>
-    <link href="/css/styles.css?v=20260622" rel="stylesheet">
-    <link href="/css/tableau-de-bord.css" rel="stylesheet">
+    <link href="/css/styles.css?v=20260623" rel="stylesheet">
+    <link href="/css/tableau-de-bord.css?v=20260623" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -56,7 +56,7 @@ $user = current_user();
 
         </div>
 
-        <a href="/pages/tableau-de-bord.php" class="btn-logout">← Retour au tableau de bord</a>
+        <a href="/pages/auth/tableau-de-bord.php" class="btn-logout">← Retour au tableau de bord</a>
     </div>
 
     <div id="footer"></div>

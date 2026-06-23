@@ -1,7 +1,5 @@
 # Dépendances
-node_modules
-package-lock.json
-package.json
+
 
 # Credentials BDD — ne jamais committer
 php/config.php

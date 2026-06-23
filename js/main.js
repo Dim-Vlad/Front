@@ -1,9 +1,9 @@
-/* ── Logo actif ──────────────────────────────────────────────────── */
+﻿/* ── Logo actif ──────────────────────────────────────────────────── */
 
 let logoActif = null;
 
 function fetchLogoActif() {
-    fetch('/php/get_logo_actif.php')
+    fetch('/php/logo/get_logo_actif.php')
         .then(r => r.json())
         .then(data => {
             if (data.logo) {
@@ -82,7 +82,7 @@ function renderAuthButton(data) {
 
     if (data.logged_in) {
         const userLink = document.createElement('a');
-        userLink.href        = '/pages/tableau-de-bord.php';
+        userLink.href        = '/pages/auth/tableau-de-bord.php';
         userLink.textContent = data.display_short || data.username;
         userLink.className   = 'nav-btn-user';
 
@@ -101,7 +101,7 @@ function renderAuthButton(data) {
         container.appendChild(logoutLink);
     } else {
         const loginLink = document.createElement('a');
-        loginLink.href        = '/pages/connexion.php';
+        loginLink.href        = '/pages/auth/connexion.php';
         loginLink.textContent = 'Connexion';
         loginLink.className   = 'nav-btn-login';
         container.appendChild(loginLink);
@@ -386,7 +386,7 @@ function openLogoManager() {
     const grid = document.getElementById('lm-logos-grid');
     grid.innerHTML = '<p style="color:#888;font-size:.85rem;grid-column:1/-1">Chargement&hellip;</p>';
 
-    fetch('/php/list_logos.php')
+    fetch('/php/logo/list_logos.php')
         .then(r => r.json())
         .then(data => {
             if (!data.success || !data.logos.length) {
@@ -442,7 +442,7 @@ async function saveLogo() {
     status.className   = 'lm-status';
 
     try {
-        const res  = await fetch('/php/change_logo.php', { method: 'POST', body: fd });
+        const res  = await fetch('/php/logo/change_logo.php', { method: 'POST', body: fd });
         const data = await res.json();
         if (data.success) {
             logoActif = data.logo;

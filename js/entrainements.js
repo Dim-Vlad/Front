@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+﻿document.addEventListener('DOMContentLoaded', () => {
     loadHTML('/commun/menu.html', 'menu');
     loadHTML('/commun/footer.html', 'footer');
 
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const fd  = new FormData(e.target);
         refreshTerrainVisibility();
         const id  = fd.get('id');
-        const url = id ? '/php/update_entrainement.php' : '/php/add_entrainement.php';
+        const url = id ? '/php/entrainements/update_entrainement.php' : '/php/entrainements/add_entrainement.php';
         try {
             const res  = await fetch(url, { method: 'POST', body: fd });
             const json = await res.json();
@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
         status.textContent = 'Enregistrement…'; status.className = 'modal-status';
         const fd = new FormData(e.target);
         try {
-            const res  = await fetch('/php/update_entrainements_config.php', { method: 'POST', body: fd });
+            const res  = await fetch('/php/entrainements/update_entrainements_config.php', { method: 'POST', body: fd });
             const json = await res.json();
             if (json.success) {
                 document.querySelector('.table-section-header h2').textContent = 'Saison ' + json.valeur;
@@ -220,51 +220,65 @@ function openEditModal(tr) {
     document.getElementById('slot-modal-title').textContent = 'Modifier le créneau';
     document.getElementById('slot-id').value = _editingId;
 
-    // Récupérer les données depuis les cellules du tableau
-    const jour    = tr.dataset.jour;
-    const cells   = tr.querySelectorAll('td');
-    // La cellule horaire est toujours présente (1re ou 2e td selon rowspan)
+    // Pré-remplir jour/horaire/lieu depuis le DOM (disponible immédiatement)
     const horaireTd = tr.querySelector('.horaire-cell');
-    document.getElementById('slot-jour').value    = jour;
+    document.getElementById('slot-jour').value    = tr.dataset.jour;
     document.getElementById('slot-horaire').value = horaireTd?.querySelector('.horaire-time')?.textContent.trim() || '';
     document.getElementById('slot-lieu').value    = horaireTd?.querySelector('.horaire-lieu')?.textContent.trim() || '';
 
-    // Lire les terrains depuis les data-attributes du formulaire (pas disponibles ici)
-    // On fait une requête PHP séparée pour récupérer les données complètes
-    loadSlotData(_editingId);
+    // Vider et désactiver les terrains pendant le chargement
+    ['t1','t2','t3'].forEach(t => {
+        document.getElementById('slot-' + t).value   = '';
+        document.getElementById('slot-' + t).disabled = true;
+        document.getElementById('cb-' + t).checked   = true;
+    });
 
-    document.getElementById('slot-status').textContent = '';
-    document.getElementById('slot-delete-zone').style.display = 'block';
-    document.getElementById('btn-delete-slot').style.display = 'block';
+    document.getElementById('slot-status').textContent = 'Chargement…';
+    document.getElementById('slot-status').className   = 'modal-status';
+    document.getElementById('slot-delete-zone').style.display   = 'block';
+    document.getElementById('btn-delete-slot').style.display    = 'block';
     document.getElementById('slot-delete-confirm').style.display = 'none';
     document.getElementById('slotModal').classList.add('open');
+
+    loadSlotData(_editingId);
 }
 
 async function loadSlotData(id) {
+    const statusEl = document.getElementById('slot-status');
     try {
-        const res  = await fetch('/php/get_entrainement.php?id=' + id);
+        const res  = await fetch('/php/entrainements/get_entrainement.php?id=' + id);
         const json = await res.json();
-        if (json.data) {
-            const d = json.data;
-            document.getElementById('slot-jour').value    = d.jour;
-            document.getElementById('slot-horaire').value = d.horaire;
-            document.getElementById('slot-lieu').value    = d.lieu;
-            // Normalise pour les cases à cocher : on répartit t1/t2/t3
-            // selon le colspan d'origine pour retrouver les bons contenus
-            let v1 = d.t1, v2 = d.t2, v3 = d.t3;
-            if (d.colspan === '21') { v2 = ''; v3 = d.t2; }  // t2 était en terrain 3
-            if (d.colspan === '12') { v2 = ''; v3 = d.t2; }  // t2 était en terrain 2+3
-            if (d.colspan === '3')  { v2 = ''; v3 = ''; }
-
-            document.getElementById('slot-t1').value = v1;
-            document.getElementById('slot-t2').value = v2;
-            document.getElementById('slot-t3').value = v3;
-            document.getElementById('cb-t1').checked = v1.trim() !== '';
-            document.getElementById('cb-t2').checked = v2.trim() !== '';
-            document.getElementById('cb-t3').checked = v3.trim() !== '';
-            refreshTerrainVisibility();
+        if (!json.success || !json.data) {
+            throw new Error(json.error || 'Données introuvables');
         }
-    } catch {}
+        const d = json.data;
+        document.getElementById('slot-jour').value    = d.jour;
+        document.getElementById('slot-horaire').value = d.horaire;
+        document.getElementById('slot-lieu').value    = d.lieu;
+
+        let v1 = d.t1 ?? '', v2 = d.t2 ?? '', v3 = d.t3 ?? '';
+        if (d.colspan === '21') { v2 = ''; v3 = d.t2 ?? ''; }
+        if (d.colspan === '12') { v2 = ''; v3 = d.t2 ?? ''; }
+        if (d.colspan === '3')  { v2 = ''; v3 = ''; }
+
+        ['t1','t2','t3'].forEach(t => {
+            document.getElementById('slot-' + t).disabled = false;
+        });
+        document.getElementById('slot-t1').value = v1;
+        document.getElementById('slot-t2').value = v2;
+        document.getElementById('slot-t3').value = v3;
+        document.getElementById('cb-t1').checked = v1.trim() !== '';
+        document.getElementById('cb-t2').checked = v2.trim() !== '';
+        document.getElementById('cb-t3').checked = v3.trim() !== '';
+        refreshTerrainVisibility();
+        statusEl.textContent = '';
+    } catch (err) {
+        ['t1','t2','t3'].forEach(t => {
+            document.getElementById('slot-' + t).disabled = false;
+        });
+        statusEl.textContent = 'Erreur lors du chargement : ' + (err.message || 'inconnu');
+        statusEl.className   = 'modal-status error';
+    }
 }
 
 function confirmRowDelete(tr) {
@@ -285,43 +299,72 @@ async function toggleTableVisibility() {
     const newVal = TABLE_VISIBLE ? '0' : '1';
     const btn    = document.getElementById('btn-toggle-visibility');
     const label  = document.getElementById('toggle-label');
-    const banner = document.getElementById('table-hidden-banner');
+
+    btn.disabled = true;
 
     const fd = new FormData();
     fd.append('cle',    'visible');
     fd.append('valeur', newVal);
 
     try {
-        const res  = await fetch('/php/update_entrainements_config.php', { method: 'POST', body: fd });
+        const res  = await fetch('/php/entrainements/update_entrainements_config.php', { method: 'POST', body: fd });
         const json = await res.json();
-        if (!json.success) return;
+        if (!json.success) { btn.disabled = false; return; }
 
         TABLE_VISIBLE = newVal === '1';
 
         if (TABLE_VISIBLE) {
             btn.classList.replace('is-hidden', 'is-visible');
-            btn.title    = 'Masquer aux visiteurs';
+            btn.title         = 'Masquer aux visiteurs';
             label.textContent = 'Visible';
-            if (banner) banner.style.display = 'none';
-        } else {
-            btn.classList.replace('is-visible', 'is-hidden');
-            btn.title    = 'Rendre visible aux visiteurs';
-            label.textContent = 'Masqué';
-            if (banner) {
-                banner.style.display = '';
-            } else {
-                // Créer le banner s'il n'existait pas (table était visible au chargement)
-                const wrap = document.querySelector('.table-scroll-wrap') || document.querySelector('#entr-table')?.closest('section');
-                if (wrap) {
-                    const b = document.createElement('div');
-                    b.id        = 'table-hidden-banner';
-                    b.className = 'table-hidden-banner';
-                    b.textContent = '⚠ Tableau masqué pour les visiteurs — seuls les modérateurs et admins peuvent le voir';
-                    wrap.closest('section')?.querySelector('.table-section-header')?.after(b);
+
+            // Masquer le banner "tableau masqué"
+            const banner = document.getElementById('table-hidden-banner');
+            if (banner) banner.remove();
+
+            // Afficher le tableau s'il avait été remplacé par un placeholder
+            const placeholder = document.querySelector('.table-placeholder');
+            if (placeholder) {
+                placeholder.remove();
+                const section = document.querySelector('.table-section');
+                if (section && !document.getElementById('table-scroll-wrap')) {
+                    section.insertAdjacentHTML('beforeend',
+                        '<div class="table-scroll-wrap" id="table-scroll-wrap">' +
+                        '<table class="entr-table" id="entr-table">' +
+                        '<thead><tr>' +
+                        '<th>Jour</th><th>Horaire / Lieu</th>' +
+                        '<th>Terrain 1</th><th>Terrain 2</th><th>Terrain 3</th>' +
+                        (CAN_EDIT ? '<th class="no-print actions-th">Actions</th>' : '') +
+                        '</tr></thead>' +
+                        '<tbody id="entr-tbody"></tbody>' +
+                        '</table></div>'
+                    );
                 }
             }
+        } else {
+            btn.classList.replace('is-visible', 'is-hidden');
+            btn.title         = 'Rendre visible aux visiteurs';
+            label.textContent = 'Masqué';
+
+            // Afficher ou créer le banner
+            let banner = document.getElementById('table-hidden-banner');
+            if (!banner) {
+                banner = document.createElement('div');
+                banner.id        = 'table-hidden-banner';
+                banner.className = 'table-hidden-banner';
+                banner.textContent = '⚠ Tableau masqué pour les visiteurs — seuls les modérateurs et admins peuvent le voir';
+                const header = document.querySelector('.table-section-header');
+                if (header) header.after(banner);
+            } else {
+                banner.style.display = '';
+            }
         }
-    } catch {}
+    } catch {
+        // En cas d'erreur réseau, restaurer l'état visuel du bouton
+        btn.title = TABLE_VISIBLE ? 'Masquer aux visiteurs' : 'Rendre visible aux visiteurs';
+    } finally {
+        btn.disabled = false;
+    }
 }
 
 function openSaisonModal() {
@@ -384,7 +427,7 @@ async function deleteSlot() {
     status.textContent = 'Suppression…'; status.className = 'modal-status';
     const fd = new FormData(); fd.append('id', id);
     try {
-        const res  = await fetch('/php/delete_entrainement.php', { method: 'POST', body: fd });
+        const res  = await fetch('/php/entrainements/delete_entrainement.php', { method: 'POST', body: fd });
         const json = await res.json();
         if (json.success) {
             removeRowFromDOM(id);

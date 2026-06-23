@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+ob_start();
 /**
  * Purge des journaux RGPD
  * - journal_connexions : suppression des entrées > 90 jours
@@ -31,14 +32,14 @@ if ($isCli) {
 
     if (!has_any_role(['admin'])) {
         http_response_code(403);
-        echo json_encode(['success' => false, 'error' => 'Accès refusé']);
+        ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Accès refusé']);
         exit;
     }
 
     try {
         $pdo = get_pdo();
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'error' => 'Erreur serveur']);
+        ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Erreur serveur']);
         exit;
     }
 }
@@ -58,7 +59,7 @@ try {
         echo '[purge_logs] Terminé — journal_connexions : ' . $n1 . ' ligne(s) supprimée(s)'
             . ', journal_activites : ' . $n2 . ' ligne(s) supprimée(s)' . PHP_EOL;
     } else {
-        echo json_encode([
+        ob_end_clean(); echo json_encode([
             'success'               => true,
             'connexions_supprimees' => $n1,
             'activites_supprimees'  => $n2,
@@ -69,5 +70,5 @@ try {
         fwrite(STDERR, '[purge_logs] Erreur : ' . $e->getMessage() . PHP_EOL);
         exit(1);
     }
-    echo json_encode(['success' => false, 'error' => 'Erreur serveur']);
+    ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Erreur serveur']);
 }

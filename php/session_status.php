@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+ob_start();
 ini_set('display_errors', 0);
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -15,7 +16,7 @@ if ($prenom !== '') {
     $display_short = $_SESSION['username'] ?? null;
 }
 
-echo json_encode([
+ob_end_clean(); echo json_encode([
     'logged_in'     => isset($_SESSION['user_id']),
     'username'      => $_SESSION['username'] ?? null,
     'display_short' => $display_short,

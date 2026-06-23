@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+﻿document.addEventListener('DOMContentLoaded', () => {
     loadHTML('/commun/menu.html', 'menu');
     loadHTML('/commun/footer.html', 'footer');
 
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         status.textContent = 'Enregistrement…'; status.className = 'modal-status';
         const fd = new FormData(e.target);
         try {
-            const res  = await fetch('/php/update_licence_document.php', { method: 'POST', body: fd });
+            const res  = await fetch('/php/licence/update_licence_document.php', { method: 'POST', body: fd });
             const json = await res.json();
             if (json.success) {
                 updateDocInDOM(json.data);
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         status.textContent = 'Enregistrement…'; status.className = 'modal-status';
         const fd = new FormData(e.target);
         try {
-            const res  = await fetch('/php/update_licence_lien.php', { method: 'POST', body: fd });
+            const res  = await fetch('/php/licence/update_licence_lien.php', { method: 'POST', body: fd });
             const json = await res.json();
             if (json.success) {
                 updateLienInDOM(json.data);
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
         status.textContent = 'Enregistrement…'; status.className = 'modal-status';
         const fd = new FormData(e.target);
         try {
-            const res  = await fetch('/php/update_licence_config.php', { method: 'POST', body: fd });
+            const res  = await fetch('/php/licence/update_licence_config.php', { method: 'POST', body: fd });
             const json = await res.json();
             if (json.success) {
                 updateVideoInDOM(json.valeur);
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
         status.textContent = 'Enregistrement…'; status.className = 'modal-status';
         const fd = new FormData(e.target);
         try {
-            const res  = await fetch('/php/update_licence_config.php', { method: 'POST', body: fd });
+            const res  = await fetch('/php/licence/update_licence_config.php', { method: 'POST', body: fd });
             const json = await res.json();
             if (json.success) {
                 // Mettre à jour le titre de section

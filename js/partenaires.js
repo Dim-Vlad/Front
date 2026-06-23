@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+﻿document.addEventListener('DOMContentLoaded', () => {
     loadHTML('/commun/menu.html', 'menu');
     loadHTML('/commun/footer.html', 'footer');
 
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
         status.className = 'modal-status';
         const fd = new FormData(e.target);
         try {
-            const res = await fetch('/php/update_partenaire.php', { method: 'POST', body: fd });
+            const res = await fetch('/php/partenaires/update_partenaire.php', { method: 'POST', body: fd });
             const json = await res.json();
             if (json.success) {
                 updateCardInDOM(json.data);
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         status.className = 'modal-status';
         const fd = new FormData(e.target);
         try {
-            const res = await fetch('/php/add_partenaire.php', { method: 'POST', body: fd });
+            const res = await fetch('/php/partenaires/add_partenaire.php', { method: 'POST', body: fd });
             const json = await res.json();
             if (json.success) {
                 addCardToDOM(json.data);
@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.disabled = true;
         const fd = new FormData(e.target);
         try {
-            const res = await fetch('/php/update_dossier.php', { method: 'POST', body: fd });
+            const res = await fetch('/php/licence/update_dossier.php', { method: 'POST', body: fd });
             const json = await res.json();
             if (json.success) {
                 status.textContent = 'Dossier mis à jour ✓';
@@ -189,7 +189,7 @@ async function deletePartner() {
     try {
         const fd = new FormData();
         fd.append('id', id);
-        const res  = await fetch('/php/delete_partenaire.php', { method: 'POST', body: fd });
+        const res  = await fetch('/php/partenaires/delete_partenaire.php', { method: 'POST', body: fd });
         const json = await res.json();
         if (json.success) {
             removeCardFromDOM(id);

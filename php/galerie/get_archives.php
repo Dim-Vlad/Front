@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+ob_start();
 require_once __DIR__ . '/../auth.php';
 header('Content-Type: application/json');
 header('Cache-Control: no-cache, no-store');
@@ -10,7 +11,7 @@ try {
     );
     $saisons = $stmt->fetchAll();
 
-    echo json_encode(['success' => true, 'saisons' => $saisons]);
+    ob_end_clean(); echo json_encode(['success' => true, 'saisons' => $saisons]);
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'error' => 'Erreur serveur']);
+    ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Erreur serveur']);
 }

@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 if (!has_any_role(['admin', 'moderateur'])) {
-    header('Location: /pages/tableau-de-bord.php');
+    header('Location: /pages/auth/tableau-de-bord.php');
     exit;
 }
 
@@ -24,9 +24,9 @@ $entrees = $entrees->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Journal des activités - VBO</title>
-    <link href="/css/styles.css?v=20260622" rel="stylesheet">
-    <link href="/css/tableau-de-bord.css" rel="stylesheet">
-    <link href="/css/journal.css" rel="stylesheet">
+    <link href="/css/styles.css?v=20260623" rel="stylesheet">
+    <link href="/css/tableau-de-bord.css?v=20260623" rel="stylesheet">
+    <link href="/css/journal.css?v=20260623" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -89,7 +89,7 @@ $entrees = $entrees->fetchAll(PDO::FETCH_ASSOC);
         <?php endif; ?>
         <?php endif; ?>
 
-        <a href="<?= has_role('admin') ? '/pages/admin/index.php' : '/pages/tableau-de-bord.php' ?>" class="btn-logout">← Retour</a>
+        <a href="<?= has_role('admin') ? '/pages/admin/index.php' : '/pages/auth/tableau-de-bord.php' ?>" class="btn-logout">← Retour</a>
     </div>
 
     <div id="footer"></div>

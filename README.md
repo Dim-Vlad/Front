@@ -76,8 +76,8 @@ migration_boutique.sql         — articles boutique + URL HelloAsso
 ├── commun/              Composants partagés (menu.html, footer.html)
 ├── css/
 │   ├── styles.css       Styles globaux + variables CSS
-│   ├── boutique.css
-│   ├── legal.css        Pages mentions légales et politique de confidentialité
+│   ├── boutique/        Styles de la boutique
+│   ├── legal/           Styles mentions légales et politique de confidentialité
 │   ├── galerie/
 │   ├── leClub/
 │   ├── evenements/
@@ -97,11 +97,9 @@ migration_boutique.sql         — articles boutique + URL HelloAsso
 ├── pages/
 │   ├── home.html
 │   ├── boutique.html
-│   ├── connexion.php
-│   ├── tableau-de-bord.php
-│   ├── mentions-legales.html
-│   ├── politique-confidentialite.html
 │   ├── nousContacter.html
+│   ├── auth/            Connexion et tableau de bord membres
+│   ├── legal/           Mentions légales et politique de confidentialité
 │   ├── leClub/          Bénévoles, inscription, staff, entraînements…
 │   ├── evenements/
 │   ├── galerie/
@@ -112,6 +110,15 @@ migration_boutique.sql         — articles boutique + URL HelloAsso
 │   ├── journal_log.php  Fonction log_activite()
 │   ├── session_status.php
 │   ├── boutique/        Endpoints API boutique
+│   ├── equipes/         CRUD équipes
+│   ├── evenements/      CRUD événements
+│   ├── staff/           CRUD staff (membres, photos, documents)
+│   ├── entrainements/   CRUD créneaux d'entraînement
+│   ├── partenaires/     CRUD partenaires
+│   ├── logo/            Gestion logo du club
+│   ├── licence/         Gestion page licences
+│   ├── contact/         Envois d'emails (contact, galerie, stage)
+│   ├── misc/            Formulaires annexes (manif sportive, remboursement)
 │   ├── galerie/         Endpoints API galerie
 │   └── rgpd/            Script de purge des logs
 ├── photos/
@@ -235,7 +242,7 @@ define('DB_PASS',    '...');
 
 ## RGPD
 
-- Pages légales : [`pages/mentions-legales.html`](pages/mentions-legales.html) et [`pages/politique-confidentialite.html`](pages/politique-confidentialite.html)
+- Pages légales : [`pages/legal/mentions-legales.html`](pages/legal/mentions-legales.html) et [`pages/legal/politique-confidentialite.html`](pages/legal/politique-confidentialite.html)
 - Consentement photo requis dans le formulaire de la galerie (double case à cocher)
 - Purge automatisable des logs via [`php/rgpd/purge_logs.php`](php/rgpd/purge_logs.php)
 - Liens mentions légales et politique de confidentialité dans le footer sur toutes les pages
