@@ -115,11 +115,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
 $users = $pdo->query(
     "SELECT u.id, u.username, u.prenom, u.nom, u.created_at,
             GROUP_CONCAT(r.name ORDER BY r.name SEPARATOR ',') AS roles
-     FROM users u
-     LEFT JOIN user_roles ur ON ur.user_id = u.id
-     LEFT JOIN roles r ON r.id = ur.role_id
-     GROUP BY u.id, u.username, u.prenom, u.nom, u.created_at
-     ORDER BY u.created_at DESC"
+    FROM users u
+    LEFT JOIN user_roles ur ON ur.user_id = u.id
+    LEFT JOIN roles r ON r.id = ur.role_id
+    GROUP BY u.id, u.username, u.prenom, u.nom, u.created_at
+    ORDER BY u.created_at DESC"
 )->fetchAll();
 $currentId = (int)(current_user()['id']);
 ?>
@@ -144,7 +144,7 @@ $currentId = (int)(current_user()['id']);
             <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club">
             <div class="text-content">
                 <h1>Gestion des utilisateurs</h1>
-                <p>Créez et gérez les comptes des entraineurs.</p>
+                <p>Créez et gérez les comptes des membres.</p>
             </div>
         </div>
     </div>
