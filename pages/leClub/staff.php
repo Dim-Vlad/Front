@@ -53,7 +53,7 @@ function cardAttrs(array $m): string {
     <title>Le staff - VBO</title>
     <link href="/css/styles.css?v=20260623" rel="stylesheet">
     <link href="/css/leClub/staff.css?v=20260623" rel="stylesheet">
-    <link rel="icon" href="/images/favicon-36x36.png" type="image/x-icon">
+    <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
