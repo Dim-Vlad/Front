@@ -70,6 +70,21 @@ function initializeMenu() {
 
 /* ── Auth button ─────────────────────────────────────────────────── */
 
+let _authData = null;
+
+function updateHomeCard(data) {
+    const btn  = document.getElementById('home-member-btn');
+    const desc = document.getElementById('home-member-desc');
+    if (!btn) return;
+    if (data.logged_in) {
+        btn.textContent  = 'Mon espace';
+        if (desc) desc.textContent = 'Bonjour ' + (data.display_short || data.username) + ' ! Retrouvez votre tableau de bord et vos outils.';
+    } else {
+        btn.textContent  = 'Se connecter';
+        if (desc) desc.textContent = 'Entraineurs, arbitres ou membres du bureau, accédez à votre espace dédié.';
+    }
+}
+
 function renderAuthButton(data) {
     const navbar = document.querySelector('.navbar-container-menu');
     if (!navbar) return;
@@ -79,6 +94,9 @@ function renderAuthButton(data) {
 
     const container = document.createElement('div');
     container.id = 'nav-auth';
+
+    _authData = data;
+    updateHomeCard(data);
 
     if (data.logged_in) {
         const userLink = document.createElement('a');
@@ -133,6 +151,9 @@ function loadHTML(url, elementId) {
             if (elementId === 'menu') {
                 initializeMenu();
                 loadAuthButton();
+            }
+            if (elementId === 'content' && _authData) {
+                updateHomeCard(_authData);
             }
             applyLogoToPage();
         })
