@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // ====== Récupération des champs texte ======
     $nom = filter_input(INPUT_POST, 'nom', FILTER_SANITIZE_STRING);

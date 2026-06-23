@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../../php/auth.php';
 
 $canEdit = is_logged_in() && has_any_role(['moderateur','admin']);

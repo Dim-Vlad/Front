@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $to = 'dimitrigarrigues@gmail.com';
 

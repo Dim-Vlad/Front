@@ -1,5 +1,6 @@
-﻿<?php
+<?php
 if (session_status() === PHP_SESSION_NONE) {
+    session_cache_limiter('');
     session_start();
 }
 

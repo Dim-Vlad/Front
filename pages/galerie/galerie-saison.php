@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once '../../php/auth.php';
 
 $slug = preg_replace('/[^a-z0-9\-]/', '', strtolower($_GET['slug'] ?? ''));
