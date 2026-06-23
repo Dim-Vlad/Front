@@ -1,77 +1,76 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carte de Visite - DG-Dev</title>
+    <title>Carte de Visite — DG-Dev</title>
     <link rel="icon" href="/images/visit-card/Logo3 DG-Dev36x36.png" type="image/png">
     <link rel="stylesheet" href="/vCard/vCard-DG-Dev.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha384-k6RqeWeci5ZR/Lv4MR0sA0FfDOMlCEJ/3paNdF+qwD5i3e/CpPhe/ZSB1vZ6df6P" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
     <meta name="mobile-web-app-capable" content="yes">
 </head>
 <body>
-    <div class="container">
-        <div class="couverture">
-            <img src="/images/visit-card/couverture-DG-Dev.png" alt="couverture">
+
+    <div class="vc-card">
+
+        <div class="vc-cover">
+            <img src="/images/visit-card/couverture-DG-Dev.png" alt="">
         </div>
 
-        <div class="card-container">
-            <div class="card">
-                <h1>DG-Dev</h1>
-                <div class="metier">
-                    <p>Web Développeur</p>
-                </div>
-                <div class="name">
-                    <p>GARRIGUES Dimitri</p>
-                </div>
-                <div class="postadress">
-                    <img src="/images/icones/Envelope-Letter.png" alt="lettre">
-                    <p>305 Avenue Général Gouraud<br>83200 Toulon</p>
-                </div>
-                <div class="contact-info">
-                    <img src="/images/icones/Email.png" alt="mail">
-                    <p>dimitrigarrigues@gmail.com</p>
-                    <a class="btn" href="mailto:dimitrigarrigues@gmail.com">Mail</a>
-                </div>
-                <div class="contact-info">
-                    <img src="/images/icones/Phone.png" alt="Téléphone">
-                    <p>06 03 89 19 71</p>
-                    <a class="btn" href="tel:+33603891971">Mobile</a>
-                </div>
-                <div class="dl">
-                    <a class="btn" href="/vCard/DG-Dev.vcf" download>Télécharger le contact</a>
-                </div>
-                <div class="qr-code">
-                    <h2>Scannez le QR code</h2>
-                    <img src="/vCard/qr-code-DG-Dev.png" alt="QR Code">
-                </div>
-            </div>
+        <div class="vc-header">
+            <h1 class="vc-name">Dimitri Garrigues</h1>
+            <p class="vc-role">Web Développeur</p>
+            <p class="vc-sub">DG-Dev</p>
+        </div>
 
-            <div class="social-links">
-                <h2>Mes réseaux</h2>
-                <div class="linkedin">
-                    <img src="/images/social/Linkedin-mini.png" alt="LinkedIn">
-                    <a href="https://www.linkedin.com/in/dimitri-garrigues-4b76a317b/" target="_blank" aria-label="LinkedIn Profile">LinkedIn</a>
-                </div>
-                <div class="github">
-                    <img src="/images/social/Github-mini.png" alt="GitHub">
-                    <a href="https://github.com/Dim-Vlad" target="_blank" aria-label="GitHub Profile">GitHub</a>
-                </div>
-                <div class="reddit">
-                    <img src="/images/social/Reddit.png" alt="Reddit">
-                    <a href="https://www.reddit.com/user/AsleepAd420/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button" target="_blank">Reddit</a>
-                </div>
-                <div class="retour">
-                <a href="/index.html" aria-label="retour home">
-                    <img src="/images/icones/Move-Back.png" alt="flêche retour">
-                    Retour au site
+        <div class="vc-section">
+            <div class="vc-row">
+                <span class="vc-icon">📍</span>
+                <span class="vc-text">305 Avenue Général Gouraud<br>83200 Toulon</span>
+            </div>
+            <div class="vc-row">
+                <span class="vc-icon">✉️</span>
+                <span class="vc-text">dimitrigarrigues@gmail.com</span>
+                <a class="vc-action" href="mailto:dimitrigarrigues@gmail.com">Mail</a>
+            </div>
+            <div class="vc-row">
+                <span class="vc-icon">📱</span>
+                <span class="vc-text">06 03 89 19 71</span>
+                <a class="vc-action" href="tel:+33603891971">Appeler</a>
+            </div>
+        </div>
+
+        <div class="vc-section">
+            <a class="vc-btn-dl" href="/vCard/DG-Dev.vcf" download>⬇ Télécharger le contact</a>
+        </div>
+
+        <div class="vc-section">
+            <p class="vc-section-title">Mes réseaux</p>
+            <div class="vc-socials">
+                <a class="vc-social-btn" href="https://www.linkedin.com/in/dimitri-garrigues-4b76a317b/" target="_blank" rel="noopener">
+                    <img src="/images/social/Linkedin-mini.png" alt="">LinkedIn
+                </a>
+                <a class="vc-social-btn" href="https://github.com/Dim-Vlad" target="_blank" rel="noopener">
+                    <img src="/images/social/Github-mini.png" alt="">GitHub
+                </a>
+                <a class="vc-social-btn" href="https://www.reddit.com/user/AsleepAd420/" target="_blank" rel="noopener">
+                    <img src="/images/social/Reddit.png" alt="">Reddit
                 </a>
             </div>
-            </div>
         </div>
+
+        <div class="vc-section vc-qr">
+            <p class="vc-section-title">Scanner pour me contacter</p>
+            <img class="vc-qr-img" src="/vCard/qr-code-DG-Dev.png" alt="QR Code">
+        </div>
+
+        <div class="vc-back">
+            <a href="/index.html">← Retour au site</a>
+        </div>
+
     </div>
+
 </body>
 </html>
