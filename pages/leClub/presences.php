@@ -12,7 +12,7 @@ if (has_role('arbitre')) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Pointage des présences - VBO">
-    <link href="/css/styles.css?v=20260623" rel="stylesheet">
+    <link href="/css/styles.css?v=20260624" rel="stylesheet">
     <link href="/css/leClub/espace-entraineur.css?v=20260623" rel="stylesheet">
     <title>Pointage Présences - VBO</title>
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
@@ -34,15 +34,6 @@ if (has_role('arbitre')) {
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             background: white;
         }
-        .sheet-back {
-            display: inline-block;
-            margin-bottom: 1rem;
-            font-size: 0.85rem;
-            color: #888;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-        .sheet-back:hover { color: var(--secondary-color); }
     </style>
 </head>
 
@@ -60,7 +51,7 @@ if (has_role('arbitre')) {
     </div>
 
     <div class="sheet-wrapper">
-        <a href="/pages/auth/tableau-de-bord.php" class="sheet-back">← Retour au tableau de bord</a>
+        <a href="/pages/auth/tableau-de-bord.php" class="back-btn">← Retour au tableau de bord</a>
         <iframe
             class="sheet-frame"
             src="COLLER_ICI_URL_EMBED_GOOGLE_SHEET_PRESENCES"

@@ -36,7 +36,7 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Évènements - VBO</title>
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
-    <link href="/css/styles.css?v=20260623" rel="stylesheet">
+    <link href="/css/styles.css?v=20260624" rel="stylesheet">
     <link href="/css/evenements/evenements.css?v=20260623" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 $isMod = has_any_role(['admin', 'moderateur']);
@@ -9,7 +9,7 @@ $isMod = has_any_role(['admin', 'moderateur']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Documents et ressources pour les entraineurs, arbitres et marqueurs du VBO.">
-    <link href="/css/styles.css?v=20260623" rel="stylesheet">
+    <link href="/css/styles.css?v=20260624" rel="stylesheet">
     <link href="/css/leClub/espace-entraineur.css?v=20260623" rel="stylesheet">
     <title>Ressources - VBO</title>
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
@@ -30,7 +30,7 @@ $isMod = has_any_role(['admin', 'moderateur']);
         </div>
     </div>
 
-    <a href="/pages/auth/tableau-de-bord.php" class="sheet-back">← Retour au tableau de bord</a>
+    <a href="/pages/auth/tableau-de-bord.php" class="back-btn">← Retour au tableau de bord</a>
 
     <main class="ent-main">
 

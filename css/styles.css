@@ -799,3 +799,33 @@ body {
   .lb-prev { left: .4rem; }
   .lb-next { right: .4rem; }
 }
+
+/* ── Bouton retour (pages protégées) ── */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .5rem 1.25rem .5rem 1rem;
+  background: rgba(255, 255, 255, .88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1.5px solid rgba(6, 62, 11, .22);
+  border-radius: 999px;
+  font-size: .82rem;
+  font-weight: 600;
+  font-family: var(--font-poppins);
+  color: var(--secondary-color);
+  text-decoration: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
+  transition: background .2s, border-color .2s, transform .2s, box-shadow .2s;
+  margin: 1.25rem auto 1.75rem;
+}
+.back-btn:hover {
+  background: #fff;
+  border-color: var(--secondary-color);
+  transform: translateX(-3px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .12);
+  color: var(--secondary-color);
+  text-decoration: none;
+}
+}

@@ -24,7 +24,7 @@ $entrees = $entrees->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Journal des activités - VBO</title>
-    <link href="/css/styles.css?v=20260623" rel="stylesheet">
+    <link href="/css/styles.css?v=20260624" rel="stylesheet">
     <link href="/css/tableau-de-bord.css?v=20260623" rel="stylesheet">
     <link href="/css/journal.css?v=20260623" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
@@ -44,6 +44,8 @@ $entrees = $entrees->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
     </div>
+
+    <a href="<?= has_role('admin') ? '/pages/admin/index.php' : '/pages/auth/tableau-de-bord.php' ?>" class="back-btn">← Retour</a>
 
     <div class="journal-container">
 
@@ -89,7 +91,7 @@ $entrees = $entrees->fetchAll(PDO::FETCH_ASSOC);
         <?php endif; ?>
         <?php endif; ?>
 
-        <a href="<?= has_role('admin') ? '/pages/admin/index.php' : '/pages/auth/tableau-de-bord.php' ?>" class="btn-logout">← Retour</a>
+        <a href="<?= has_role('admin') ? '/pages/admin/index.php' : '/pages/auth/tableau-de-bord.php' ?>" class="back-btn">← Retour</a>
     </div>
 
     <div id="footer"></div>

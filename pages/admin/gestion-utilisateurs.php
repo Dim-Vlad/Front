@@ -129,7 +129,7 @@ $currentId = (int)(current_user()['id']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des utilisateurs - VBO</title>
-    <link href="/css/styles.css?v=20260623" rel="stylesheet">
+    <link href="/css/styles.css?v=20260624" rel="stylesheet">
     <link href="/css/admin.css?v=20260623" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -148,6 +148,8 @@ $currentId = (int)(current_user()['id']);
             </div>
         </div>
     </div>
+
+    <a href="/pages/admin/index.php" class="back-btn">← Retour</a>
 
     <div class="admin-container">
 

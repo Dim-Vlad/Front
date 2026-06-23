@@ -2,18 +2,6 @@
     --card-shadow: 0 2px 14px rgba(0,0,0,.08);
 }
 
-/* ── Back link ───────────────────────────────────────────────────────────────── */
-.sheet-back {
-    display: inline-block;
-    margin: 0 auto 1rem;
-    padding: 0 1rem;
-    font-size: .85rem;
-    color: #888;
-    text-decoration: none;
-    transition: color .2s;
-}
-.sheet-back:hover { color: var(--secondary-color); }
-
 /* ── Main container ──────────────────────────────────────────────────────────── */
 .ent-main {
     max-width: 860px;

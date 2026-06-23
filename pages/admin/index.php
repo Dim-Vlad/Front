@@ -13,7 +13,7 @@ $user = current_user();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administration - VBO</title>
-    <link href="/css/styles.css?v=20260623" rel="stylesheet">
+    <link href="/css/styles.css?v=20260624" rel="stylesheet">
     <link href="/css/tableau-de-bord.css?v=20260623" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -56,7 +56,7 @@ $user = current_user();
 
         </div>
 
-        <a href="/pages/auth/tableau-de-bord.php" class="btn-logout">← Retour au tableau de bord</a>
+        <a href="/pages/auth/tableau-de-bord.php" class="back-btn">← Retour au tableau de bord</a>
     </div>
 
     <div id="footer"></div>
