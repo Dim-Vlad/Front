@@ -1,85 +1,89 @@
-/* ===== CONTAINER PRINCIPAL ===== */
-.container {
+.remb-main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    gap: 2rem;
-    padding: 2rem 1rem;
+    gap: 1.5rem;
 }
 
-/* ===== SECTIONS "DOCUMENTS" ET "TICKETS" ET "SITE FFVB" ===== */
-.tickets {
-    max-width: 800px;
-    width: 100%;
-    margin: 2.5rem auto;
-    background: white;
-    border-radius: 0.625rem;
-    box-shadow: 0 0.313rem 0.938rem rgba(0, 0, 0, 0.1);
-    padding: 1.875rem;
-    position: relative;
+/* ── Carte info ─────────────────────────────────────────────────── */
+
+.remb-info {
+    background: #fff;
+    border-radius: 12px;
+    border-left: 5px solid var(--secondary-color);
+    box-shadow: var(--card-shadow);
+    padding: 1.5rem 1.8rem;
+}
+
+.remb-info h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+    margin: 0 0 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.remb-rules {
+    display: flex;
+    flex-direction: column;
+    gap: .85rem;
+}
+
+.remb-rule {
+    display: flex;
+    align-items: flex-start;
+    gap: .9rem;
+}
+
+.remb-rule-num {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--secondary-color);
+    color: #fff;
+    font-size: .8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: .1rem;
+}
+
+.remb-rule p {
+    margin: 0;
+    font-size: .92rem;
+    color: #444;
+    line-height: 1.55;
+}
+
+/* ── Carte iframe ────────────────────────────────────────────────── */
+
+.remb-frame-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
     overflow: hidden;
 }
 
-.tickets::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 0.313rem;
-    height: 100%;
-    background: linear-gradient(to bottom, var(--secondary-color), var(--primary-color));
-}
-
-.tickets h2 {
-    color: var(--bg-dark);
-    margin-bottom: 1.25rem;
-    font-size: 2rem;
-    font-weight: 600;
-    position: relative;
-    padding-left: 0.938rem;
-}
-
-.tickets h2::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 0.313rem;
-    height: 70%;
-    background-color: var(--secondary-color);
-    border-radius: 0.188rem;
-}
-
-.tickets strong {
-    color: var(--bg-dark);
-    font-size: 1.2rem;
+.remb-frame-card iframe {
     display: block;
-    margin-bottom: 0.5rem;
-}
-
-iframe {
+    width: 100%;
     height: 900px;
-    width: 1000px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+    border: none;
 }
 
-/* ===== RESPONSIVE ===== */
-@media screen and (max-width: 768px) {
-    .tickets {
-        margin: 1.5rem 1rem;
-        padding: 1rem;
+/* ── Responsive ─────────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+    .remb-main {
+        padding: 1.2rem 1rem 3rem;
     }
 
-    .tickets h2 {
-        font-size: 1.5rem;
+    .remb-frame-card iframe {
+        height: 1100px;
     }
-
-    iframe {
-    height: 1000px;
-    width: 400px;
-}
 }

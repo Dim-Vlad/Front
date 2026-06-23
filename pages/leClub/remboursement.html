@@ -1,62 +1,62 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Le VBO te propose un espace dédié aux entraineurs.">
+    <meta name="description" content="Formulaire de remboursement des frais engagés pour le VBO.">
     <link href="/css/styles.css?v=20260623" rel="stylesheet">
     <link href="/css/leClub/remboursement.css?v=20260623" rel="stylesheet">
     <title>Remboursement - VBO</title>
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-
 <body>
     <div id="menu"></div>
-    
+
     <div id="content">
         <div class="header-content">
-            <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club" class="club-logo">
+            <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club">
             <div class="text-content">
                 <h1>Remboursement</h1>
-                <p class="explication">Vous avez engagé des frais concernant une équipe du club ?<br>
-                    Vous pouvez demander le remboursement de ces frais en utilisant le formulaire ci-dessous.
-                </p>
+                <p>Vous avez engagé des frais pour le club ? Soumettez votre demande directement en ligne.</p>
             </div>
         </div>
     </div>
 
-<div class="container">
+    <main class="remb-main">
 
-<div class="tickets">
-    <h2>Remboursements des frais</h2>
-    <p>Grâce à ce formulaire, vous pouvez directement envoyer vos demandes de remboursement.</p>
-    <p><strong>Important :</strong></p>
-    <p>Quelques règles pour en bénéficier :</p>
-    <ol>
-        <li>Les pièces jointes doivent être scannés sur une feuille blanche et envoyés au format PDF.</li>
-        <li>Les demandes doivent être faites dans un délai de 15 jours après la dépense.</li>
-    </ol>
-</div>
+        <div class="remb-info">
+            <h2>Avant de remplir le formulaire</h2>
+            <div class="remb-rules">
+                <div class="remb-rule">
+                    <span class="remb-rule-num">1</span>
+                    <p>Les pièces justificatives doivent être scannées sur fond blanc et jointes au format <strong>PDF</strong>.</p>
+                </div>
+                <div class="remb-rule">
+                    <span class="remb-rule-num">2</span>
+                    <p>Les demandes doivent être soumises dans un délai de <strong>15 jours</strong> après la date de la dépense.</p>
+                </div>
+            </div>
+        </div>
 
-<div>
-    <iframe 
-        src="https://script.google.com/macros/s/AKfycbx0ca9TSiT_bUmwdzsULp7XDfPOSrC_zLu9RwnqgfqhNuiFCe1GaTU7HzdRvWs4UnR3/exec">
-    </iframe>
-</div>
+        <div class="remb-frame-card">
+            <iframe
+                src="https://script.google.com/macros/s/AKfycbx0ca9TSiT_bUmwdzsULp7XDfPOSrC_zLu9RwnqgfqhNuiFCe1GaTU7HzdRvWs4UnR3/exec"
+                title="Formulaire de remboursement VBO"
+                loading="lazy">
+            </iframe>
+        </div>
 
-</div>
+    </main>
 
     <div id="footer"></div>
 
     <script src="/js/main.js"></script>
-
     <script>
         loadHTML('/commun/menu.html', 'menu');
         loadHTML('/commun/footer.html', 'footer');
     </script>
-
 </body>
 </html>
