@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../../php/auth.php';
 
 $canEdit = is_logged_in() && has_any_role(['moderateur','admin']);
@@ -37,7 +37,7 @@ try {
     <title>Évènements - VBO</title>
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link href="/css/styles.css?v=20260624" rel="stylesheet">
-    <link href="/css/evenements/evenements.css?v=20260623" rel="stylesheet">
+    <link href="/css/evenements/evenements.css?v=20260624" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -71,14 +71,18 @@ try {
             <?php else: ?>
             <div class="ev-grid" id="ev-avenir-grid">
                 <?php foreach ($aVenir as $ev): ?>
-                <article class="ev-card" data-id="<?= $ev['id'] ?>">
+                <article class="ev-card" data-id="<?= $ev['id'] ?>"<?= $canEdit ? ' data-ev="'.h(json_encode($ev, JSON_UNESCAPED_UNICODE)).'"' : '' ?>>
                     <?php if ($canEdit): ?>
                     <div class="ev-card-actions">
-                        <button class="btn-ev-toggle" onclick="toggleTermine(<?= $ev['id'] ?>, this)"
-                                title="Marquer comme terminé">✓ Terminé</button>
-                        <button class="btn-ev-delete" onclick="deleteEvent(<?= $ev['id'] ?>)"
-                                title="Supprimer">🗑</button>
+                        <button class="btn-ev-order" onclick="moveEvent(<?= $ev['id'] ?>, 'up')" title="Monter">▲</button>
+                        <button class="btn-ev-order" onclick="moveEvent(<?= $ev['id'] ?>, 'down')" title="Descendre">▼</button>
+                        <button class="btn-ev-edit" onclick="openEditModal(this.closest('.ev-card'))" title="Modifier">✏</button>
+                        <button class="btn-ev-toggle" onclick="toggleTermine(<?= $ev['id'] ?>, this)" title="Marquer comme terminé">✓ Terminé</button>
+                        <button class="btn-ev-delete" onclick="deleteEvent(<?= $ev['id'] ?>)" title="Supprimer">🗑</button>
                     </div>
+                    <?php endif; ?>
+                    <?php if (!empty($ev['image_url'])): ?>
+                    <img class="ev-img" src="<?= h($ev['image_url']) ?>" alt="<?= h($ev['titre']) ?>">
                     <?php endif; ?>
                     <div class="ev-date"><?= h(formatDate($ev['date_debut'], $ev['date_fin'])) ?></div>
                     <h3 class="ev-title"><?= h($ev['titre']) ?></h3>
@@ -109,14 +113,16 @@ try {
                 </summary>
                 <div class="ev-grid ev-grid-past" id="ev-termines-grid">
                     <?php foreach ($termines as $ev): ?>
-                    <article class="ev-card ev-card-past" data-id="<?= $ev['id'] ?>">
+                    <article class="ev-card ev-card-past" data-id="<?= $ev['id'] ?>"<?= $canEdit ? ' data-ev="'.h(json_encode($ev, JSON_UNESCAPED_UNICODE)).'"' : '' ?>>
                         <?php if ($canEdit): ?>
                         <div class="ev-card-actions">
-                            <button class="btn-ev-toggle btn-ev-restore" onclick="toggleTermine(<?= $ev['id'] ?>, this)"
-                                    title="Remettre à venir">↩ Restaurer</button>
-                            <button class="btn-ev-delete" onclick="deleteEvent(<?= $ev['id'] ?>)"
-                                    title="Supprimer">🗑</button>
+                            <button class="btn-ev-edit" onclick="openEditModal(this.closest('.ev-card'))" title="Modifier">✏</button>
+                            <button class="btn-ev-toggle btn-ev-restore" onclick="toggleTermine(<?= $ev['id'] ?>, this)" title="Remettre à venir">↩ Restaurer</button>
+                            <button class="btn-ev-delete" onclick="deleteEvent(<?= $ev['id'] ?>)" title="Supprimer">🗑</button>
                         </div>
+                        <?php endif; ?>
+                        <?php if (!empty($ev['image_url'])): ?>
+                        <img class="ev-img" src="<?= h($ev['image_url']) ?>" alt="<?= h($ev['titre']) ?>">
                         <?php endif; ?>
                         <span class="ev-past-badge">Terminé</span>
                         <div class="ev-date"><?= h(formatDate($ev['date_debut'], $ev['date_fin'])) ?></div>
@@ -174,6 +180,10 @@ try {
                         <label for="ev-lien-label">Libellé lien</label>
                         <input type="text" id="ev-lien-label" name="lien_label" placeholder="Inscription, En savoir plus…">
                     </div>
+                    <div class="ev-form-row">
+                        <label for="ev-image">Image</label>
+                        <input type="file" id="ev-image" name="image" accept="image/jpeg,image/png,image/webp,image/gif">
+                    </div>
                     <div class="ev-form-row ev-form-check">
                         <label>
                             <input type="checkbox" name="termine">
@@ -185,6 +195,70 @@ try {
                         <button type="submit" class="btn-save">Ajouter</button>
                     </div>
                     <p class="modal-status" id="ev-status"></p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ MODALE ÉDITION ÉVÉNEMENT ════════════════════════════════ -->
+    <div id="editEventModal" class="ev-modal">
+        <div class="ev-modal-content">
+            <div class="ev-modal-header">
+                <h3>Modifier l'événement</h3>
+                <span class="close" onclick="closeEditModal()">&times;</span>
+            </div>
+            <div class="ev-modal-body">
+                <form id="edit-event-form">
+                    <input type="hidden" id="edit-ev-id" name="id">
+                    <input type="hidden" id="edit-ev-image-existing" name="image_url_existing">
+                    <div class="ev-form-row">
+                        <label for="edit-ev-titre">Titre *</label>
+                        <input type="text" id="edit-ev-titre" name="titre" required>
+                    </div>
+                    <div class="ev-form-row">
+                        <label for="edit-ev-desc">Description</label>
+                        <textarea id="edit-ev-desc" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="ev-form-row">
+                        <label for="edit-ev-date-debut">Date début</label>
+                        <input type="date" id="edit-ev-date-debut" name="date_debut">
+                    </div>
+                    <div class="ev-form-row">
+                        <label for="edit-ev-date-fin">Date fin</label>
+                        <input type="date" id="edit-ev-date-fin" name="date_fin">
+                    </div>
+                    <div class="ev-form-row">
+                        <label for="edit-ev-lieu">Lieu</label>
+                        <input type="text" id="edit-ev-lieu" name="lieu">
+                    </div>
+                    <div class="ev-form-row">
+                        <label for="edit-ev-lien">Lien</label>
+                        <input type="text" id="edit-ev-lien" name="lien_url">
+                    </div>
+                    <div class="ev-form-row">
+                        <label for="edit-ev-lien-label">Libellé lien</label>
+                        <input type="text" id="edit-ev-lien-label" name="lien_label">
+                    </div>
+                    <div class="ev-form-row">
+                        <label>Image</label>
+                        <div>
+                            <div id="edit-ev-img-preview" class="ev-edit-img-preview" style="display:none">
+                                <img id="edit-ev-img-thumb" src="" alt="">
+                            </div>
+                            <input type="file" id="edit-ev-image" name="image" accept="image/jpeg,image/png,image/webp,image/gif">
+                        </div>
+                    </div>
+                    <div class="ev-form-row ev-form-check">
+                        <label>
+                            <input type="checkbox" id="edit-ev-termine" name="termine">
+                            Événement terminé
+                        </label>
+                    </div>
+                    <div class="ev-modal-actions">
+                        <button type="button" class="btn-cancel-modal" onclick="closeEditModal()">Annuler</button>
+                        <button type="submit" class="btn-save">Enregistrer</button>
+                    </div>
+                    <p class="modal-status" id="edit-ev-status"></p>
                 </form>
             </div>
         </div>

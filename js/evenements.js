@@ -1,4 +1,4 @@
-﻿/* ── Modale ajout ──────────────────────────────────────────────── */
+/* ── Modale ajout ──────────────────────────────────────────────── */
 
 function openAddModal() {
     document.getElementById('event-form').reset();
@@ -31,6 +31,86 @@ document.getElementById('event-form')?.addEventListener('submit', async function
         status.className = 'modal-status error';
     }
 });
+
+document.getElementById('eventModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeAddModal();
+});
+
+/* ── Modale édition ─────────────────────────────────────────────── */
+
+function openEditModal(cardEl) {
+    const ev = JSON.parse(cardEl.dataset.ev);
+
+    document.getElementById('edit-ev-id').value             = ev.id;
+    document.getElementById('edit-ev-titre').value          = ev.titre        || '';
+    document.getElementById('edit-ev-desc').value           = ev.description  || '';
+    document.getElementById('edit-ev-date-debut').value     = ev.date_debut   || '';
+    document.getElementById('edit-ev-date-fin').value       = ev.date_fin     || '';
+    document.getElementById('edit-ev-lieu').value           = ev.lieu         || '';
+    document.getElementById('edit-ev-lien').value           = ev.lien_url     || '';
+    document.getElementById('edit-ev-lien-label').value     = ev.lien_label   || '';
+    document.getElementById('edit-ev-termine').checked      = ev.termine == 1;
+    document.getElementById('edit-ev-image-existing').value = ev.image_url    || '';
+    document.getElementById('edit-ev-image').value          = '';
+
+    const preview = document.getElementById('edit-ev-img-preview');
+    const thumb   = document.getElementById('edit-ev-img-thumb');
+    if (ev.image_url) {
+        thumb.src = ev.image_url;
+        preview.style.display = 'block';
+    } else {
+        preview.style.display = 'none';
+    }
+
+    document.getElementById('edit-ev-status').textContent = '';
+    document.getElementById('editEventModal').classList.add('open');
+}
+
+function closeEditModal() {
+    document.getElementById('editEventModal').classList.remove('open');
+}
+
+document.getElementById('edit-event-form')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const status = document.getElementById('edit-ev-status');
+    status.textContent = 'Enregistrement…';
+    status.className   = 'modal-status';
+
+    const fd = new FormData(this);
+    try {
+        const res  = await fetch('/php/evenements/update_evenement.php', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.success) {
+            location.reload();
+        } else {
+            status.textContent = data.error || 'Erreur inconnue';
+            status.className   = 'modal-status error';
+        }
+    } catch {
+        status.textContent = 'Erreur réseau';
+        status.className   = 'modal-status error';
+    }
+});
+
+document.getElementById('editEventModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeEditModal();
+});
+
+/* ── Réorganisation ─────────────────────────────────────────────── */
+
+async function moveEvent(id, direction) {
+    const fd = new FormData();
+    fd.append('id', id);
+    fd.append('direction', direction);
+    try {
+        const res  = await fetch('/php/evenements/reorder_evenements.php', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.success) location.reload();
+        else alert(data.error || 'Erreur');
+    } catch {
+        alert('Erreur réseau');
+    }
+}
 
 /* ── Suppression ───────────────────────────────────────────────── */
 
@@ -68,9 +148,3 @@ async function toggleTermine(id) {
         alert('Erreur réseau');
     }
 }
-
-/* ── Fermer modale au clic extérieur ───────────────────────────── */
-
-document.getElementById('eventModal')?.addEventListener('click', function(e) {
-    if (e.target === this) closeAddModal();
-});
