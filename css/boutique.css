@@ -1,180 +1,502 @@
-h2 {
-    font-family: Poppins, sans-serif;
-    color: var(--bg-dark);
-    font-size: 2.5rem;
-    font-weight: bold;
-    margin: 20px 0;
-}
+/* ── Boutique VBO ─────────────────────────────────────────────────── */
 
-.content {
-    padding: 100px 20px;
-}
-
-.content p {
-    margin: 20px 0;
-}
-
-
-.main {
-    display: flex;
-    flex-wrap: wrap;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 30px;
-    padding: 10px;
-    justify-content: center;
-    align-items: center;
-    min-height: 50vh;
+#bq-main {
     max-width: 1200px;
-    margin: 0 auto 20px;
-    width: 100%;
-    box-sizing: border-box;
+    margin: 0 auto;
+    padding: 10px 24px 70px;
 }
 
-.wrap {
-    flex: 1 1 200px;
-    min-width: 300px;
-    max-width: 400px;
-    margin: 10px;
+/* ── Barre admin ── */
+.bq-admin-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--secondary-color);
+    color: rgba(255, 255, 255, .85);
+    padding: 10px 18px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    font-size: .88rem;
+    font-family: var(--font-poppins);
+    flex-wrap: wrap;
+}
+
+.bq-admin-bar-label {
+    font-weight: 600;
+    flex: 1;
+    min-width: 140px;
+}
+
+.bq-bar-btn {
+    background: rgba(255, 255, 255, .15);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, .3);
+    border-radius: 6px;
+    padding: 5px 14px;
     cursor: pointer;
-    text-align: center;
-    background-color: #f9f9f9;
-    border-radius: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-    font-size: 1.2rem;
+    font-size: .82rem;
+    font-family: var(--font-poppins);
+    transition: background .2s;
+    white-space: nowrap;
 }
 
-.wrap:hover {
-    transform: scale(1.10);
+.bq-bar-btn:hover { background: rgba(255, 255, 255, .28); }
+
+/* ── Sections ── */
+.bq-section { margin-bottom: 3rem; }
+
+.bq-section-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 1.2rem;
+    padding-bottom: .6rem;
+    border-bottom: 3px solid var(--primary-color);
 }
 
-.item {
-    width: 100%;
-    background-color: var(--primary-color);
-    border-radius: 20px;
-    transition: 0.2s;
-    padding: 20px;
-    box-shadow: 0 30px 20px #5555;
+.bq-section-head h2 {
+    font-family: var(--font-poppins);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--bg-dark);
+    margin: 0;
 }
 
-.wrap img {
-    width: 100%;
-    height: auto;
-    border-radius: 10px;
-    border: 2px solid;
-    border-color: var(--bg-dark);
+.bq-section-head--promo { border-bottom-color: #cc3300; }
+.bq-section-head--promo h2 { color: #cc3300; }
+
+.bq-section-head--vedette { border-bottom-color: #b07800; }
+.bq-section-head--vedette h2 { color: #7a5200; }
+
+.bq-section-sub {
+    font-size: .85rem;
+    color: #777;
+    margin: .25rem 0 0;
+    font-family: var(--font-poppins);
+    line-height: 1.5;
 }
 
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1010;
-    left: 0;
-    top: 0;  /* Aligner en haut de l'écran */
+/* ── Section HelloAsso ── */
+.bq-section--helloasso {
+    background: #f5f8f5;
+    border-radius: 12px;
+    padding: 1.6rem 2rem;
+    margin-top: 1rem;
+}
+
+.bq-section-head--ha {
+    align-items: center;
+    justify-content: space-between;
+}
+
+.bq-ha-head-text { flex: 1; }
+
+.bq-ha-cfg-btn {
+    background: var(--secondary-color);
+    color: #fff;
+    border-color: transparent;
+    flex-shrink: 0;
+    transition: background .2s, transform .15s;
+}
+
+.bq-ha-cfg-btn:hover {
+    background: var(--bg-dark);
+    transform: translateY(-1px);
+}
+
+/* ── Grille d'articles ── */
+.bq-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.2rem;
+}
+
+/* ── Carte article ── */
+.bq-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
+    overflow: hidden;
+    transition: transform .25s, box-shadow .25s;
+    position: relative;
+    font-family: var(--font-poppins);
+}
+
+.bq-card:not(.bq-card--add):hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .14);
+}
+
+.bq-card--inactive { opacity: .5; }
+
+/* Carte "Ajouter" */
+.bq-card--add {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .6rem;
+    min-height: 200px;
+    background: #f4f7f4;
+    border: 2px dashed #b8ccb8;
+    cursor: pointer;
+    color: #6a8e6a;
+    font-size: .88rem;
+    font-weight: 600;
+    box-shadow: none;
+    border-radius: 12px;
+}
+
+.bq-card--add:hover {
+    border-color: var(--secondary-color);
+    color: var(--secondary-color);
+    background: #ecf3ec;
+    transform: none;
+    box-shadow: none;
+}
+
+.bq-add-icon {
+    font-size: 2.2rem;
+    font-weight: 300;
+    line-height: 1;
+    color: inherit;
+}
+
+/* Image de la carte */
+.bq-card-img {
+    position: relative;
+    cursor: zoom-in;
+    overflow: hidden;
+    background: var(--primary-color);
+    aspect-ratio: 4 / 3;
+}
+
+.bq-card-img img {
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
-    overflow: auto;
-    font-size: 1.2rem;
-    opacity: 0;  /* Commence invisible */
-    transition: opacity 0.3s ease;
-    justify-content: center;  /* Centrer horizontalement */
-    align-items: flex-start;  /* Aligner en haut */
-    padding-top: 20px;  /* Ajouter un espace entre le haut de l'écran et la modale */
+    object-fit: contain;
+    padding: 12px;
+    transition: transform .3s;
+    display: block;
 }
 
-.modal-content {
-    background-color: var(--primary-color);
-    margin: 0 auto;  /* Supprimer la marge verticale automatique */
-    padding: 20px;
-    border: 1px solid #888;
-    width: 90%;
-    max-width: 600px;
-    text-align: center;
+.bq-card:not(.bq-card--add):hover .bq-card-img img {
+    transform: scale(1.06);
+}
+
+/* Corps de la carte */
+.bq-card-body {
+    padding: .8rem 1rem .9rem;
+}
+
+.bq-card-body h3 {
+    font-size: .92rem;
+    font-weight: 700;
+    color: var(--bg-dark);
+    margin: 0 0 .3rem;
+    line-height: 1.3;
+}
+
+.bq-card-body p {
+    font-size: .8rem;
+    color: #666;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* ── Badges de section ── */
+.bq-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    padding: 3px 10px;
     border-radius: 20px;
-    transform: scale(0.7);  /* Commence réduit */
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    opacity: 0;
-    position: relative;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    pointer-events: none;
 }
 
-/* Effet d'animation lors de l'ouverture */
-.modal.show {
-    opacity: 1;
+.bq-badge--promo   { background: #cc3300; color: #fff; }
+.bq-badge--vedette { background: #b07800; color: #fff; }
+
+/* ── Boutons admin sur les cartes ── */
+.bq-card-admin {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 5px;
+    z-index: 10;
 }
 
-.modal.show .modal-content {
-    transform: scale(1); /* Grandit jusqu'à sa taille normale */
-    opacity: 1;
-}
-
-.close {
-    color: black;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-}
-
-.close:hover,
-.close:focus {
-    color: white;
-    text-decoration: none;
+.bq-cadmin-btn {
+    padding: 4px 10px;
+    border: none;
+    border-radius: 4px;
+    font-size: .7rem;
+    font-weight: 600;
     cursor: pointer;
+    font-family: var(--font-poppins);
+    opacity: 0;
+    transition: opacity .2s;
 }
 
+.bq-card:hover .bq-cadmin-btn { opacity: 1; }
 
-@media (min-width: 1200px) {
-    .main {
-    grid-template-columns: repeat(5, 1fr);
-    max-width: 85%;
-    }
+.bq-cadmin-btn--edit { background: var(--secondary-color); color: #fff; }
+.bq-cadmin-btn--del  { background: #cc3300; color: #fff; }
+
+/* ── Lightbox ── */
+#bq-lb {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .88);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .3s ease;
+    cursor: zoom-out;
+    padding: 20px;
 }
 
-@media (min-width: 992px) and (max-width: 1199px) {
-    .main {
-    grid-template-columns: repeat(4, 1fr);
-    max-width: 85%;
-    }
+#bq-lb.bq-lb--open {
+    opacity: 1;
+    pointer-events: auto;
 }
 
-@media (min-width: 768px) and (max-width: 991px) {
-    .main {
-    grid-template-columns: repeat(3, 1fr); 
-    max-width: 85%;  
-    }
+.bq-lb-close {
+    position: fixed;
+    top: 1.1rem;
+    right: 1.2rem;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .2);
+    border-radius: 50%;
+    color: #fff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .2s, transform .2s;
+    z-index: 2001;
 }
 
-@media (min-width: 576px) and (max-width: 767px) {
-    .main {
-    grid-template-columns: repeat(2, 1fr);
-    max-width: 85%;
-    }
-    .banner {
-        padding: 20px 0;
-    }
-
-    .banner h2 {
-        font-size: 24px;
-    }
-
-    .decorative-line {
-        margin: 0 10px;
-    }
-
-    .decorative-line::before,
-    .decorative-line::after {
-        font-size: 12px;
-    }
-
-    .content {
-        padding: 20px;
-    }
+.bq-lb-close:hover {
+    background: rgba(255, 255, 255, .25);
+    transform: rotate(90deg);
 }
 
-@media (max-width: 575px) {
-    .main {
-    grid-template-columns: 1fr;
-    max-width: 85%;
-    }
+.bq-lb-wrap {
+    max-width: min(860px, calc(100vw - 40px));
+    max-height: calc(100vh - 60px);
+    text-align: center;
+    cursor: default;
+    transform: scale(.88);
+    transition: transform .35s cubic-bezier(.34, 1.42, .64, 1);
 }
 
+#bq-lb.bq-lb--open .bq-lb-wrap {
+    transform: scale(1);
+}
+
+.bq-lb-wrap img {
+    max-width: 100%;
+    max-height: calc(100vh - 110px);
+    object-fit: contain;
+    border-radius: 10px;
+    display: block;
+    margin: 0 auto;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .6);
+}
+
+.bq-lb-info {
+    margin-top: .75rem;
+}
+
+#bq-lb-title {
+    color: rgba(255, 255, 255, .9);
+    font-family: var(--font-poppins);
+    font-size: .95rem;
+    font-weight: 600;
+    margin: 0 0 .3rem;
+}
+
+#bq-lb-desc {
+    color: rgba(255, 255, 255, .6);
+    font-family: var(--font-poppins);
+    font-size: .82rem;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* ── Overlay modale admin ── */
+.bq-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .5);
+    z-index: 1500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s;
+    padding: 16px;
+}
+
+.bq-overlay--open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.bq-modal-box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.8rem 2rem 1.6rem;
+    max-width: 500px;
+    width: 100%;
+    max-height: 88vh;
+    overflow-y: auto;
+    position: relative;
+    font-family: var(--font-poppins);
+}
+
+.bq-modal-close {
+    position: absolute;
+    top: .8rem;
+    right: .9rem;
+    width: 28px;
+    height: 28px;
+    background: rgba(0, 0, 0, .07);
+    border: none;
+    border-radius: 50%;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #444;
+}
+
+.bq-modal-close:hover { background: rgba(0, 0, 0, .14); }
+
+.bq-modal-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+    margin: 0 0 1.2rem;
+    padding-right: 2rem;
+}
+
+.bq-modal-desc {
+    font-size: .88rem;
+    color: #666;
+    margin: -.6rem 0 1rem;
+    line-height: 1.5;
+}
+
+/* ── Champs du formulaire modal ── */
+.bq-mf-row { margin-bottom: .9rem; }
+
+.bq-mf-row label {
+    display: block;
+    font-size: .84rem;
+    font-weight: 600;
+    color: var(--bg-dark);
+    margin-bottom: .3rem;
+}
+
+.bq-mf-req { color: #cc3300; }
+.bq-mf-opt { font-weight: 400; color: #aaa; font-size: .75rem; }
+
+.bq-mf-row input[type="text"],
+.bq-mf-row input[type="url"],
+.bq-mf-row input[type="number"],
+.bq-mf-row select,
+.bq-mf-row textarea {
+    width: 100%;
+    padding: .5rem .75rem;
+    border: 1.5px solid #d0d8d0;
+    border-radius: 6px;
+    font-size: .88rem;
+    font-family: var(--font-poppins);
+    box-sizing: border-box;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+.bq-mf-row input:focus,
+.bq-mf-row select:focus,
+.bq-mf-row textarea:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(6, 62, 11, .1);
+}
+
+.bq-mf-row textarea { resize: vertical; min-height: 70px; }
+
+.bq-mf-check-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: .88rem;
+    font-weight: 400;
+}
+
+.bq-form-cur-img {
+    margin-bottom: .5rem;
+}
+
+.bq-form-cur-img img {
+    max-width: 110px;
+    max-height: 80px;
+    object-fit: contain;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    background: var(--primary-color);
+    padding: 4px;
+}
+
+.bq-modal-submit {
+    width: 100%;
+    background: var(--secondary-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: .7rem 1rem;
+    font-size: .9rem;
+    font-weight: 600;
+    font-family: var(--font-poppins);
+    cursor: pointer;
+    margin-top: .6rem;
+    transition: background .2s;
+}
+
+.bq-modal-submit:hover { background: var(--bg-dark); }
+
+.bq-form-err  { color: #cc3300; font-size: .84rem; margin: .5rem 0 0; }
+.bq-form-info { color: #555; font-size: .84rem; margin: .5rem 0 0; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    #bq-main { padding: 0 14px 48px; }
+    .bq-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .9rem; }
+    .bq-cadmin-btn { opacity: 1; } /* toujours visible sur mobile */
+    .bq-section--helloasso { padding: 1.2rem; }
+}
+
+@media (max-width: 480px) {
+    .bq-grid { grid-template-columns: 1fr 1fr; gap: .7rem; }
+    .bq-card-body { padding: .6rem .7rem .7rem; }
+    .bq-section-head h2 { font-size: 1.2rem; }
+    .bq-modal-box { padding: 1.4rem 1.2rem 1.2rem; }
+}
