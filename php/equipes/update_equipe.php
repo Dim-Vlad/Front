@@ -39,7 +39,9 @@ $poule = trim($_POST['poule'] ?? '');
 $coach  = trim($_POST['coach'] ?? '');
 $lien   = trim($_POST['lien']  ?? '');
 
-$photoPath = null;
+$photoPath  = null;
+$genericUrl = trim($_POST['photo_url_generic'] ?? '');
+
 if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
     $tmp  = $_FILES['photo']['tmp_name'];
     $type = mime_content_type($tmp);
@@ -60,12 +62,15 @@ if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
 
     $filename  = $id . '.' . $ext;
     $uploadDir = __DIR__ . '/../../photos/equipes/';
+    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
     if (!move_uploaded_file($tmp, $uploadDir . $filename)) {
         http_response_code(500);
         ob_end_clean(); echo json_encode(['error' => "Erreur lors de l'enregistrement du fichier."]);
         exit;
     }
     $photoPath = '/photos/equipes/' . $filename;
+} elseif ($genericUrl !== '') {
+    $photoPath = $genericUrl;
 }
 
 if ($photoPath !== null) {

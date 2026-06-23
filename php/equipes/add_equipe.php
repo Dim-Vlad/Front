@@ -40,7 +40,9 @@ $pdo->prepare('INSERT INTO equipes (nom, groupe, niveau, coach, lien, photo, ord
     ->execute([$nom, $groupe, $niveau, $coach, $lien, '', $ordre]);
 $newId = (int)$pdo->lastInsertId();
 
-$photoPath = '';
+$photoPath  = '';
+$genericUrl = trim($_POST['photo_url_generic'] ?? '');
+
 if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
     $tmp     = $_FILES['photo']['tmp_name'];
     $type    = mime_content_type($tmp);
@@ -61,12 +63,16 @@ if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
 
     $filename  = $newId . '.' . $ext;
     $uploadDir = __DIR__ . '/../../photos/equipes/';
+    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
     if (!move_uploaded_file($tmp, $uploadDir . $filename)) {
         http_response_code(500);
         ob_end_clean(); echo json_encode(['error' => "Erreur lors de l'enregistrement du fichier."]);
         exit;
     }
     $photoPath = '/photos/equipes/' . $filename;
+    $pdo->prepare('UPDATE equipes SET photo = ? WHERE id = ?')->execute([$photoPath, $newId]);
+} elseif ($genericUrl !== '') {
+    $photoPath = $genericUrl;
     $pdo->prepare('UPDATE equipes SET photo = ? WHERE id = ?')->execute([$photoPath, $newId]);
 }
 

@@ -50,8 +50,11 @@ function openEditModal(card) {
         preview.src          = photo || '';
         preview.style.display = photo ? 'block' : 'none';
     }
-    document.getElementById('edit-file').value   = '';
-    document.getElementById('edit-status').textContent = '';
+    document.getElementById('edit-file').value             = '';
+    document.getElementById('edit-photo-url-generic').value = '';
+    document.getElementById('edit-status').textContent     = '';
+    const g = document.getElementById('edit-img-gallery');
+    if (g) g.style.display = 'none';
     cancelDeleteEquipe();
     document.getElementById('editModal').classList.add('show');
 }
@@ -63,18 +66,68 @@ function closeEditModal() {
 
 // ── Modale ajout ──
 function openAddModal(groupe) {
-    document.getElementById('add-groupe').value          = groupe;
+    document.getElementById('add-groupe').value               = groupe;
     document.getElementById('add-groupe-display').textContent = groupe === 'seniors' ? 'Seniors' : 'Jeunes';
     document.getElementById('add-form').reset();
     const preview = document.getElementById('add-photo-preview');
     if (preview) { preview.src = ''; preview.style.display = 'none'; }
-    document.getElementById('add-status').textContent = '';
+    document.getElementById('add-photo-url-generic').value = '';
+    document.getElementById('add-status').textContent      = '';
+    const g = document.getElementById('add-img-gallery');
+    if (g) g.style.display = 'none';
     document.getElementById('addModal').classList.add('show');
 }
 
 function closeAddModal() {
     const m = document.getElementById('addModal');
     if (m) m.classList.remove('show');
+}
+
+// ── Galerie d'images génériques ──
+let _galleryCache = null;
+
+async function toggleGallery(prefix) {
+    const gallery = document.getElementById(`${prefix}-img-gallery`);
+    if (!gallery) return;
+
+    if (gallery.style.display !== 'none') {
+        gallery.style.display = 'none';
+        return;
+    }
+
+    gallery.style.display = 'grid';
+    if (_galleryCache === null) {
+        gallery.innerHTML = '<p class="gallery-loading">Chargement…</p>';
+        try {
+            const res  = await fetch('/php/equipes/list_images.php');
+            const data = await res.json();
+            _galleryCache = data.images || [];
+        } catch {
+            gallery.innerHTML = '<p class="gallery-loading">Erreur de chargement.</p>';
+            return;
+        }
+    }
+
+    gallery.innerHTML = '';
+    _galleryCache.forEach(url => {
+        const img   = document.createElement('img');
+        img.src     = url;
+        img.className = 'gallery-thumb';
+        img.title   = url.split('/').pop();
+        img.loading = 'lazy';
+        img.addEventListener('click', () => selectGenericImage(prefix, url));
+        gallery.appendChild(img);
+    });
+}
+
+function selectGenericImage(prefix, url) {
+    document.getElementById(`${prefix}-photo-url-generic`).value = url;
+    document.getElementById(`${prefix}-file`).value              = '';
+
+    const preview = document.getElementById(`${prefix}-photo-preview`);
+    if (preview) { preview.src = url; preview.style.display = 'block'; }
+
+    document.getElementById(`${prefix}-img-gallery`).style.display = 'none';
 }
 
 // ── Suppression ──
@@ -168,6 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('edit-file')?.addEventListener('change', function () {
         const file = this.files[0];
         if (!file) return;
+        document.getElementById('edit-photo-url-generic').value = '';
         const reader = new FileReader();
         reader.onload = ev => {
             const p = document.getElementById('edit-photo-preview');
@@ -181,6 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('add-file')?.addEventListener('change', function () {
         const file = this.files[0];
         if (!file) return;
+        document.getElementById('add-photo-url-generic').value = '';
         const reader = new FileReader();
         reader.onload = ev => {
             const p = document.getElementById('add-photo-preview');

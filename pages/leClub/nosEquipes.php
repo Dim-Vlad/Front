@@ -178,7 +178,10 @@ try {
                     <div class="edit-form-group">
                         <label for="edit-file">Photo de l'équipe</label>
                         <img id="edit-photo-preview" class="edit-photo-preview" src="" alt="Aperçu actuel">
+                        <input type="hidden" name="photo_url_generic" id="edit-photo-url-generic">
                         <input type="file" name="photo" id="edit-file" class="edit-file-input" accept="image/*">
+                        <button type="button" class="btn-pick-img" onclick="toggleGallery('edit')">🖼 Choisir une image existante</button>
+                        <div id="edit-img-gallery" class="img-gallery" style="display:none"></div>
                     </div>
                     <div class="edit-modal-actions">
                         <button type="submit" class="btn-save">Enregistrer</button>
@@ -227,7 +230,10 @@ try {
                     <div class="edit-form-group">
                         <label for="add-file">Photo de l'équipe</label>
                         <img id="add-photo-preview" class="edit-photo-preview" src="" alt="Aperçu" style="display:none">
+                        <input type="hidden" name="photo_url_generic" id="add-photo-url-generic">
                         <input type="file" name="photo" id="add-file" class="edit-file-input" accept="image/*">
+                        <button type="button" class="btn-pick-img" onclick="toggleGallery('add')">🖼 Choisir une image existante</button>
+                        <div id="add-img-gallery" class="img-gallery" style="display:none"></div>
                     </div>
                     <div class="edit-modal-actions">
                         <button type="submit" class="btn-save">Ajouter</button>
