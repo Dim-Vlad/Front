@@ -1,48 +1,148 @@
-h2 {
-    margin: 0;
-    font-size: 1.8rem;
+/* ── Bénévoles ─────────────────────────────────────────────────────── */
+
+.ben-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px 64px;
+}
+
+/* ── Bannière image ── */
+.ben-banner {
+    text-align: center;
+    margin: 28px 0 36px;
+}
+
+.ben-banner img {
+    max-width: 480px;
+    width: 100%;
+    height: auto;
+    display: inline-block;
+}
+
+/* ── Grille de cartes ── */
+.ben-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.ben-card--wide {
+    grid-column: 1 / -1;
+}
+
+/* ── Carte ── */
+.ben-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .07);
+    padding: 1.6rem 1.8rem 1.8rem;
+    position: relative;
+    overflow: hidden;
+    font-family: var(--font-poppins);
+}
+
+.ben-card-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--secondary-color);
+    border-radius: 12px 12px 0 0;
+}
+
+.ben-card h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
     color: var(--secondary-color);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin: 0 0 .9rem;
 }
 
-.main-contant {
-    display: flex; /* Affiche les divs en ligne */
-    justify-content: space-between; /* Espacement entre les colonnes */
-    gap: 20px; /* Ajoute un espace entre les deux divs */
-    align-items: flex-start; /* Aligne les divs en haut */
+.ben-card p {
+    font-size: .92rem;
+    color: #444;
+    line-height: 1.7;
+    margin: 0;
 }
 
-.benevoles {
-    flex: 1;
+/* ── Liste des tâches ── */
+.ben-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
     display: flex;
-    justify-content: space-around;
-    align-items: center;
-    margin: 20px 0;
+    flex-direction: column;
+    gap: .6rem;
 }
 
-.benevoles-content{
-    max-width: 80%;
-    background-color: var(--primary-color);
-    border-radius: 20px;
-    padding: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+.ben-list li {
+    font-size: .92rem;
+    color: #444;
+    line-height: 1.6;
+    padding-left: 1.2rem;
+    position: relative;
 }
 
+.ben-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: .55em;
+    width: 7px;
+    height: 7px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
 
-@media (max-width: 768px) {
-    .benevoles {
-        margin: 10px;
+/* ── CTA ── */
+.ben-cta {
+    margin-top: 36px;
+    text-align: center;
+}
+
+.ben-cta p {
+    font-family: var(--font-poppins);
+    font-size: .95rem;
+    color: #555;
+    margin: 0 0 1rem;
+}
+
+.ben-cta-btn {
+    display: inline-block;
+    background: var(--secondary-color);
+    color: #fff;
+    font-family: var(--font-poppins);
+    font-size: .9rem;
+    font-weight: 600;
+    padding: .7rem 2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background .2s, transform .15s;
+}
+
+.ben-cta-btn:hover {
+    background: var(--bg-dark);
+    transform: translateY(-2px);
+}
+
+/* ── Responsive ── */
+@media (max-width: 680px) {
+    .ben-cards {
+        grid-template-columns: 1fr;
     }
 
-    .benevoles-content {
-        flex-direction: column;
+    .ben-card--wide {
+        grid-column: auto;
     }
 
-    .benevoles-content h2 {
-        text-align: center;
-        font-size: 1.5rem;
+    .ben-banner img {
+        max-width: 320px;
     }
 
-    .benevoles-content p {
-        text-align: center;
+    .ben-wrap {
+        padding: 0 16px 48px;
     }
 }
