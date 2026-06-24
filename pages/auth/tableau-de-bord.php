@@ -47,14 +47,14 @@ $user = current_user();
         <div class="dashboard-cards">
 
             <a href="/pages/leClub/espace-entraineur.php" class="dashboard-card">
-                <div class="card-icon">📂</div>
+                <div class="card-icon">📥</div>
                 <h2>Ressources</h2>
                 <p>Documents téléchargeables et ressources FFVB.</p>
             </a>
 
             <?php if (has_any_role(['bureau', 'admin', 'moderateur'])): ?>
             <a href="/pages/bureau/drive.php" class="dashboard-card">
-                <div class="card-icon">📁</div>
+                <div class="card-icon">🗂️</div>
                 <h2>Dossiers Commissions</h2>
                 <p>Accédez aux documents partagés sur Google Drive.</p>
             </a>
