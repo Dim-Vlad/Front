@@ -1,0 +1,231 @@
+.dd-container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+}
+
+/* Liste */
+.dd-list {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    margin-bottom: 2rem;
+}
+
+.dd-empty {
+    color: #888;
+    font-style: italic;
+    text-align: center;
+    padding: 1.5rem 0;
+}
+
+.dd-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: .8rem 1rem;
+}
+
+.dd-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+    min-width: 0;
+}
+
+.dd-item-info strong {
+    font-size: .95rem;
+    color: var(--secondary-color);
+}
+
+.dd-url {
+    font-size: .72rem;
+    color: #999;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 380px;
+}
+
+.dd-item-actions {
+    display: flex;
+    gap: .4rem;
+    flex-shrink: 0;
+}
+
+.dd-btn {
+    padding: .3rem .65rem;
+    border-radius: 7px;
+    border: 1px solid #ccc;
+    background: #fff;
+    cursor: pointer;
+    font-size: .8rem;
+    transition: background .15s;
+}
+
+.dd-btn--order { color: #555; }
+.dd-btn--order:hover { background: #f0f0f0; }
+
+.dd-btn--edit {
+    border-color: #a8c4d4;
+    color: #1565c0;
+}
+.dd-btn--edit:hover { background: #e3f2fd; }
+
+.dd-btn--delete {
+    border-color: #e57373;
+    color: #c62828;
+}
+.dd-btn--delete:hover { background: #fdecea; }
+
+/* Formulaire */
+.dd-form-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.dd-form-card h2 {
+    font-size: 1.05rem;
+    color: var(--secondary-color);
+    margin: 0 0 1rem;
+}
+
+.dd-form-card label {
+    display: block;
+    font-size: .85rem;
+    font-weight: 600;
+    color: #444;
+    margin-bottom: .3rem;
+}
+
+.dd-form-card input[type="text"],
+.dd-form-card input[type="url"] {
+    width: 100%;
+    padding: .55rem .8rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: .9rem;
+    margin-bottom: .9rem;
+    box-sizing: border-box;
+}
+
+.dd-form-card small {
+    display: block;
+    font-size: .75rem;
+    color: #888;
+    margin-top: -.6rem;
+    margin-bottom: 1rem;
+}
+
+.dd-btn-submit {
+    padding: .55rem 1.4rem;
+    background: var(--secondary-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: .9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+}
+
+.dd-btn-submit:hover { opacity: .85; }
+
+/* Message */
+.dd-msg {
+    padding: .6rem .9rem;
+    border-radius: 8px;
+    font-size: .88rem;
+    margin-bottom: 1rem;
+}
+.dd-msg--ok  { background: #e8f5e9; color: #2e7d32; }
+.dd-msg--err { background: #fdecea; color: #c62828; }
+
+/* Modal */
+.dd-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.dd-modal-inner {
+    background: #fff;
+    border-radius: 14px;
+    padding: 1.8rem;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.18);
+}
+
+.dd-modal-inner h2 {
+    font-size: 1.05rem;
+    color: var(--secondary-color);
+    margin: 0 0 1.2rem;
+}
+
+.dd-modal-inner label {
+    display: block;
+    font-size: .85rem;
+    font-weight: 600;
+    color: #444;
+    margin-bottom: .3rem;
+}
+
+.dd-modal-inner input[type="text"],
+.dd-modal-inner input[type="url"] {
+    width: 100%;
+    padding: .55rem .8rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: .9rem;
+    margin-bottom: .9rem;
+    box-sizing: border-box;
+}
+
+.dd-modal-inner small {
+    display: block;
+    font-size: .75rem;
+    color: #888;
+    margin-top: -.6rem;
+    margin-bottom: 1rem;
+}
+
+.dd-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: .7rem;
+    margin-top: .5rem;
+}
+
+.dd-btn-cancel {
+    padding: .5rem 1.1rem;
+    background: #f5f5f5;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: .88rem;
+    cursor: pointer;
+}
+.dd-btn-cancel:hover { background: #e8e8e8; }
+
+/* Nav */
+.dd-nav {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}

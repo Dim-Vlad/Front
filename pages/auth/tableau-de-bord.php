@@ -52,6 +52,14 @@ $user = current_user();
                 <p>Documents téléchargeables et ressources FFVB.</p>
             </a>
 
+            <?php if (has_any_role(['bureau', 'admin', 'moderateur'])): ?>
+            <a href="/pages/bureau/drive.php" class="dashboard-card">
+                <div class="card-icon">📁</div>
+                <h2>Dossiers Commissions</h2>
+                <p>Accédez aux documents partagés sur Google Drive.</p>
+            </a>
+            <?php endif; ?>
+
             <?php if (has_role('arbitre') || has_role('admin') || has_role('bureau')): ?>
             <a href="/pages/arbitres/arbitres.php" class="dashboard-card">
                 <div class="card-icon">📣</div>
