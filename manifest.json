@@ -6,7 +6,7 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#223224",
+  "background_color": "#ffffff",
   "theme_color": "#063E0B",
   "lang": "fr",
   "icons": [
@@ -16,13 +16,13 @@
       "type": "image/png"
     },
     {
-      "src": "/images/logo-club/LogoVBO.png",
+      "src": "/images/logo-club/pwa-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/images/logo-club/LogoVBO.png",
+      "src": "/images/logo-club/pwa-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
