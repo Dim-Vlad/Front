@@ -1,0 +1,31 @@
+{
+  "name": "Volleyball Ollioulais",
+  "short_name": "VBO",
+  "description": "Site officiel du Volleyball Ollioulais",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#223224",
+  "theme_color": "#063E0B",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/images/favicon-36x36.png",
+      "sizes": "36x36",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/logo-club/LogoVBO.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/logo-club/LogoVBO.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

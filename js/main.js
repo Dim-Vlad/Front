@@ -126,6 +126,7 @@ function renderAuthButton(data) {
     }
 
     navbar.appendChild(container);
+    _pwaInjectBtn();
 
     // Logo manager pour admin / modérateur
     const roles = data.roles || [];
@@ -584,6 +585,164 @@ async function saveLogo() {
         else if (e.key === 'Escape')     _lbClose(false);
     }
 })();
+
+/* ── PWA — manifest + service worker + bouton d'installation ────── */
+
+(function () {
+    // Injecte le manifest si pas déjà présent
+    if (!document.querySelector('link[rel="manifest"]')) {
+        const link = document.createElement('link');
+        link.rel   = 'manifest';
+        link.href  = '/manifest.json';
+        document.head.appendChild(link);
+    }
+
+    // Injecte theme-color pour la barre de statut Android
+    if (!document.querySelector('meta[name="theme-color"]')) {
+        const meta = document.createElement('meta');
+        meta.name    = 'theme-color';
+        meta.content = '#063E0B';
+        document.head.appendChild(meta);
+    }
+
+    // Enregistre le service worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+})();
+
+/* ── Bouton d'installation PWA ───────────────────────────────────── */
+
+let _pwaInstallPrompt = null;
+
+// Déjà installée en mode standalone : on n'affiche rien
+const _pwaIsStandalone = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true;
+
+window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    _pwaInstallPrompt = e;
+    // Le bouton est déjà dans le DOM (injecté au chargement du menu), rien à faire
+});
+
+window.addEventListener('appinstalled', () => {
+    _pwaHideInstallBtn();
+    _pwaInstallPrompt = null;
+});
+
+function _pwaInjectBtn() {
+    if (_pwaIsStandalone) return;
+    if (document.getElementById('pwa-install-btn')) return;
+
+    if (!document.getElementById('pwa-install-style')) {
+        const style = document.createElement('style');
+        style.id = 'pwa-install-style';
+        style.textContent = `
+            #pwa-install-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: .35rem;
+                padding: .38rem .85rem;
+                background: var(--primary-color, #acc2ab);
+                color: var(--secondary-color, #063E0B);
+                border: none;
+                border-radius: 20px;
+                font-family: var(--font-poppins, 'Poppins', sans-serif);
+                font-size: .78rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: opacity .2s, transform .2s;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+            #pwa-install-btn:hover { opacity: .85; transform: translateY(-1px); }
+            #pwa-install-btn svg { width: 14px; height: 14px; }
+            #pwa-install-tooltip {
+                position: fixed;
+                bottom: 1.5rem;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #223224;
+                color: #fff;
+                padding: .85rem 1.3rem;
+                border-radius: 12px;
+                font-family: var(--font-poppins, 'Poppins', sans-serif);
+                font-size: .85rem;
+                box-shadow: 0 4px 20px rgba(0,0,0,.35);
+                z-index: 2000;
+                text-align: center;
+                max-width: 320px;
+                line-height: 1.5;
+                animation: pwaTooltipIn .25s ease;
+            }
+            #pwa-install-tooltip strong { color: #acc2ab; }
+            #pwa-install-tooltip-close {
+                display: block;
+                margin-top: .6rem;
+                font-size: .78rem;
+                color: rgba(255,255,255,.6);
+                cursor: pointer;
+                background: none;
+                border: none;
+                font-family: inherit;
+            }
+            @keyframes pwaTooltipIn {
+                from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+                to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+            }
+            @media (max-width: 480px) {
+                #pwa-install-btn span { display: none; }
+                #pwa-install-btn { padding: .38rem .55rem; }
+                #pwa-install-btn svg { width: 17px; height: 17px; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    const btn = document.createElement('button');
+    btn.id        = 'pwa-install-btn';
+    btn.title     = "Installer l'application";
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M7 11l5 5 5-5"/><path d="M5 20h14"/></svg><span>Installer</span>';
+
+    btn.addEventListener('click', async () => {
+        if (_pwaInstallPrompt) {
+            // Prompt natif disponible (Chrome Android / Edge desktop)
+            _pwaInstallPrompt.prompt();
+            const { outcome } = await _pwaInstallPrompt.userChoice;
+            if (outcome === 'accepted') _pwaHideInstallBtn();
+        } else {
+            // Pas de prompt natif : affiche les instructions selon navigateur
+            _pwaShowTooltip();
+        }
+    });
+
+    const navAuth = document.getElementById('nav-auth');
+    if (navAuth) navAuth.insertBefore(btn, navAuth.firstChild);
+}
+
+function _pwaShowTooltip() {
+    if (document.getElementById('pwa-install-tooltip')) return;
+    const isIOS   = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+    let msg;
+    if (isIOS || isSafari) {
+        msg = 'Sur Safari, appuyez sur <strong>Partager</strong> puis <strong>Sur l\'écran d\'accueil</strong>.';
+    } else {
+        msg = 'Dans Chrome ou Edge, cliquez sur l\'icône <strong>⊕</strong> à droite de la barre d\'adresse.';
+    }
+
+    const tip = document.createElement('div');
+    tip.id = 'pwa-install-tooltip';
+    tip.innerHTML = msg + '<button id="pwa-install-tooltip-close">Fermer</button>';
+    document.body.appendChild(tip);
+    document.getElementById('pwa-install-tooltip-close').addEventListener('click', () => tip.remove());
+    setTimeout(() => tip.remove(), 8000);
+}
+
+function _pwaHideInstallBtn() {
+    document.getElementById('pwa-install-btn')?.remove();
+}
 
 /* ── Initialisation ──────────────────────────────────────────────── */
 

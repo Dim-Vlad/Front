@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hors ligne - VBO</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #223224;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+        .offline-box {
+            max-width: 360px;
+        }
+        .offline-logo {
+            width: 90px;
+            margin-bottom: 1.8rem;
+            opacity: .9;
+        }
+        h1 {
+            font-size: 1.4rem;
+            margin-bottom: .75rem;
+            color: #acc2ab;
+        }
+        p {
+            font-size: .95rem;
+            color: rgba(255,255,255,.7);
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        a {
+            display: inline-block;
+            padding: .65rem 1.6rem;
+            background: #acc2ab;
+            color: #063E0B;
+            border-radius: 24px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: .95rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-box">
+        <img class="offline-logo" src="/images/logo-club/Logo-VBO-blanc.png" alt="VBO">
+        <h1>Vous êtes hors ligne</h1>
+        <p>Vérifiez votre connexion internet et réessayez.</p>
+        <a href="/" onclick="location.reload(); return false;">Réessayer</a>
+    </div>
+</body>
+</html>
