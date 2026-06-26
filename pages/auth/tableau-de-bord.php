@@ -68,7 +68,7 @@ $user = current_user();
             </a>
             <?php endif; ?>
 
-            <?php if (!has_role('arbitre')): ?>
+            <?php if (!has_any_role(['arbitre', 'adherent'])): ?>
             <a href="/pages/leClub/minibus.php" class="dashboard-card">
                 <div class="card-icon">🚌</div>
                 <h2>Réservations Minibus</h2>
