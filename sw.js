@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'vbo-v3';
+const CACHE_VERSION = 'vbo-v4';
 
 const STATIC_ASSETS = [
     '/',

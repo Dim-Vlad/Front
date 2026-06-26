@@ -10,13 +10,14 @@ $pdo = get_pdo();
 $message = '';
 $messageType = '';
 
-$validRoles = ['entraineur', 'admin', 'arbitre', 'bureau', 'moderateur'];
+$validRoles = ['entraineur', 'admin', 'arbitre', 'bureau', 'moderateur', 'adherent'];
 $roleLabels = [
     'entraineur' => 'Entraineur',
     'admin'      => 'Admin',
     'arbitre'    => 'Arbitre',
     'bureau'     => 'Bureau',
     'moderateur' => 'Modérateur',
+    'adherent'   => 'Adhérent',
 ];
 
 // Suppression

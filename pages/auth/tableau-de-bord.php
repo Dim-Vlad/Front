@@ -31,7 +31,7 @@ $user = current_user();
                 ?>
                 <p>Bonjour, <strong><?= htmlspecialchars($display) ?></strong> 👋</p>
                 <?php if (!empty($user['roles'])):
-                    $roleLabels = ['entraineur'=>'Entraineur','admin'=>'Admin','arbitre'=>'Arbitre','bureau'=>'Bureau','moderateur'=>'Modérateur'];
+                    $roleLabels = ['entraineur'=>'Entraineur','admin'=>'Admin','arbitre'=>'Arbitre','bureau'=>'Bureau','moderateur'=>'Modérateur','adherent'=>'Adhérent'];
                 ?>
                 <div class="user-roles">
                     <?php foreach ($user['roles'] as $r): ?>
