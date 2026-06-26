@@ -1,0 +1,103 @@
+.ca-container {
+    max-width: 800px;
+    margin: 24px auto;
+    padding: 0 20px 60px;
+}
+
+.ca-empty {
+    text-align: center;
+    color: #555;
+    font-size: 1rem;
+    padding: 40px 0;
+}
+
+.ca-count {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 16px;
+}
+
+.ca-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ca-item {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,.05);
+}
+
+.ca-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ca-info strong {
+    font-size: 1rem;
+    color: var(--secondary-color);
+}
+
+.ca-email {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.ca-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.ca-role-select {
+    padding: 7px 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    color: #333;
+    background: #f9f9f9;
+}
+
+.ca-btn {
+    padding: 7px 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity .15s;
+}
+
+.ca-btn:hover { opacity: .85; }
+
+.ca-btn--activate {
+    background: #d4edda;
+    color: #1a6a32;
+}
+
+.ca-btn--reject {
+    background: #fde8e8;
+    color: #c0392b;
+}
+
+@media (max-width: 560px) {
+    .ca-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

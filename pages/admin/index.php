@@ -6,6 +6,8 @@ if (!has_role('admin')) {
     exit;
 }
 $user = current_user();
+$pdo  = get_pdo();
+$nbAttente = (int)$pdo->query('SELECT COUNT(*) FROM users WHERE actif = 0')->fetchColumn();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -40,6 +42,12 @@ $user = current_user();
                 <div class="card-icon">👥</div>
                 <h2>Gestion des utilisateurs</h2>
                 <p>Créer, consulter et supprimer les comptes entraineurs.</p>
+            </a>
+
+            <a href="/pages/admin/comptes-attente.php" class="dashboard-card card-admin">
+                <div class="card-icon">⏳<?php if ($nbAttente > 0): ?><span class="badge-attente"><?= $nbAttente ?></span><?php endif; ?></div>
+                <h2>Comptes en attente</h2>
+                <p>Valider ou refuser les demandes d'inscription des adhérents.</p>
             </a>
 
             <a href="/pages/admin/journal.php" class="dashboard-card card-admin">

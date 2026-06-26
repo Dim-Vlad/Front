@@ -66,7 +66,12 @@ $entrees = $entrees->fetchAll(PDO::FETCH_ASSOC);
                         <strong><?= htmlspecialchars($e['username']) ?></strong>
                         <span class="journal-date"><?= $dateStr ?></span>
                     </div>
-                    <p class="journal-details">IP : <?= htmlspecialchars($e['ip'] ?: '—') ?></p>
+                    <p class="journal-details">
+                        <?php if (!empty($e['roles'])): ?>
+                        <span class="journal-roles"><?= htmlspecialchars($e['roles']) ?></span> —
+                        <?php endif; ?>
+                        IP : <?= htmlspecialchars($e['ip'] ?: '—') ?>
+                    </p>
                 </div>
             </li>
             <?php endforeach; ?>

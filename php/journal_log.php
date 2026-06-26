@@ -3,9 +3,10 @@ function log_activite(PDO $pdo, string $action, string $entite, string $details)
     $user = current_user();
     if (!$user) return;
     try {
+        $nomComplet = trim(($user['prenom'] ?? '') . ' ' . ($user['nom'] ?? '')) ?: ($user['username'] ?? 'Inconnu');
         $pdo->prepare(
             'INSERT INTO journal_activites (user_id, username, action, entite, details) VALUES (?, ?, ?, ?, ?)'
-        )->execute([(int)$user['id'], $user['username'], $action, $entite, $details]);
+        )->execute([(int)$user['id'], $nomComplet, $action, $entite, $details]);
     } catch (Exception $e) {
         // Ne pas bloquer l'action principale si le log échoue
     }

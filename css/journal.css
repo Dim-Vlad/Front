@@ -42,6 +42,11 @@
 .badge-modif       { background: #fff3cd; color: #7a5c00; }
 .badge-connexion   { background: #e8eaf6; color: #3949ab; }
 
+.journal-roles {
+  font-weight: 500;
+  color: var(--secondary-color);
+}
+
 .journal-body {
   flex: 1;
   min-width: 0;

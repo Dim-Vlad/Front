@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'vbo-v2';
+const CACHE_VERSION = 'vbo-v3';
 
 const STATIC_ASSETS = [
     '/',
@@ -56,7 +56,12 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Assets statiques (CSS, JS, images) : cache-first
+    // Assets versionnés (?v=...) : toujours depuis le réseau, jamais mis en cache
+    if (url.search.includes('v=')) {
+        return; // laisse le navigateur gérer avec son propre cache HTTP
+    }
+
+    // Assets statiques sans version (CSS/JS/images) : cache-first
     event.respondWith(
         caches.match(request).then(cached => {
             if (cached) return cached;
