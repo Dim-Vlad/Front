@@ -1,16 +1,76 @@
-﻿<!DOCTYPE html>
+<?php
+require_once __DIR__ . '/../../php/auth.php';
+
+$canEdit = is_logged_in() && has_any_role(['moderateur', 'admin']);
+
+// Defaults
+$saison  = '2026-2027';
+$tarifs  = [
+    'jeunes' => [
+        ['value' => 'M7',      'label' => 'M7 – Baby Volley', 'prix' => '140 € + 47 € (maillot & short)', 'cheques' => '2 chèques'],
+        ['value' => 'M9-M15',  'label' => 'M9 à M15',         'prix' => '160 € + 47 € (maillot & short)', 'cheques' => '2 chèques'],
+        ['value' => 'M18-M21', 'label' => 'M18 et M21',       'prix' => '190 € + 47 € (maillot & short)', 'cheques' => '2 chèques'],
+    ],
+    'seniors' => [
+        ['value' => 'Seniors',        'label' => 'Seniors',        'prix' => '200 € + 47 € (maillot & short)', 'cheques' => '2 chèques'],
+        ['value' => 'Seniors Loisirs','label' => 'Seniors Loisirs','prix' => '100 € + 47 € (maillot & short)', 'cheques' => 'Maillot non obligatoire'],
+        ['value' => 'Compet Lib',     'label' => 'Compet Lib',     'prix' => '130 € + 47 € (maillot & short)', 'cheques' => 'Maillot non obligatoire'],
+    ],
+];
+
+try {
+    $pdo = get_pdo();
+    $row = $pdo->query("SELECT cle, valeur FROM parametres WHERE cle IN ('inscription_saison','inscription_tarifs')")->fetchAll(PDO::FETCH_KEY_PAIR);
+    if (!empty($row['inscription_saison'])) $saison = $row['inscription_saison'];
+    if (!empty($row['inscription_tarifs'])) {
+        $decoded = json_decode($row['inscription_tarifs'], true);
+        if ($decoded) $tarifs = $decoded;
+    }
+} catch (Exception $e) {}
+
+// Calcul automatique des années depuis l'année de fin de saison
+$parts   = explode('-', $saison);
+$endYear = (int)($parts[1] ?? 2027);
+$years   = [
+    'M7_debut'    => $endYear - 7,
+    'M7_fin'      => $endYear - 6,
+    'M9_debut'    => $endYear - 15,
+    'M9_fin'      => $endYear - 8,
+    'M18_debut'   => $endYear - 21,
+    'M18_fin'     => $endYear - 16,
+    'seniors_max' => $endYear - 22,
+];
+
+$annees = [
+    'M7'      => 'Né(e) en ' . $years['M7_debut'] . ', ' . $years['M7_fin'] . ' et après',
+    'M9-M15'  => 'Né(e) entre ' . $years['M9_debut'] . ' et ' . $years['M9_fin'],
+    'M18-M21' => 'Né(e) entre ' . $years['M18_debut'] . ' et ' . $years['M18_fin'],
+    'Seniors' => 'Né(e) en ' . $years['seniors_max'] . ' et avant',
+];
+
+// Saison précédente pour les "pièces à fournir"
+$startYear  = (int)($parts[0] ?? 2026);
+$saisonPrev = ($startYear - 1) . '/' . ($endYear - 1);
+
+function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); }
+?>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fiche de renseignements - VBO</title>
     <link href="/css/styles.css?v=20260624" rel="stylesheet">
-    <link href="/css/leClub/inscription.css?v=20260623" rel="stylesheet">
+    <link href="/css/leClub/inscription.css?v=20260626" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        window.INSCRIPTION_SAISON      = <?= json_encode($saison) ?>;
+        window.INSCRIPTION_SAISON_PREV = <?= json_encode($saisonPrev) ?>;
+    </script>
 </head>
 
 <body>
@@ -18,39 +78,28 @@
 
     <div id="content">
 
-        <div class="inscription-header">
+        <div class="header-content">
             <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo VBO">
             <div class="text-content">
                 <h1>Fiche de renseignements<br>
-                    Saison 2026–2027</h1>
+                    Saison <?= h($saison) ?></h1>
                 <p>Remplissez votre fiche en ligne et téléchargez-la en PDF, prête à remettre au club.</p>
             </div>
         </div>
 
         <!-- ── Onglets de navigation ── -->
         <div class="inscription-tabs">
-            <div class="inscription-tab active" id="tab-jeunes" onclick="switchTab('jeunes')">
-                <div class="tab-inner">
-                    <div class="tab-icon">&#x1F3D0;</div>
-                    <div class="tab-text">
-                        <div class="tab-label">Formulaire</div>
-                        <div class="tab-title">Jeunes</div>
-                        <div class="tab-sub">M7 &middot; M9&#8209;M15 &middot; M18&#8209;M21</div>
-                    </div>
+            <div class="inscription-toggle">
+                <div class="inscription-tab active" id="tab-jeunes" onclick="switchTab('jeunes')">
+                    <span class="toggle-icon">&#x1F3D0;</span>
+                    <span class="toggle-title">Jeunes</span>
+                    <span class="toggle-sub">M7 &middot; M9&#8209;M15 &middot; M18&#8209;M21</span>
                 </div>
-                <div class="tab-bar"></div>
-            </div>
-
-            <div class="inscription-tab" id="tab-seniors" onclick="switchTab('seniors')">
-                <div class="tab-inner">
-                    <div class="tab-icon">&#x1F3D0;</div>
-                    <div class="tab-text">
-                        <div class="tab-label">Formulaire</div>
-                        <div class="tab-title">Seniors</div>
-                        <div class="tab-sub">Seniors &middot; Loisirs &middot; Compet&nbsp;Lib</div>
-                    </div>
+                <div class="inscription-tab" id="tab-seniors" onclick="switchTab('seniors')">
+                    <span class="toggle-icon">&#x1F3D0;</span>
+                    <span class="toggle-title">Seniors</span>
+                    <span class="toggle-sub">Seniors &middot; Loisirs &middot; Compet&nbsp;Lib</span>
                 </div>
-                <div class="tab-bar"></div>
             </div>
         </div>
 
@@ -65,43 +114,22 @@
                     <div class="form-section-title">Catégorie</div>
                     <div class="form-section-body">
                         <div class="tarifs-grid">
-
+                            <?php foreach ($tarifs['jeunes'] as $t):
+                                $ann = $annees[$t['value']] ?? '';
+                                $idRadio = 'j_' . strtolower(str_replace(['-','–',' '], '_', $t['value']));
+                            ?>
                             <div class="tarif-card" onclick="selectTarif('j', this)">
                                 <div class="tarif-header">
-                                    <input type="radio" name="catJ" id="j_m7" value="M7">
-                                    <label for="j_m7">M7 – Baby Volley</label>
+                                    <input type="radio" name="catJ" id="<?= h($idRadio) ?>" value="<?= h($t['value']) ?>">
+                                    <label for="<?= h($idRadio) ?>"><?= h($t['label']) ?></label>
                                 </div>
                                 <div class="tarif-body">
-                                    <div class="annees">Né(e) en 2020, 2021 et après</div>
-                                    <div class="prix">140 € + 47 € (maillot &amp; short)</div>
-                                    <div class="cheques">2 chèques</div>
+                                    <?php if ($ann): ?><div class="annees"><?= h($ann) ?></div><?php endif; ?>
+                                    <div class="prix"><?= h($t['prix']) ?></div>
+                                    <div class="cheques"><?= h($t['cheques']) ?></div>
                                 </div>
                             </div>
-
-                            <div class="tarif-card" onclick="selectTarif('j', this)">
-                                <div class="tarif-header">
-                                    <input type="radio" name="catJ" id="j_m9" value="M9-M15">
-                                    <label for="j_m9">M9 à M15</label>
-                                </div>
-                                <div class="tarif-body">
-                                    <div class="annees">Né(e) entre 2012 et 2019</div>
-                                    <div class="prix">160 € + 47 € (maillot &amp; short)</div>
-                                    <div class="cheques">2 chèques</div>
-                                </div>
-                            </div>
-
-                            <div class="tarif-card" onclick="selectTarif('j', this)">
-                                <div class="tarif-header">
-                                    <input type="radio" name="catJ" id="j_m18" value="M18-M21">
-                                    <label for="j_m18">M18 et M21</label>
-                                </div>
-                                <div class="tarif-body">
-                                    <div class="annees">Né(e) entre 2006 et 2011</div>
-                                    <div class="prix">190 € + 47 € (maillot &amp; short)</div>
-                                    <div class="cheques">2 chèques</div>
-                                </div>
-                            </div>
-
+                            <?php endforeach; ?>
                         </div>
                     </div>
                 </div>
@@ -173,7 +201,7 @@
                     <div class="form-section-body">
                         <div class="pieces-grid">
                             <div class="pieces-col">
-                                <h4>Licencié saison 2025/2026 au VBO</h4>
+                                <h4>Licencié saison <?= h($saisonPrev) ?> au VBO</h4>
                                 <ul>
                                     <li>La présente fiche de renseignement</li>
                                     <li>Cotisation par chèque (échelonnable) + chèque 47 € maillot à l'ordre de : Volley Ball Ollioulais ou paiement HelloAsso</li>
@@ -252,41 +280,22 @@
                     <div class="form-section-title">Catégorie</div>
                     <div class="form-section-body">
                         <div class="tarifs-grid">
-
+                            <?php foreach ($tarifs['seniors'] as $i => $t):
+                                $idRadio = 's_' . strtolower(str_replace([' ', '-'], '_', $t['value']));
+                                $ann = ($t['value'] === 'Seniors') ? $annees['Seniors'] : '';
+                            ?>
                             <div class="tarif-card" onclick="selectTarif('s', this)">
                                 <div class="tarif-header">
-                                    <input type="radio" name="catS" id="s_comp" value="Seniors">
-                                    <label for="s_comp">Seniors</label>
+                                    <input type="radio" name="catS" id="<?= h($idRadio) ?>" value="<?= h($t['value']) ?>">
+                                    <label for="<?= h($idRadio) ?>"><?= h($t['label']) ?></label>
                                 </div>
                                 <div class="tarif-body">
-                                    <div class="annees">Né(e) en 2005 et avant</div>
-                                    <div class="prix">200 € + 47 € (maillot &amp; short)</div>
-                                    <div class="cheques">2 chèques</div>
+                                    <?php if ($ann): ?><div class="annees"><?= h($ann) ?></div><?php endif; ?>
+                                    <div class="prix"><?= h($t['prix']) ?></div>
+                                    <div class="cheques"><?= h($t['cheques']) ?></div>
                                 </div>
                             </div>
-
-                            <div class="tarif-card" onclick="selectTarif('s', this)">
-                                <div class="tarif-header">
-                                    <input type="radio" name="catS" id="s_loisirs" value="Seniors Loisirs">
-                                    <label for="s_loisirs">Seniors Loisirs</label>
-                                </div>
-                                <div class="tarif-body">
-                                    <div class="prix">100 € + 47 € (maillot &amp; short)</div>
-                                    <div class="cheques">Maillot non obligatoire</div>
-                                </div>
-                            </div>
-
-                            <div class="tarif-card" onclick="selectTarif('s', this)">
-                                <div class="tarif-header">
-                                    <input type="radio" name="catS" id="s_lib" value="Compet Lib">
-                                    <label for="s_lib">Compet Lib</label>
-                                </div>
-                                <div class="tarif-body">
-                                    <div class="prix">130 € + 47 € (maillot &amp; short)</div>
-                                    <div class="cheques">Maillot non obligatoire</div>
-                                </div>
-                            </div>
-
+                            <?php endforeach; ?>
                         </div>
                     </div>
                 </div>
@@ -349,7 +358,7 @@
                     <div class="form-section-body">
                         <div class="pieces-grid">
                             <div class="pieces-col">
-                                <h4>Licencié saison 2025/2026 au VBO</h4>
+                                <h4>Licencié saison <?= h($saisonPrev) ?> au VBO</h4>
                                 <ul>
                                     <li>La présente fiche de renseignement</li>
                                     <li>Cotisation par chèque (échelonnable) + chèque 47 € maillot à l'ordre de : Volley Ball Ollioulais ou paiement HelloAsso</li>
@@ -407,10 +416,111 @@
 
     </div><!-- /content -->
 
+    <?php if ($canEdit): ?>
+    <!-- ── Bouton flottant + panneau d'édition ── -->
+    <button id="insc-edit-fab" onclick="inscOpenEdit()" title="Modifier la saison et les tarifs">⚙ Modifier</button>
+
+    <div id="insc-edit-overlay" onclick="inscCloseEdit(event)">
+        <div id="insc-edit-panel">
+            <div class="insc-edit-header">
+                <h2>Saison &amp; Tarifs</h2>
+                <button class="insc-edit-close" onclick="inscCloseEdit(null, true)">&times;</button>
+            </div>
+            <div class="insc-edit-body">
+                <div id="insc-edit-msg" class="insc-msg" style="display:none"></div>
+
+                <div class="insc-edit-section">
+                    <label class="insc-edit-label">Saison</label>
+                    <input type="text" id="ie_saison" class="insc-edit-input"
+                           value="<?= h($saison) ?>" placeholder="2026-2027" pattern="\d{4}-\d{4}">
+                    <small class="insc-edit-hint">Les dates de naissance des catégories sont recalculées automatiquement.</small>
+                </div>
+
+                <div class="insc-edit-section">
+                    <div class="insc-edit-group-title">Tarifs Jeunes</div>
+                    <?php foreach ($tarifs['jeunes'] as $i => $t): ?>
+                    <div class="insc-edit-tarif">
+                        <div class="insc-edit-tarif-label"><?= h($t['label']) ?></div>
+                        <div class="insc-edit-row">
+                            <label>Prix</label>
+                            <input type="text" id="ie_prix_j_<?= $i ?>" class="insc-edit-input"
+                                   value="<?= h($t['prix']) ?>" placeholder="Ex : 140 € + 47 €">
+                        </div>
+                        <div class="insc-edit-row">
+                            <label>Info chèques</label>
+                            <input type="text" id="ie_cheques_j_<?= $i ?>" class="insc-edit-input"
+                                   value="<?= h($t['cheques']) ?>" placeholder="Ex : 2 chèques">
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <div class="insc-edit-section">
+                    <div class="insc-edit-group-title">Tarifs Seniors</div>
+                    <?php foreach ($tarifs['seniors'] as $i => $t): ?>
+                    <div class="insc-edit-tarif">
+                        <div class="insc-edit-tarif-label"><?= h($t['label']) ?></div>
+                        <div class="insc-edit-row">
+                            <label>Prix</label>
+                            <input type="text" id="ie_prix_s_<?= $i ?>" class="insc-edit-input"
+                                   value="<?= h($t['prix']) ?>" placeholder="Ex : 200 € + 47 €">
+                        </div>
+                        <div class="insc-edit-row">
+                            <label>Info chèques</label>
+                            <input type="text" id="ie_cheques_s_<?= $i ?>" class="insc-edit-input"
+                                   value="<?= h($t['cheques']) ?>" placeholder="Ex : 2 chèques">
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <div class="insc-edit-footer">
+                <button class="insc-btn-cancel" onclick="inscCloseEdit(null, true)">Annuler</button>
+                <button class="insc-btn-save" onclick="inscSaveConfig()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function inscOpenEdit() {
+        document.getElementById('insc-edit-overlay').classList.add('open');
+    }
+    function inscCloseEdit(e, force) {
+        if (!force && e && e.target !== document.getElementById('insc-edit-overlay')) return;
+        document.getElementById('insc-edit-overlay').classList.remove('open');
+    }
+    async function inscSaveConfig() {
+        const msg = document.getElementById('insc-edit-msg');
+        const fd  = new FormData();
+        fd.append('saison', document.getElementById('ie_saison').value.trim());
+        <?php foreach ($tarifs['jeunes'] as $i => $t): ?>
+        fd.append('prix_j_<?= $i ?>',    document.getElementById('ie_prix_j_<?= $i ?>').value.trim());
+        fd.append('cheques_j_<?= $i ?>', document.getElementById('ie_cheques_j_<?= $i ?>').value.trim());
+        <?php endforeach; ?>
+        <?php foreach ($tarifs['seniors'] as $i => $t): ?>
+        fd.append('prix_s_<?= $i ?>',    document.getElementById('ie_prix_s_<?= $i ?>').value.trim());
+        fd.append('cheques_s_<?= $i ?>', document.getElementById('ie_cheques_s_<?= $i ?>').value.trim());
+        <?php endforeach; ?>
+        const res  = await fetch('/php/inscription/save_config.php', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.success) {
+            msg.textContent = 'Enregistré. Rechargement…';
+            msg.className = 'insc-msg insc-msg--ok';
+            msg.style.display = 'block';
+            setTimeout(() => location.reload(), 900);
+        } else {
+            msg.textContent = data.error || 'Erreur.';
+            msg.className = 'insc-msg insc-msg--err';
+            msg.style.display = 'block';
+        }
+    }
+    </script>
+    <?php endif; ?>
+
     <div id="footer"></div>
 
     <script src="/js/main.js"></script>
-    <script src="/js/inscription.js?v=3"></script>
+    <script src="/js/inscription.js?v=4"></script>
     <script>
         loadHTML('/commun/menu.html', 'menu');
         loadHTML('/commun/footer.html', 'footer');

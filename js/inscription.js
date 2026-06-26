@@ -154,8 +154,8 @@ function generatePDF(type) {
   doc.text("VOLLEY BALL OLLIOULAIS", M + 20, y + 8);
   doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(...VD);
   doc.text(type === "jeunes"
-    ? "FICHE DE RENSEIGNEMENTS JEUNES - SAISON 2026-2027"
-    : "FICHE DE RENSEIGNEMENTS SENIORS - SAISON 2026-2027", M + 20, y + 14);
+    ? "FICHE DE RENSEIGNEMENTS JEUNES - SAISON " + (window.INSCRIPTION_SAISON || "2026-2027")
+    : "FICHE DE RENSEIGNEMENTS SENIORS - SAISON " + (window.INSCRIPTION_SAISON || "2026-2027"), M + 20, y + 14);
   doc.setDrawColor(...VD); doc.setLineWidth(0.3); doc.rect(210 - M - 22, y, 22, 21);
   doc.setFontSize(6); doc.setTextColor(150, 150, 150);
   doc.text("[ QR Code\nHelloAsso ]", 210 - M - 11, y + 8, { align: "center" });
@@ -252,7 +252,7 @@ function generatePDF(type) {
   doc.setFillColor(...VP); doc.rect(M,y,hCW,7,"F"); doc.rect(M+hCW,y,hCW,7,"F");
   doc.setDrawColor(...VD); doc.rect(M,y,hCW,7); doc.rect(M+hCW,y,hCW,7);
   doc.setFontSize(7); doc.setFont("helvetica","bold"); doc.setTextColor(...VS);
-  doc.text("Licencie saison 2025/2026 au VBO",M+2,y+5); doc.text("Nouveau licencie",M+hCW+2,y+5);
+  doc.text("Licencie saison " + (window.INSCRIPTION_SAISON_PREV || "2025/2026") + " au VBO",M+2,y+5); doc.text("Nouveau licencie",M+hCW+2,y+5);
   y+=7;
   const pyS=y; let p1=y+4, p2=y+4;
   doc.setFont("helvetica","normal"); doc.setFontSize(6.5); doc.setTextColor(40,40,40);
@@ -308,5 +308,5 @@ function generatePDF(type) {
   doc.text("www.volleyballollioulais.fr",M+fw3*2,y+3.5);
 
   const nom=type==="jeunes"?(v("j_nom")||"Jeune"):(v("s_nom")||"Senior");
-  doc.save("VBO_Inscription_"+nom+"_2026-2027.pdf");
+  doc.save("VBO_Inscription_" + nom + "_" + (window.INSCRIPTION_SAISON || "2026-2027") + ".pdf");
 }
