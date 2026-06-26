@@ -46,6 +46,14 @@ $user = current_user();
     <div class="dashboard-container">
         <div class="dashboard-cards">
 
+            <?php if (has_role('admin')): ?>
+            <a href="/pages/admin/index.php" class="dashboard-card card-admin card-admin--featured">
+                <div class="card-icon">⚙️</div>
+                <h2>Administration</h2>
+                <p>Gestion des utilisateurs.</p>
+            </a>
+            <?php endif; ?>
+
             <a href="/pages/leClub/espace-entraineur.php" class="dashboard-card">
                 <div class="card-icon">📥</div>
                 <h2>Ressources</h2>
@@ -79,22 +87,6 @@ $user = current_user();
                 <div class="card-icon">✅</div>
                 <h2>Pointage Présences</h2>
                 <p>Suivez le pointage des présences aux entraînements et aux matchs.</p>
-            </a>
-            <?php endif; ?>
-
-            <?php if (has_any_role(['admin', 'moderateur'])): ?>
-            <a href="/pages/admin/journal.php" class="dashboard-card">
-                <div class="card-icon">📝</div>
-                <h2>Journal des activités</h2>
-                <p>Historique des modifications effectuées par les modérateurs et administrateurs.</p>
-            </a>
-            <?php endif; ?>
-
-            <?php if (has_role('admin')): ?>
-            <a href="/pages/admin/index.php" class="dashboard-card card-admin">
-                <div class="card-icon">⚙️</div>
-                <h2>Administration</h2>
-                <p>Gestion du site, des utilisateurs et des contenus.</p>
             </a>
             <?php endif; ?>
 

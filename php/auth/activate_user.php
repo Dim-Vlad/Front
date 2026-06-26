@@ -41,6 +41,21 @@ try {
 
     log_activite($pdo, 'modification', 'utilisateur', 'Compte activé : ' . $user['prenom'] . ' ' . $user['nom'] . ' → rôle ' . $role);
 
+    // Email de confirmation à l'adhérent
+    try {
+        $subj = '[VBO] Votre compte a été validé';
+        $body = "Bonjour " . $user['prenom'] . ",\r\n\r\n"
+                . "Votre compte sur le site du Volleyball Ollioulais a été validé par un administrateur.\r\n\r\n"
+                . "Vous pouvez maintenant vous connecter à votre espace membres :\r\n"
+                . "https://volleyballollioulais.fr/pages/auth/connexion.php\r\n\r\n"
+                . "Identifiant : " . $user['username'] . "\r\n\r\n"
+                . "À bientôt sur le terrain !\r\n"
+                . "-- L'équipe VBO";
+        $headers = "From: no-reply@volleyballollioulais.fr\r\n"
+                    . "Content-Type: text/plain; charset=utf-8\r\n";
+        @mail($user['username'], $subj, $body, $headers);
+    } catch (Exception $e) {}
+
     ob_end_clean();
     echo json_encode(['success' => true]);
 
