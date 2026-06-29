@@ -44,7 +44,7 @@ function renderCell(string $text): string {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Planning des entraînements - VBO</title>
     <link href="/css/styles.css?v=20260624" rel="stylesheet">
-    <link href="/css/leClub/entrainements.css?v=20260623" rel="stylesheet">
+    <link href="/css/leClub/entrainements.css?v=20260629" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -148,8 +148,12 @@ function renderCell(string $text): string {
                                     <?php break; endswitch; ?>
                                 <?php if ($canEdit): ?>
                                 <td class="actions-cell no-print">
-                                    <button class="btn-row-edit" onclick="openEditModal(this.closest('tr'))" title="Modifier">✏️</button>
-                                    <button class="btn-row-delete" onclick="confirmRowDelete(this.closest('tr'))" title="Supprimer">🗑</button>
+                                    <div class="action-btns">
+                                        <button class="btn-row-move btn-row-up" onclick="moveSlot(this.closest('tr'),-1)" title="Monter">▲</button>
+                                        <button class="btn-row-edit" onclick="openEditModal(this.closest('tr'))" title="Modifier">✏️</button>
+                                        <button class="btn-row-delete" onclick="confirmRowDelete(this.closest('tr'))" title="Supprimer">🗑</button>
+                                        <button class="btn-row-move btn-row-down" onclick="moveSlot(this.closest('tr'),1)" title="Descendre">▼</button>
+                                    </div>
                                 </td>
                                 <?php endif; ?>
                             </tr>
@@ -247,28 +251,42 @@ function renderCell(string $text): string {
                         </div>
                     </div>
                     <input type="hidden" name="colspan" id="slot-colspan" value="111">
-                    <div class="terrain-checkboxes">
-                        <div class="terrain-cb-group">
-                            <label class="terrain-cb-header">
-                                <input type="checkbox" id="cb-t1" onchange="toggleTerrain('t1')" checked>
-                                <span>Terrain 1</span>
-                            </label>
-                            <textarea name="t1" id="slot-t1" rows="2" placeholder="Équipe&#10;Coach"></textarea>
+                    <textarea name="t1" id="slot-t1" hidden></textarea>
+                    <textarea name="t2" id="slot-t2" hidden></textarea>
+                    <textarea name="t3" id="slot-t3" hidden></textarea>
+                    <div class="terrain-layout-block">
+                        <div class="terrain-layout-label">Répartition des terrains</div>
+                        <div class="layout-picker" id="layout-picker">
+                            <button type="button" class="layout-opt" data-colspan="111" title="3 équipes — 1 terrain chacune">
+                                <div class="lp-visual">
+                                    <div class="lp-bar">T1</div>
+                                    <div class="lp-bar">T2</div>
+                                    <div class="lp-bar">T3</div>
+                                </div>
+                                <span class="lp-desc">1 · 1 · 1</span>
+                            </button>
+                            <button type="button" class="layout-opt" data-colspan="21" title="Équipe 1 : T1+T2 — Équipe 2 : T3">
+                                <div class="lp-visual">
+                                    <div class="lp-bar lp-w2">T1+T2</div>
+                                    <div class="lp-bar">T3</div>
+                                </div>
+                                <span class="lp-desc">2 · 1</span>
+                            </button>
+                            <button type="button" class="layout-opt" data-colspan="12" title="Équipe 1 : T1 — Équipe 2 : T2+T3">
+                                <div class="lp-visual">
+                                    <div class="lp-bar">T1</div>
+                                    <div class="lp-bar lp-w2">T2+T3</div>
+                                </div>
+                                <span class="lp-desc">1 · 2</span>
+                            </button>
+                            <button type="button" class="layout-opt" data-colspan="3" title="1 équipe — 3 terrains">
+                                <div class="lp-visual">
+                                    <div class="lp-bar lp-w3">T1+T2+T3</div>
+                                </div>
+                                <span class="lp-desc">3</span>
+                            </button>
                         </div>
-                        <div class="terrain-cb-group">
-                            <label class="terrain-cb-header">
-                                <input type="checkbox" id="cb-t2" onchange="toggleTerrain('t2')" checked>
-                                <span>Terrain 2</span>
-                            </label>
-                            <textarea name="t2" id="slot-t2" rows="2" placeholder="Équipe&#10;Coach"></textarea>
-                        </div>
-                        <div class="terrain-cb-group">
-                            <label class="terrain-cb-header">
-                                <input type="checkbox" id="cb-t3" onchange="toggleTerrain('t3')" checked>
-                                <span>Terrain 3</span>
-                            </label>
-                            <textarea name="t3" id="slot-t3" rows="2" placeholder="Équipe&#10;Coach"></textarea>
-                        </div>
+                        <div id="terrain-teams" class="terrain-teams"></div>
                     </div>
                     <div class="modal-actions">
                         <button type="submit" class="btn-save">Enregistrer</button>

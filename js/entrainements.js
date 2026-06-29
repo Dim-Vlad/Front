@@ -1,4 +1,4 @@
-﻿document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
     loadHTML('/commun/menu.html', 'menu');
     loadHTML('/commun/footer.html', 'footer');
 
@@ -11,6 +11,13 @@
     });
     document.getElementById('saisonModal')?.addEventListener('click', e => {
         if (e.target === document.getElementById('saisonModal')) closeSaisonModal();
+    });
+
+    // Sélecteur de disposition des terrains
+    document.getElementById('layout-picker')?.addEventListener('click', e => {
+        const btn = e.target.closest('.layout-opt');
+        if (!btn) return;
+        setLayout(btn.dataset.colspan);
     });
 
     // Calculateur de catégorie
@@ -27,25 +34,22 @@
         const status = document.getElementById('slot-status');
         status.textContent = 'Enregistrement…'; status.className = 'modal-status';
 
-        // Calculer colspan depuis les cases cochées et vider les inactives
-        const c1 = document.getElementById('cb-t1').checked;
-        const c2 = document.getElementById('cb-t2').checked;
-        const c3 = document.getElementById('cb-t3').checked;
+        // Synchroniser les champs visuels vers les hidden textareas
+        const colspan = document.getElementById('slot-colspan').value;
+        const vals = { t1: '', t2: '', t3: '' };
+        document.querySelectorAll('#terrain-teams .team-visual-input').forEach(ta => {
+            const target = ta.dataset.target;
+            if (target in vals) vals[target] = ta.value;
+        });
+        document.getElementById('slot-t1').value = vals.t1;
+        document.getElementById('slot-t2').value = vals.t2;
+        document.getElementById('slot-t3').value = vals.t3;
 
-        let colspan = '111';
-        if      (c1 && c2 && !c3) colspan = '21';
-        else if (c1 && !c2 && !c3) colspan = '3';
-
-        if (!c1) document.getElementById('slot-t1').value = '';
-        if (!c2) document.getElementById('slot-t2').value = '';
-        if (!c3) document.getElementById('slot-t3').value = '';
-        document.getElementById('slot-colspan').value = colspan;
-
-        // Réactiver pour que FormData les inclue (disabled n'est pas envoyé)
-        ['t1','t2','t3'].forEach(t => { document.getElementById('slot-' + t).disabled = false; });
+        // Vider les champs non utilisés selon le layout
+        if (colspan !== '111') document.getElementById('slot-t3').value = '';
+        if (colspan === '3')   document.getElementById('slot-t2').value = '';
 
         const fd  = new FormData(e.target);
-        refreshTerrainVisibility();
         const id  = fd.get('id');
         const url = id ? '/php/entrainements/update_entrainement.php' : '/php/entrainements/add_entrainement.php';
         try {
@@ -89,6 +93,8 @@
             }
         } catch { status.textContent = 'Erreur réseau.'; status.className = 'modal-status error'; }
     });
+
+    updateMoveButtons();
 });
 
 // ── Calculateur de catégorie ──────────────────────
@@ -190,6 +196,57 @@ function rebuildBirthYearSelect(endYear) {
     if (contact) contact.style.display = 'none';
 }
 
+// ── Disposition des terrains ──────────────────────
+
+const LAYOUT_CONFIG = {
+    '111': [
+        { badge: 'T1',       target: 't1' },
+        { badge: 'T2',       target: 't2' },
+        { badge: 'T3',       target: 't3' },
+    ],
+    '21': [
+        { badge: 'T1 + T2',  target: 't1' },
+        { badge: 'T3',       target: 't2' },
+    ],
+    '12': [
+        { badge: 'T1',       target: 't1' },
+        { badge: 'T2 + T3',  target: 't2' },
+    ],
+    '3': [
+        { badge: 'T1 + T2 + T3', target: 't1' },
+    ],
+};
+
+function setLayout(colspan, values) {
+    document.querySelectorAll('.layout-opt').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.colspan === colspan);
+    });
+    document.getElementById('slot-colspan').value = colspan;
+    renderTerrainTeams(colspan, values);
+}
+
+function renderTerrainTeams(colspan, values) {
+    const container = document.getElementById('terrain-teams');
+    if (!container) return;
+
+    // Sauvegarder les valeurs des champs visuels actuels si aucune valeur fournie
+    if (!values) {
+        values = {};
+        container.querySelectorAll('.team-visual-input').forEach(ta => {
+            values[ta.dataset.target] = ta.value;
+        });
+    }
+
+    const config = LAYOUT_CONFIG[colspan] || LAYOUT_CONFIG['111'];
+    container.innerHTML = config.map(({ badge, target }) => {
+        const val = escHtml(values[target] ?? '');
+        return `<div class="team-input-group">
+            <label><span class="team-terrain-badge">${badge}</span> Équipe</label>
+            <textarea class="team-visual-input" data-target="${target}" rows="2" placeholder="Équipe&#10;Coach">${val}</textarea>
+        </div>`;
+    }).join('');
+}
+
 // ── Modales ───────────────────────────────────────
 
 let _editingId = null;
@@ -202,13 +259,7 @@ function openAddModal(jour) {
     document.getElementById('slot-jour').value  = jour;
     document.getElementById('slot-horaire').value = '';
     document.getElementById('slot-lieu').value    = '';
-    document.getElementById('slot-t1').value = '';
-    document.getElementById('slot-t2').value = '';
-    document.getElementById('slot-t3').value = '';
-    document.getElementById('cb-t1').checked = true;
-    document.getElementById('cb-t2').checked = true;
-    document.getElementById('cb-t3').checked = true;
-    refreshTerrainVisibility();
+    setLayout('111', { t1: '', t2: '', t3: '' });
     document.getElementById('slot-status').textContent = '';
     document.getElementById('slot-delete-zone').style.display = 'none';
     document.getElementById('slotModal').classList.add('open');
@@ -220,18 +271,14 @@ function openEditModal(tr) {
     document.getElementById('slot-modal-title').textContent = 'Modifier le créneau';
     document.getElementById('slot-id').value = _editingId;
 
-    // Pré-remplir jour/horaire/lieu depuis le DOM (disponible immédiatement)
+    // Pré-remplir jour/horaire/lieu depuis le DOM
     const horaireTd = tr.querySelector('.horaire-cell');
     document.getElementById('slot-jour').value    = tr.dataset.jour;
     document.getElementById('slot-horaire').value = horaireTd?.querySelector('.horaire-time')?.textContent.trim() || '';
     document.getElementById('slot-lieu').value    = horaireTd?.querySelector('.horaire-lieu')?.textContent.trim() || '';
 
-    // Vider et désactiver les terrains pendant le chargement
-    ['t1','t2','t3'].forEach(t => {
-        document.getElementById('slot-' + t).value   = '';
-        document.getElementById('slot-' + t).disabled = true;
-        document.getElementById('cb-' + t).checked   = true;
-    });
+    // Réinitialiser le layout en attendant le chargement
+    setLayout('111', { t1: '', t2: '', t3: '' });
 
     document.getElementById('slot-status').textContent = 'Chargement…';
     document.getElementById('slot-status').className   = 'modal-status';
@@ -256,26 +303,12 @@ async function loadSlotData(id) {
         document.getElementById('slot-horaire').value = d.horaire;
         document.getElementById('slot-lieu').value    = d.lieu;
 
-        let v1 = d.t1 ?? '', v2 = d.t2 ?? '', v3 = d.t3 ?? '';
-        if (d.colspan === '21') { v2 = ''; v3 = d.t2 ?? ''; }
-        if (d.colspan === '12') { v2 = ''; v3 = d.t2 ?? ''; }
-        if (d.colspan === '3')  { v2 = ''; v3 = ''; }
+        // Appliquer le layout et pré-remplir les valeurs
+        // DB: t1=equipe1, t2=equipe2 (pour '21' et '12'), t3=equipe3 (pour '111' seulement)
+        setLayout(d.colspan, { t1: d.t1 ?? '', t2: d.t2 ?? '', t3: d.t3 ?? '' });
 
-        ['t1','t2','t3'].forEach(t => {
-            document.getElementById('slot-' + t).disabled = false;
-        });
-        document.getElementById('slot-t1').value = v1;
-        document.getElementById('slot-t2').value = v2;
-        document.getElementById('slot-t3').value = v3;
-        document.getElementById('cb-t1').checked = v1.trim() !== '';
-        document.getElementById('cb-t2').checked = v2.trim() !== '';
-        document.getElementById('cb-t3').checked = v3.trim() !== '';
-        refreshTerrainVisibility();
         statusEl.textContent = '';
     } catch (err) {
-        ['t1','t2','t3'].forEach(t => {
-            document.getElementById('slot-' + t).disabled = false;
-        });
         statusEl.textContent = 'Erreur lors du chargement : ' + (err.message || 'inconnu');
         statusEl.className   = 'modal-status error';
     }
@@ -283,7 +316,6 @@ async function loadSlotData(id) {
 
 function confirmRowDelete(tr) {
     openEditModal(tr);
-    // Scroll to delete zone after modal opens
     setTimeout(() => {
         document.getElementById('slot-delete-zone').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 100);
@@ -318,11 +350,9 @@ async function toggleTableVisibility() {
             btn.title         = 'Masquer aux visiteurs';
             label.textContent = 'Visible';
 
-            // Masquer le banner "tableau masqué"
             const banner = document.getElementById('table-hidden-banner');
             if (banner) banner.remove();
 
-            // Afficher le tableau s'il avait été remplacé par un placeholder
             const placeholder = document.querySelector('.table-placeholder');
             if (placeholder) {
                 placeholder.remove();
@@ -346,7 +376,6 @@ async function toggleTableVisibility() {
             btn.title         = 'Rendre visible aux visiteurs';
             label.textContent = 'Masqué';
 
-            // Afficher ou créer le banner
             let banner = document.getElementById('table-hidden-banner');
             if (!banner) {
                 banner = document.createElement('div');
@@ -360,7 +389,6 @@ async function toggleTableVisibility() {
             }
         }
     } catch {
-        // En cas d'erreur réseau, restaurer l'état visuel du bouton
         btn.title = TABLE_VISIBLE ? 'Masquer aux visiteurs' : 'Rendre visible aux visiteurs';
     } finally {
         btn.disabled = false;
@@ -377,35 +405,58 @@ function closeSaisonModal() {
     document.getElementById('saisonModal')?.classList.remove('open');
 }
 
-// ── Terrain fields (cases à cocher) ──────────────
+// ── Déplacement des créneaux ──────────────────────
 
-function toggleTerrain(which) {
-    const cb = document.getElementById('cb-' + which);
-    const ta = document.getElementById('slot-' + which);
-    const group = cb.closest('.terrain-cb-group');
-    if (cb.checked) {
-        group.classList.remove('terrain-inactive');
-        ta.disabled = false;
-    } else {
-        group.classList.add('terrain-inactive');
-        ta.disabled = true;
-        ta.value = '';
-    }
+async function reorderSlot(id1, id2) {
+    const fd = new FormData();
+    fd.append('id1', id1);
+    fd.append('id2', id2);
+    try {
+        const res  = await fetch('/php/entrainements/reorder_entrainement.php', { method: 'POST', body: fd });
+        const json = await res.json();
+        return json.success === true;
+    } catch { return false; }
 }
 
-function refreshTerrainVisibility() {
-    ['t1','t2','t3'].forEach(t => {
-        const cb = document.getElementById('cb-' + t);
-        const ta = document.getElementById('slot-' + t);
-        const group = cb?.closest('.terrain-cb-group');
-        if (!cb || !ta || !group) return;
-        if (cb.checked) {
-            group.classList.remove('terrain-inactive');
-            ta.disabled = false;
-        } else {
-            group.classList.add('terrain-inactive');
-            ta.disabled = true;
-        }
+function swapAdjacentRows(rowAbove, rowBelow) {
+    // rowAbove est actuellement avant rowBelow dans le DOM
+    const dayCell = rowAbove.querySelector('.day-cell');
+    if (dayCell) {
+        // rowAbove est la première ligne du jour ; après l'échange, rowBelow prend la position
+        rowAbove.removeChild(dayCell);
+        rowBelow.prepend(dayCell);
+    }
+    rowAbove.parentNode.insertBefore(rowBelow, rowAbove);
+}
+
+async function moveSlot(tr, dir) {
+    const jour = tr.dataset.jour;
+    const rows = Array.from(document.querySelectorAll(`tr.row-${jour}[data-id]`));
+    const idx  = rows.indexOf(tr);
+    const targetIdx = idx + dir;
+    if (targetIdx < 0 || targetIdx >= rows.length) return;
+
+    const other   = rows[targetIdx];
+    const success = await reorderSlot(tr.dataset.id, other.dataset.id);
+    if (!success) return;
+
+    if (dir < 0) {
+        swapAdjacentRows(other, tr);   // other était au-dessus
+    } else {
+        swapAdjacentRows(tr, other);   // tr était au-dessus
+    }
+    updateMoveButtons();
+}
+
+function updateMoveButtons() {
+    ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].forEach(jour => {
+        const rows = Array.from(document.querySelectorAll(`tr.row-${jour}[data-id]`));
+        rows.forEach((tr, i) => {
+            const up   = tr.querySelector('.btn-row-up');
+            const down = tr.querySelector('.btn-row-down');
+            if (up)   up.disabled   = (i === 0);
+            if (down) down.disabled = (i === rows.length - 1);
+        });
     });
 }
 
@@ -446,10 +497,9 @@ const colTotal  = typeof CAN_EDIT !== 'undefined' && CAN_EDIT ? 6 : 5;
 
 function buildRowHtml(d) {
     let terrainHtml = '';
-    const cell = (t) => `<td>${t ? `<span class="cell-team">${escHtml(t.split('\n')[0] || '')}</span>${t.split('\n')[1] ? '<span class="cell-coach">' + escHtml(t.split('\n')[1]) + '</span>' : ''}` : '<span class="cell-empty">—</span>'}</td>`;
     switch (d.colspan) {
         case '111':
-            terrainHtml = cell(d.t1) + cell(d.t2) + cell(d.t3); break;
+            terrainHtml = `<td>${cellContent(d.t1)}</td><td>${cellContent(d.t2)}</td><td>${cellContent(d.t3)}</td>`; break;
         case '21':
             terrainHtml = `<td colspan="2">${cellContent(d.t1)}</td><td>${cellContent(d.t2)}</td>`; break;
         case '12':
@@ -458,8 +508,12 @@ function buildRowHtml(d) {
             terrainHtml = `<td colspan="3">${cellContent(d.t1)}</td>`; break;
     }
     const actionsHtml = CAN_EDIT ? `<td class="actions-cell no-print">
-        <button class="btn-row-edit" onclick="openEditModal(this.closest('tr'))" title="Modifier">✏️</button>
-        <button class="btn-row-delete" onclick="confirmRowDelete(this.closest('tr'))" title="Supprimer">🗑</button>
+        <div class="action-btns">
+            <button class="btn-row-move btn-row-up" onclick="moveSlot(this.closest('tr'),-1)" title="Monter">▲</button>
+            <button class="btn-row-edit" onclick="openEditModal(this.closest('tr'))" title="Modifier">✏️</button>
+            <button class="btn-row-delete" onclick="confirmRowDelete(this.closest('tr'))" title="Supprimer">🗑</button>
+            <button class="btn-row-move btn-row-down" onclick="moveSlot(this.closest('tr'),1)" title="Descendre">▼</button>
+        </div>
     </td>` : '';
     return `<tr class="row-${d.jour}" data-jour="${d.jour}" data-id="${d.id}">
         <td class="horaire-cell">
@@ -478,28 +532,22 @@ function cellContent(t) {
 }
 
 function addRowToDOM(data) {
-    // Trouver la ligne "ajouter" du bon jour
     const addRow = document.querySelector(`.add-row-tr[data-jour="${data.jour}"]`);
     if (!addRow) { location.reload(); return; }
 
-    // Vérifier si la cellule "jour" existe déjà dans le tbody pour ce jour
     const existing = document.querySelector(`tr.row-${data.jour}[data-id]`);
     const newTr    = document.createElement('tr');
-    newTr.className   = `row-${data.jour}`;
+    newTr.className    = `row-${data.jour}`;
     newTr.dataset.jour = data.jour;
     newTr.dataset.id   = data.id;
 
     if (!existing) {
-        // Première ligne du jour : ajouter la cellule jour
         const dayTd = document.createElement('td');
-        dayTd.className = 'day-cell';
-        dayTd.rowSpan   = 1;
+        dayTd.className   = 'day-cell';
+        dayTd.rowSpan     = 1;
         dayTd.textContent = dayLabels[data.jour] || data.jour;
         newTr.appendChild(dayTd);
     } else {
-        // Incrémenter le rowspan de la cellule jour existante
-        const dayCellExisting = document.querySelector(`.day-cell[rowspan]`);
-        // Find the day-cell for this specific day
         const allRows  = document.querySelectorAll(`tr.row-${data.jour}[data-id]`);
         const firstRow = allRows[0];
         if (firstRow) {
@@ -508,9 +556,7 @@ function addRowToDOM(data) {
         }
     }
 
-    // Ajouter les cellules horaire + terrains + actions
     newTr.insertAdjacentHTML('beforeend', buildRowHtml(data).replace(/<tr[^>]*>|<\/tr>/g, '').replace(/<td class="horaire/, '<td class="horaire'));
-    // Simpler: just reload. The DOM manipulation for rowspan is complex.
     location.reload();
 }
 
@@ -524,22 +570,16 @@ function updateRowInDOM(data) {
         horaireTd.querySelector('.horaire-lieu').textContent = data.lieu;
     }
 
-    // Rebuild terrain cells
     const actionsTd = tr.querySelector('.actions-cell');
-    // Remove existing terrain TDs (not day-cell, not horaire-cell, not actions-cell)
     tr.querySelectorAll('td:not(.day-cell):not(.horaire-cell):not(.actions-cell)').forEach(td => td.remove());
 
     const tmp = document.createElement('template');
     let terrainHtml = '';
-    const cc = (t) => t
-        ? `<span class="cell-team">${escHtml((t.split('\n')[0]) || '')}</span>${t.split('\n')[1] ? '<span class="cell-coach">' + escHtml(t.split('\n')[1]) + '</span>' : ''}`
-        : '<span class="cell-empty">—</span>';
-
     switch (data.colspan) {
-        case '111': terrainHtml = `<td>${cc(data.t1)}</td><td>${cc(data.t2)}</td><td>${cc(data.t3)}</td>`; break;
-        case '21':  terrainHtml = `<td colspan="2">${cc(data.t1)}</td><td>${cc(data.t2)}</td>`; break;
-        case '12':  terrainHtml = `<td>${cc(data.t1)}</td><td colspan="2">${cc(data.t2)}</td>`; break;
-        case '3':   terrainHtml = `<td colspan="3">${cc(data.t1)}</td>`; break;
+        case '111': terrainHtml = `<td>${cellContent(data.t1)}</td><td>${cellContent(data.t2)}</td><td>${cellContent(data.t3)}</td>`; break;
+        case '21':  terrainHtml = `<td colspan="2">${cellContent(data.t1)}</td><td>${cellContent(data.t2)}</td>`; break;
+        case '12':  terrainHtml = `<td>${cellContent(data.t1)}</td><td colspan="2">${cellContent(data.t2)}</td>`; break;
+        case '3':   terrainHtml = `<td colspan="3">${cellContent(data.t1)}</td>`; break;
     }
     tmp.innerHTML = terrainHtml;
     if (actionsTd) {
@@ -555,11 +595,9 @@ function removeRowFromDOM(id) {
     const jour    = tr.dataset.jour;
     const allRows = document.querySelectorAll(`tr.row-${jour}[data-id]`);
     if (allRows.length === 1) {
-        // Dernière ligne du jour : recharger (pour nettoyer le rowspan)
         location.reload();
         return;
     }
-    // Réattribuer la cellule jour si c'est la 1re ligne
     if (tr.querySelector('.day-cell')) {
         const nextRow = tr.nextElementSibling;
         if (nextRow && nextRow.classList.contains(`row-${jour}`)) {
@@ -569,11 +607,11 @@ function removeRowFromDOM(id) {
             nextRow.prepend(dayTd);
         }
     } else {
-        // Décrémenter rowspan de la cellule jour
         const firstRow = document.querySelector(`tr.row-${jour}[data-id] .day-cell`);
         if (firstRow) firstRow.rowSpan = (parseInt(firstRow.rowSpan) || 2) - 1;
     }
     tr.remove();
+    updateMoveButtons();
 }
 
 // ── Utilitaires ───────────────────────────────────
