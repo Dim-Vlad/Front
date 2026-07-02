@@ -71,7 +71,7 @@ if (has_role('admin')) {
             <?php endif; ?>
 
             <a href="/pages/pronostics/index.php" class="dashboard-card">
-                <div class="card-icon">🎯</div>
+                <div class="card-icon">🔮</div>
                 <h2>Pronostics</h2>
                 <p>Pronostiques les résultats des matchs du VBO et grimpez au classement.</p>
             </a>
