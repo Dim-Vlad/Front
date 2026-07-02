@@ -12,7 +12,7 @@ document.addEventListener('keydown', function(event) {
 
 document.addEventListener('DOMContentLoaded', () => {
     loadHTML('/commun/menu.html', 'menu');
-    loadHTML('/commun/footer.html', 'footer');
+    loadHTML('/commun/footer.php', 'footer');
 });
 
 // ── Modale info ──

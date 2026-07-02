@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../../php/auth.php';
 
 $canEdit = is_logged_in() && has_any_role(['moderateur','admin']);
@@ -271,7 +271,7 @@ try {
     <script src="/js/evenements.js"></script>
     <script>
         loadHTML('/commun/menu.html', 'menu');
-        loadHTML('/commun/footer.html', 'footer');
+        loadHTML('/commun/footer.php', 'footer');
     </script>
 </body>
 </html>

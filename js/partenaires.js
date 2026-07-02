@@ -1,6 +1,6 @@
 ﻿document.addEventListener('DOMContentLoaded', () => {
     loadHTML('/commun/menu.html', 'menu');
-    loadHTML('/commun/footer.html', 'footer');
+    loadHTML('/commun/footer.php', 'footer');
 
     // Fermeture modales sur Escape
     document.addEventListener('keydown', e => {

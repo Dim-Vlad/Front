@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 if (!has_role('admin')) {
@@ -330,7 +330,7 @@ $currentId = (int)(current_user()['id']);
     <script src="/js/main.js"></script>
     <script>
         loadHTML('/commun/menu.html', 'menu');
-        loadHTML('/commun/footer.html', 'footer');
+        loadHTML('/commun/footer.php', 'footer');
 
         function togglePassword(btn) {
             const input = btn.closest('.password-wrapper').querySelector('input');

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 if (!has_role('admin')) {
@@ -108,7 +108,7 @@ $dossiers = $pdo->query("SELECT id, nom, url FROM drive_dossiers ORDER BY ordre 
     <script src="/js/main.js"></script>
     <script>
         loadHTML('/commun/menu.html', 'menu');
-        loadHTML('/commun/footer.html', 'footer');
+        loadHTML('/commun/footer.php', 'footer');
 
         async function addDossier(e) {
             e.preventDefault();

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 $isMod = has_any_role(['admin', 'moderateur']);
@@ -149,7 +149,7 @@ $isMod = has_any_role(['admin', 'moderateur']);
     <script src="/js/main.js"></script>
     <script>
         loadHTML('/commun/menu.html', 'menu');
-        loadHTML('/commun/footer.html', 'footer');
+        loadHTML('/commun/footer.php', 'footer');
     </script>
 </body>
 </html>

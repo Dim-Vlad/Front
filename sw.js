@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'vbo-v4.1.0';
+﻿const CACHE_VERSION = 'vbo-v4.1.0';
 
 const STATIC_ASSETS = [
     '/',
@@ -6,7 +6,7 @@ const STATIC_ASSETS = [
     '/css/styles.css',
     '/js/main.js',
     '/commun/menu.html',
-    '/commun/footer.html',
+    '/commun/footer.php',
     '/images/logo-club/LogoVBO.png',
     '/images/logo-club/Logo-VBO-blanc.png',
     '/images/favicon-36x36.png',

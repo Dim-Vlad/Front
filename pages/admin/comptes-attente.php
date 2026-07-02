@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 if (!has_role('admin')) {
@@ -83,7 +83,7 @@ $roles = $pdo->query("SELECT name, label FROM roles ORDER BY label")->fetchAll(P
     <script src="/js/main.js"></script>
     <script>
         loadHTML('/commun/menu.html', 'menu');
-        loadHTML('/commun/footer.html', 'footer');
+        loadHTML('/commun/footer.php', 'footer');
 
         async function activateUser(id) {
             const role = document.getElementById('role-' + id).value;
