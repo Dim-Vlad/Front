@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 if (!has_role('admin')) {
@@ -62,6 +62,12 @@ $nbAttente = (int)$pdo->query('SELECT COUNT(*) FROM users WHERE actif = 0')->fet
                 <p>Historique des connexions à l'espace membres.</p>
             </a>
 
+            <a href="/pages/admin/gestion-site.php" class="dashboard-card card-admin">
+                <div class="card-icon">⚙️</div>
+                <h2>Gestion du site</h2>
+                <p>Modifier l'adresse, l'email de contact, les réseaux sociaux et les informations du club.</p>
+            </a>
+
         </div>
 
         <a href="/pages/auth/tableau-de-bord.php" class="back-btn">← Retour au tableau de bord</a>
@@ -72,7 +78,7 @@ $nbAttente = (int)$pdo->query('SELECT COUNT(*) FROM users WHERE actif = 0')->fet
     <script src="/js/main.js"></script>
     <script>
         loadHTML('/commun/menu.html', 'menu');
-        loadHTML('/commun/footer.html', 'footer');
+        loadHTML('/commun/footer.php', 'footer');
     </script>
 </body>
 </html>
