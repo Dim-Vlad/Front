@@ -6,15 +6,27 @@ $canEdit = is_logged_in() && has_any_role(['moderateur', 'admin']);
 $docs   = [];
 $liens  = [];
 $saison = '2026-2027';
-$videoUrl = '';
+
+$defaultTutos = [
+    1 => ['titre' => '01 – Création de compte et connexion',      'url' => 'https://youtu.be/QqA1F569QJU'],
+    2 => ['titre' => '02 – Création d\'un profil adulte',          'url' => 'https://youtu.be/Bh_K_WiDpsc'],
+    3 => ['titre' => '03 – Création d\'une inscription adulte',    'url' => 'https://youtu.be/e-fR_nYjkg4'],
+    4 => ['titre' => '04 – Création d\'un profil enfant',          'url' => 'https://youtu.be/qQRHJQZBN-o'],
+    5 => ['titre' => '05 – Création d\'une inscription enfant',    'url' => 'https://youtu.be/_RGtEiADvLo'],
+    6 => ['titre' => '06 – Paiement du dossier (HelloAsso)',       'url' => 'https://youtu.be/m4zzgywP_ro'],
+];
+$tutos = $defaultTutos;
 
 try {
     $pdo = get_pdo();
     $docs  = $pdo->query("SELECT * FROM licence_documents ORDER BY section, ordre")->fetchAll();
     $liens = $pdo->query("SELECT * FROM licence_liens ORDER BY id")->fetchAll();
     $cfg   = $pdo->query("SELECT cle, valeur FROM licence_config")->fetchAll(PDO::FETCH_KEY_PAIR);
-    $saison   = $cfg['saison']    ?? '2026-2027';
-    $videoUrl = $cfg['video_url'] ?? '';
+    $saison = $cfg['saison'] ?? '2026-2027';
+    for ($i = 1; $i <= 6; $i++) {
+        if (isset($cfg["tuto_{$i}_titre"])) $tutos[$i]['titre'] = $cfg["tuto_{$i}_titre"];
+        if (isset($cfg["tuto_{$i}_url"]))   $tutos[$i]['url']   = $cfg["tuto_{$i}_url"];
+    }
 } catch (Exception $e) {}
 
 // Grouper les documents par section
@@ -25,16 +37,10 @@ foreach ($docs as $d) $docsBySection[$d['section']][] = $d;
 $liensBySlug = [];
 foreach ($liens as $l) $liensBySlug[$l['slug']] = $l;
 
-// Transformer URL YouTube → embed
-function youtube_embed(string $url): string {
-    if ($url === '') return '';
-    if (str_contains($url, '/embed/')) return $url;
-    if (preg_match('/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/', $url, $m)) {
-        return 'https://www.youtube.com/embed/' . $m[1] . '?rel=0';
-    }
-    return $url;
+function youtube_id(string $url): string {
+    if (preg_match('/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/', $url, $m)) return $m[1];
+    return '';
 }
-$embedUrl = youtube_embed($videoUrl);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -44,7 +50,7 @@ $embedUrl = youtube_embed($videoUrl);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Licences - VBO</title>
     <link href="/css/styles.css?v=20260624" rel="stylesheet">
-    <link href="/css/leClub/licence.css?v=20260623" rel="stylesheet">
+    <link href="/css/leClub/licence.css?v=20260702" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -148,27 +154,40 @@ $embedUrl = youtube_embed($videoUrl);
 
         </div><!-- /licence-layout -->
 
-        <!-- ── Section vidéo tuto ── -->
-        <div class="video-section" id="video-section">
-            <div class="video-section-header">
-                <h2>Tutoriel myFFvolley App</h2>
+        <!-- ── Section tutoriels myFFvolley ── -->
+        <div class="tuto-section">
+            <div class="tuto-section-header">
+                <h2>Tutoriels myFFvolley App</h2>
                 <?php if ($canEdit): ?>
-                <button class="btn-edit-video" onclick="openVideoModal()" title="Modifier la vidéo">✏️ <?= $videoUrl ? 'Changer la vidéo' : 'Ajouter une vidéo' ?></button>
+                <span class="tuto-admin-hint">Survolez une vidéo pour la modifier</span>
                 <?php endif; ?>
             </div>
-            <div id="video-wrap" class="video-wrap">
-                <?php if ($embedUrl): ?>
-                <iframe id="video-iframe"
-                    src="<?= htmlspecialchars($embedUrl) ?>"
-                    allowfullscreen
-                    loading="lazy"
-                    title="Tutoriel myFFvolley"></iframe>
-                <?php else: ?>
-                <div class="video-placeholder" id="video-placeholder">
-                    <span>📹</span>
-                    <p>La vidéo tutoriel sera disponible prochainement.</p>
+            <div class="tuto-grid">
+                <?php foreach ($tutos as $num => $t):
+                    $vid = youtube_id($t['url']);
+                    $thumb = $vid ? 'https://img.youtube.com/vi/' . $vid . '/mqdefault.jpg' : '';
+                ?>
+                <div class="tuto-card"
+                     data-tuto-id="<?= $num ?>"
+                     data-titre="<?= htmlspecialchars($t['titre'], ENT_QUOTES) ?>"
+                     data-url="<?= htmlspecialchars($t['url'], ENT_QUOTES) ?>">
+                    <div class="tuto-thumb" onclick="playTuto(this,'<?= $vid ?>')">
+                        <?php if ($thumb): ?>
+                        <img src="<?= $thumb ?>" alt="<?= htmlspecialchars($t['titre']) ?>" loading="lazy">
+                        <button class="tuto-play-btn" type="button" aria-hidden="true">▶</button>
+                        <?php else: ?>
+                        <div class="tuto-no-video">📹 Vidéo à configurer</div>
+                        <?php endif; ?>
+                    </div>
+                    <a class="tuto-info" href="<?= htmlspecialchars($t['url']) ?>" target="_blank" rel="noopener" title="Voir sur YouTube">
+                        <span class="tuto-num"><?= str_pad((string)$num, 2, '0', STR_PAD_LEFT) ?></span>
+                        <span class="tuto-titre"><?= htmlspecialchars($t['titre']) ?></span>
+                    </a>
+                    <?php if ($canEdit): ?>
+                    <button class="tuto-edit-btn" onclick="openTutoModal(<?= $num ?>)" title="Modifier">✏️</button>
+                    <?php endif; ?>
                 </div>
-                <?php endif; ?>
+                <?php endforeach; ?>
             </div>
         </div>
 
@@ -232,28 +251,30 @@ $embedUrl = youtube_embed($videoUrl);
         </div>
     </div>
 
-    <!-- ── Modale vidéo ── -->
-    <div id="videoModal" class="licence-modal">
+    <!-- ── Modale tutoriel ── -->
+    <div id="tutoModal" class="licence-modal">
         <div class="licence-modal-content">
             <div class="licence-modal-header">
-                <h3>Vidéo tutoriel myFFvolley</h3>
-                <span class="close" onclick="closeVideoModal()" role="button" tabindex="0" aria-label="Fermer">&times;</span>
+                <h3>Modifier le tutoriel <span id="tuto-modal-num"></span></h3>
+                <span class="close" onclick="closeTutoModal()" role="button" tabindex="0" aria-label="Fermer">&times;</span>
             </div>
             <div class="licence-modal-body">
-                <form id="video-form">
+                <form id="tuto-form">
+                    <input type="hidden" name="num" id="tuto-num-input">
                     <div class="modal-form-group">
-                        <label for="video-url-input">URL YouTube</label>
-                        <input type="text" name="valeur" id="video-url-input"
-                            placeholder="https://www.youtube.com/watch?v=..."
-                            value="<?= htmlspecialchars($videoUrl, ENT_QUOTES) ?>">
-                        <input type="hidden" name="cle" value="video_url">
-                        <small class="modal-hint">Accepte les liens YouTube standards (youtube.com/watch?v=... ou youtu.be/...)</small>
+                        <label for="tuto-titre-input">Titre</label>
+                        <input type="text" name="titre" id="tuto-titre-input" required>
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="tuto-url-input">URL YouTube</label>
+                        <input type="text" name="url" id="tuto-url-input" placeholder="https://youtu.be/...">
+                        <small class="modal-hint">Accepte youtube.com/watch?v=... ou youtu.be/...</small>
                     </div>
                     <div class="modal-actions">
                         <button type="submit" class="btn-save">Enregistrer</button>
-                        <button type="button" class="btn-cancel-modal" onclick="closeVideoModal()">Annuler</button>
+                        <button type="button" class="btn-cancel-modal" onclick="closeTutoModal()">Annuler</button>
                     </div>
-                    <p class="modal-status" id="video-status"></p>
+                    <p class="modal-status" id="tuto-status"></p>
                 </form>
             </div>
         </div>

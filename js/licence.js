@@ -1,17 +1,17 @@
-﻿document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
     loadHTML('/commun/menu.html', 'menu');
     loadHTML('/commun/footer.html', 'footer');
 
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
-            closeDocModal(); closeLienModal(); closeVideoModal(); closeSaisonModal();
+            closeDocModal(); closeLienModal(); closeTutoModal(); closeSaisonModal();
         }
     });
 
-    ['docModal','lienModal','videoModal','saisonModal'].forEach(id => {
+    ['docModal','lienModal','tutoModal','saisonModal'].forEach(id => {
         document.getElementById(id)?.addEventListener('click', e => {
             if (e.target === document.getElementById(id)) {
-                closeDocModal(); closeLienModal(); closeVideoModal(); closeSaisonModal();
+                closeDocModal(); closeLienModal(); closeTutoModal(); closeSaisonModal();
             }
         });
     });
@@ -54,21 +54,19 @@
         } catch { status.textContent = 'Erreur réseau.'; status.className = 'modal-status error'; }
     });
 
-    // Formulaire vidéo
-    document.getElementById('video-form')?.addEventListener('submit', async e => {
+    // Formulaire tutoriel
+    document.getElementById('tuto-form')?.addEventListener('submit', async e => {
         e.preventDefault();
-        const status = document.getElementById('video-status');
+        const status = document.getElementById('tuto-status');
         status.textContent = 'Enregistrement…'; status.className = 'modal-status';
         const fd = new FormData(e.target);
         try {
-            const res  = await fetch('/php/licence/update_licence_config.php', { method: 'POST', body: fd });
+            const res  = await fetch('/php/licence/update_licence_tuto.php', { method: 'POST', body: fd });
             const json = await res.json();
             if (json.success) {
-                updateVideoInDOM(json.valeur);
-                // Mettre à jour la valeur dans l'input
-                document.getElementById('video-url-input').value = json.valeur;
+                updateTutoInDOM(json.num, json.titre, json.url);
                 status.textContent = 'Enregistré ✓'; status.className = 'modal-status success';
-                setTimeout(closeVideoModal, 900);
+                setTimeout(closeTutoModal, 900);
             } else {
                 status.textContent = json.error || 'Erreur.'; status.className = 'modal-status error';
             }
@@ -85,7 +83,6 @@
             const res  = await fetch('/php/licence/update_licence_config.php', { method: 'POST', body: fd });
             const json = await res.json();
             if (json.success) {
-                // Mettre à jour le titre de section
                 document.querySelectorAll('.doc-section-header h2').forEach(h => {
                     if (h.textContent.startsWith('Documents licence')) {
                         h.textContent = 'Documents licence ' + json.valeur;
@@ -131,16 +128,51 @@ function closeLienModal() {
     document.getElementById('lienModal')?.classList.remove('open');
 }
 
-// ── Modale vidéo ───────────────────────────────────
+// ── Tutoriels ──────────────────────────────────────
 
-function openVideoModal() {
-    document.getElementById('video-status').textContent = '';
-    document.getElementById('video-status').className  = 'modal-status';
-    document.getElementById('videoModal').classList.add('open');
+function playTuto(thumb, videoId) {
+    if (!videoId) return;
+    thumb.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0"
+        allowfullscreen allow="autoplay; encrypted-media" loading="lazy"></iframe>`;
 }
 
-function closeVideoModal() {
-    document.getElementById('videoModal')?.classList.remove('open');
+
+function openTutoModal(num) {
+    const card = document.querySelector(`.tuto-card[data-tuto-id="${num}"]`);
+    if (!card) return;
+    document.getElementById('tuto-modal-num').textContent = '#' + num;
+    document.getElementById('tuto-num-input').value       = num;
+    document.getElementById('tuto-titre-input').value     = card.dataset.titre;
+    document.getElementById('tuto-url-input').value       = card.dataset.url;
+    document.getElementById('tuto-status').textContent    = '';
+    document.getElementById('tuto-status').className      = 'modal-status';
+    document.getElementById('tutoModal').classList.add('open');
+}
+
+function closeTutoModal() {
+    document.getElementById('tutoModal')?.classList.remove('open');
+}
+
+function updateTutoInDOM(num, titre, url) {
+    const card = document.querySelector(`.tuto-card[data-tuto-id="${num}"]`);
+    if (!card) return;
+    card.dataset.titre = titre;
+    card.dataset.url   = url;
+    card.querySelector('.tuto-titre').textContent = titre;
+
+    // Reconstruire la miniature avec la nouvelle URL
+    const vid   = extractYoutubeId(url);
+    const thumb = card.querySelector('.tuto-thumb');
+    if (thumb) {
+        if (vid) {
+            thumb.setAttribute('onclick', `playTuto(this,'${vid}')`);
+            thumb.innerHTML = `<img src="https://img.youtube.com/vi/${vid}/mqdefault.jpg" alt="${escHtml(titre)}" loading="lazy">
+                <button class="tuto-play-btn" type="button" aria-hidden="true">▶</button>`;
+        } else {
+            thumb.setAttribute('onclick', '');
+            thumb.innerHTML = '<div class="tuto-no-video">📹 Vidéo à configurer</div>';
+        }
+    }
 }
 
 // ── Modale saison ──────────────────────────────────
@@ -185,32 +217,15 @@ function updateLienInDOM(data) {
     }
 }
 
-function updateVideoInDOM(rawUrl) {
-    const wrap = document.getElementById('video-wrap');
-    if (!wrap) return;
+// ── Utilitaires ───────────────────────────────────
 
-    const btn = document.querySelector('.btn-edit-video');
-    if (btn) btn.textContent = rawUrl ? '✏️ Changer la vidéo' : '✏️ Ajouter une vidéo';
-
-    if (!rawUrl) {
-        wrap.innerHTML = `<div class="video-placeholder" id="video-placeholder"><span>📹</span><p>La vidéo tutoriel sera disponible prochainement.</p></div>`;
-        return;
-    }
-
-    const embedUrl = toEmbedUrl(rawUrl);
-    wrap.innerHTML = `<iframe id="video-iframe" src="${escHtml(embedUrl)}" allowfullscreen loading="lazy" title="Tutoriel myFFvolley"></iframe>`;
-}
-
-function toEmbedUrl(url) {
-    if (!url) return '';
-    if (url.includes('/embed/')) return url;
-    const m = url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
-    if (m) return 'https://www.youtube.com/embed/' + m[1] + '?rel=0';
-    return url;
+function extractYoutubeId(url) {
+    const m = (url || '').match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+    return m ? m[1] : '';
 }
 
 function escHtml(str) {
-    return String(str)
+    return String(str || '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;')
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
