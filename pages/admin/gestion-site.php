@@ -14,7 +14,7 @@ function gs_param(PDO $pdo, string $key, string $default = ''): string {
         $stmt->execute([$key]);
         $row = $stmt->fetch();
         return $row ? $row['valeur'] : $default;
-    } catch (Exception $e) { return $default; }
+    } catch (Exception) { return $default; }
 }
 function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); }
 
@@ -24,8 +24,6 @@ $email    = gs_param($pdo, 'club_email',           'dimitrigarrigues@gmail.com')
 $facebook = gs_param($pdo, 'social_facebook',      'https://www.facebook.com/volley.vbollioulais');
 $instagram= gs_param($pdo, 'social_instagram',     'https://www.instagram.com/volley.ball.ollioulais/');
 $youtube  = gs_param($pdo, 'social_youtube',       'https://www.youtube.com/@VolleyBallOllioulais');
-$arbSheet = gs_param($pdo, 'arbitres_sheet_url',   '');
-$minibus  = gs_param($pdo, 'minibus_sheet_url',    '');
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -88,7 +86,7 @@ $minibus  = gs_param($pdo, 'minibus_sheet_url',    '');
             <p class="gs-desc">Les messages envoyés via le formulaire de contact seront transmis à cette adresse.</p>
             <form class="admin-form gs-form" data-section="email">
                 <div class="form-row">
-                    <div class="form-group" style="max-width:440px">
+                    <div class="form-group gs-email-group">
                         <label for="club_email">Adresse email de réception</label>
                         <input type="email" id="club_email" name="club_email"
                                value="<?= h($email) ?>" placeholder="contact@votreclub.fr">
@@ -105,28 +103,28 @@ $minibus  = gs_param($pdo, 'minibus_sheet_url',    '');
             <h2>Réseaux sociaux</h2>
             <p class="gs-desc">Les liens vers vos pages Facebook, Instagram et YouTube apparaissent dans le pied de page.</p>
             <form class="admin-form gs-form" data-section="reseaux">
-                <div class="form-row">
+                <div class="form-row gs-social-row">
                     <div class="form-group">
                         <label for="social_facebook">
-                            <span class="gs-social-icon">📘</span> Facebook
+                            <img src="/images/social/facebook.png" alt="Facebook" class="gs-social-logo"> Facebook
                         </label>
                         <input type="url" id="social_facebook" name="social_facebook"
                                value="<?= h($facebook) ?>" placeholder="https://www.facebook.com/votreclub">
                     </div>
                 </div>
-                <div class="form-row">
+                <div class="form-row gs-social-row">
                     <div class="form-group">
                         <label for="social_instagram">
-                            <span class="gs-social-icon">📷</span> Instagram
+                            <img src="/images/social/instagram.png" alt="Instagram" class="gs-social-logo"> Instagram
                         </label>
                         <input type="url" id="social_instagram" name="social_instagram"
                                value="<?= h($instagram) ?>" placeholder="https://www.instagram.com/votreclub/">
                     </div>
                 </div>
-                <div class="form-row">
+                <div class="form-row gs-social-row">
                     <div class="form-group">
                         <label for="social_youtube">
-                            <span class="gs-social-icon">▶️</span> YouTube
+                            <img src="/images/social/Youtube.png" alt="YouTube" class="gs-social-logo"> YouTube
                         </label>
                         <input type="url" id="social_youtube" name="social_youtube"
                                value="<?= h($youtube) ?>" placeholder="https://www.youtube.com/@votreclub">
@@ -136,43 +134,6 @@ $minibus  = gs_param($pdo, 'minibus_sheet_url',    '');
                     <button type="submit" class="btn-admin">Enregistrer</button>
                 </div>
             </form>
-        </div>
-
-        <!-- ── Liens externes ── -->
-        <div class="admin-card">
-            <h2>Liens externes</h2>
-            <p class="gs-desc">Liens vers les Google Sheets utilisés dans les pages Arbitres et Minibus.</p>
-            <form class="admin-form gs-form" data-section="liens">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="arbitres_sheet_url">URL Google Sheets — Arbitres</label>
-                        <input type="url" id="arbitres_sheet_url" name="arbitres_sheet_url"
-                               value="<?= h($arbSheet) ?>" placeholder="https://docs.google.com/spreadsheets/d/…">
-                        <span class="hint">Lien de partage public du tableau des désignations arbitres</span>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="minibus_sheet_url">URL Google Sheets — Minibus</label>
-                        <input type="url" id="minibus_sheet_url" name="minibus_sheet_url"
-                               value="<?= h($minibus) ?>" placeholder="https://docs.google.com/spreadsheets/d/…">
-                        <span class="hint">Lien de partage public du planning minibus</span>
-                    </div>
-                </div>
-                <div class="gs-form-footer">
-                    <button type="submit" class="btn-admin">Enregistrer</button>
-                </div>
-            </form>
-        </div>
-
-        <!-- ── Logo du club ── -->
-        <div class="admin-card">
-            <h2>Logo du club</h2>
-            <p class="gs-desc">Le logo s'affiche dans la barre de navigation et sur chaque page. Cliquez sur le logo pour le modifier.</p>
-            <div class="gs-logo-preview">
-                <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo actuel du club">
-                <p class="hint">Survolez le logo et cliquez sur "Changer le logo"<br>(disponible pour les administrateurs et modérateurs)</p>
-            </div>
         </div>
 
         <!-- ── Informations techniques ── -->
@@ -196,7 +157,7 @@ $minibus  = gs_param($pdo, 'minibus_sheet_url',    '');
                 </div>
                 <div class="gs-tech-item">
                     <span class="gs-tech-label">Accès FTP</span>
-                    <span class="gs-tech-value">FileZilla ou client FTP · hôte : <code>ftp.votredomaine.fr</code></span>
+                    <span class="gs-tech-value">FileZilla ou client FTP · hôte : <code>ftp.volleyballollioulais.fr</code></span>
                 </div>
                 <div class="gs-tech-item">
                     <span class="gs-tech-label">Développeur d'origine</span>
