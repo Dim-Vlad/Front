@@ -1,0 +1,676 @@
+.prono-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+}
+
+.prono-top-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+}
+
+/* ── Sections ── */
+.prono-section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+    margin: 28px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e8e8e8;
+    font-family: var(--font-poppins);
+}
+
+.prono-empty {
+    color: #888;
+    font-size: 0.88rem;
+    font-style: italic;
+    padding: 8px 0;
+}
+
+/* ── Cards match ── */
+.prono-card {
+    background: #fff;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.04);
+    transition: border-color 0.2s;
+}
+
+.prono-card--voted {
+    border-color: var(--secondary-color);
+}
+
+.prono-card--closed {
+    opacity: 0.85;
+}
+
+.prono-match-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.prono-match-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--secondary-color);
+}
+
+.prono-badge-dom {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.prono-badge-dom--home { background: #e8f4e8; color: #2d6a2d; }
+.prono-badge-dom--away { background: #fdebd0; color: #a04000; }
+
+.prono-match-meta {
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 14px;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.prono-nb-votes {
+    font-size: 0.78rem;
+    color: #aaa;
+}
+
+/* ── Formulaire de vote ── */
+.prono-vote-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.prono-choices {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.prono-choice {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 18px;
+    border: 2px solid #ddd;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-weight: 600;
+    font-family: var(--font-poppins);
+    transition: all 0.15s;
+    user-select: none;
+    color: #555;
+    background: #fafafa;
+}
+
+.prono-choice input[type="radio"] { display: none; }
+
+.prono-choice:has(input:checked).prono-choice--win  { background: #e8f4e8; color: #2d6a2d; border-color: #2d6a2d; }
+.prono-choice:has(input:checked).prono-choice--lose { background: #fde8e8; color: #c0392b; border-color: #c0392b; }
+
+.prono-sets-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.prono-sets-label {
+    font-size: 0.82rem;
+    color: #555;
+    white-space: nowrap;
+}
+
+.prono-sets-select {
+    padding: 6px 10px;
+    border: 1.5px solid #ccc;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    background: #fff;
+    cursor: pointer;
+}
+
+.prono-pts-hint {
+    font-size: 0.75rem;
+    color: #aaa;
+}
+
+.prono-vote-submit {
+    align-self: flex-start;
+    padding: 8px 20px;
+    background: var(--secondary-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.prono-vote-submit:hover { opacity: 0.85; }
+.prono-vote-submit:disabled { opacity: 0.5; cursor: default; }
+
+.prono-vote-saved {
+    font-size: 0.82rem;
+    color: #2d6a2d;
+    font-weight: 600;
+    display: none;
+}
+
+/* ── Résultat ── */
+.prono-result-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.prono-result-label {
+    font-size: 0.8rem;
+    color: #888;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    min-width: 100px;
+}
+
+.prono-result-badge {
+    padding: 4px 13px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.82rem;
+}
+
+.prono-result-badge--win  { background: #e8f4e8; color: #2d6a2d; }
+.prono-result-badge--lose { background: #fde8e8; color: #c0392b; }
+.prono-result-badge--none { background: #f0f0f0; color: #999; }
+
+.prono-sets-val {
+    font-size: 0.85rem;
+    color: #444;
+    font-weight: 600;
+}
+
+.prono-points {
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-left: 4px;
+}
+
+.prono-points--3 { color: #c17900; }
+.prono-points--1 { color: #2d6a2d; }
+.prono-points--0 { color: #c0392b; }
+
+.prono-no-vote {
+    font-size: 0.82rem;
+    color: #bbb;
+    font-style: italic;
+}
+
+/* ── Matchs à venir (ligne unique + panneau vote) ── */
+.prono-card--avenir {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 14px 18px;
+}
+
+.prono-vote-panel {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    padding-top: 14px;
+    border-top: 1px solid #eee;
+    margin-top: 2px;
+}
+
+.prono-vote-panel.open { display: flex; }
+
+/* ── Matchs terminés (ligne unique) ── */
+.prono-card--done {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 14px 18px;
+}
+
+.prono-done-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.prono-done-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.prono-done-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #bbb;
+    font-family: var(--font-poppins);
+}
+
+.prono-done-badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.prono-waiting {
+    font-size: 0.82rem;
+    color: #aaa;
+    font-style: italic;
+    margin-top: 6px;
+}
+
+/* ── Classement ── */
+.classement-container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+}
+
+.classement-intro {
+    font-size: 0.88rem;
+    color: #666;
+    margin-bottom: 24px;
+}
+
+.classement-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.classement-table th {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #999;
+    border-bottom: 2px solid #eee;
+    font-family: var(--font-poppins);
+}
+
+.classement-table th:last-child { text-align: right; }
+
+.classement-table td {
+    padding: 13px 14px;
+    border-bottom: 1px solid #f2f2f2;
+    font-size: 0.9rem;
+}
+
+.classement-rank {
+    font-weight: 700;
+    color: #bbb;
+    font-size: 0.88rem;
+    width: 36px;
+}
+
+.rank-gold   { color: #c17900; font-size: 1.1rem; }
+.rank-silver { color: #777;    font-size: 1.05rem; }
+.rank-bronze { color: #a04000; font-size: 1rem; }
+
+.classement-name { font-weight: 600; }
+
+.classement-prono {
+    font-size: 0.78rem;
+    color: #aaa;
+    text-align: center;
+}
+
+.classement-pts {
+    font-weight: 700;
+    color: var(--secondary-color);
+    font-size: 1rem;
+    text-align: right;
+    font-family: var(--font-poppins);
+}
+
+.classement-table tr.is-me td {
+    background: #f0f7f0;
+}
+
+.classement-empty {
+    text-align: center;
+    color: #aaa;
+    padding: 40px 0;
+    font-style: italic;
+}
+
+/* ── Admin pronostics ── */
+.admin-prono-container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+}
+
+.admin-prono-form {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 14px;
+    padding: 28px;
+    margin-bottom: 32px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.06);
+}
+
+.admin-prono-form h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 20px;
+    color: var(--secondary-color);
+    font-family: var(--font-poppins);
+    padding-bottom: 14px;
+    border-bottom: 2px solid #eef2ee;
+}
+
+.admin-prono-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* Champs du formulaire de création */
+.admin-prono-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin: 0;
+}
+
+.admin-prono-form .form-group label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-family: var(--font-poppins);
+}
+
+.admin-prono-form .form-group input,
+.admin-prono-form .form-group select {
+    padding: 9px 12px;
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: var(--font-poppins);
+    color: var(--bg-dark);
+    background: #fafafa;
+    transition: border-color 0.2s, background 0.2s;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.admin-prono-form .form-group input:focus,
+.admin-prono-form .form-group select:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    background: #fff;
+}
+
+.admin-prono-form .form-hint {
+    font-size: 0.75rem;
+    color: #aaa;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.admin-prono-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.88rem;
+    cursor: pointer;
+    grid-column: 1 / -1;
+    font-family: var(--font-poppins);
+    color: #555;
+}
+
+.admin-prono-check input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--secondary-color);
+    cursor: pointer;
+}
+
+.admin-prono-submit {
+    grid-column: 1 / -1;
+    align-self: start;
+    padding: 10px 26px;
+    background: var(--secondary-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: var(--font-poppins);
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    margin-top: 4px;
+}
+
+.admin-prono-submit:hover { opacity: 0.85; }
+
+/* Cartes match */
+.admin-match-item {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+
+.admin-match-info {
+    flex: 1;
+    min-width: 200px;
+}
+
+.admin-match-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--secondary-color);
+}
+
+.admin-match-meta {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 2px;
+}
+
+.admin-match-item--inline {
+    flex-wrap: nowrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.admin-match-meta-inline {
+    font-size: 0.8rem;
+    color: #aaa;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-match-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.btn-sm {
+    padding: 6px 13px;
+    border: none;
+    border-radius: 7px;
+    font-size: 0.8rem;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.btn-sm:hover { opacity: 0.8; }
+.btn-sm--delete  { background: #fde8e8; color: #c0392b; }
+.btn-sm--edit    { background: #e8f0fb; color: #1a3a8f; }
+.btn-sm--result  { background: #e8f4e8; color: #2d6a2d; }
+.btn-sm--done    { background: #f0f0f0; color: #888; cursor: default; }
+
+/* Formulaire résultat inline */
+.result-form-inline {
+    display: none;
+    background: #f4f8f4;
+    border: 1.5px solid #d0e8d0;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-top: 12px;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.result-form-inline.open { display: flex; width: 100%; }
+
+.result-form-inline-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #2d6a2d;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-family: var(--font-poppins);
+    margin: 0;
+}
+
+.result-form-fields {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.result-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.result-form-group label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-family: var(--font-poppins);
+}
+
+.result-form-group select,
+.result-form-group input[type="text"],
+.result-form-group input[type="datetime-local"] {
+    padding: 8px 12px;
+    border: 1.5px solid #c8dfc8;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-family: var(--font-poppins);
+    color: var(--bg-dark);
+    background: #fff;
+    transition: border-color 0.2s;
+    min-width: 140px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.result-form-group select { cursor: pointer; }
+
+.result-form-group select:focus,
+.result-form-group input:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+}
+
+.result-form-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.result-err {
+    color: #c0392b;
+    font-size: 0.8rem;
+}
+
+/* ── Zone de danger ── */
+.prono-danger-zone {
+    margin-top: 40px;
+    border: 1.5px solid #f5c6c6;
+    border-radius: 12px;
+    padding: 20px 24px;
+    background: #fff8f8;
+}
+
+.prono-danger-title {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #c0392b;
+    margin-bottom: 6px;
+    font-family: var(--font-poppins);
+}
+
+.prono-danger-desc {
+    font-size: 0.82rem;
+    color: #888;
+    margin: 0 0 14px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .admin-prono-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-prono-grid .form-group:last-child,
+    .admin-prono-check,
+    .admin-prono-submit {
+        grid-column: 1;
+    }
+
+    .prono-choice {
+        padding: 7px 14px;
+        font-size: 0.82rem;
+    }
+}

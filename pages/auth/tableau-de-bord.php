@@ -70,11 +70,19 @@ if (has_role('admin')) {
             </div>
             <?php endif; ?>
 
+            <a href="/pages/pronostics/index.php" class="dashboard-card">
+                <div class="card-icon">🎯</div>
+                <h2>Pronostics</h2>
+                <p>Pronostiques les résultats des matchs du VBO et grimpez au classement.</p>
+            </a>
+
+            <?php if (has_any_role(['admin', 'bureau', 'moderateur', 'entraineur', 'arbitre'])): ?>
             <a href="/pages/leClub/espace-entraineur.php" class="dashboard-card">
                 <div class="card-icon">📥</div>
                 <h2>Ressources</h2>
                 <p>Documents téléchargeables et ressources FFVB.</p>
             </a>
+            <?php endif; ?>
 
             <?php if (has_any_role(['bureau', 'admin', 'moderateur'])): ?>
             <a href="/pages/bureau/drive.php" class="dashboard-card">

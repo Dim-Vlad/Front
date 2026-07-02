@@ -62,6 +62,12 @@ $nbAttente = (int)$pdo->query('SELECT COUNT(*) FROM users WHERE actif = 0')->fet
                 <p>Historique des connexions à l'espace membres.</p>
             </a>
 
+            <a href="/pages/admin/pronostics.php" class="dashboard-card card-admin">
+                <div class="card-icon">🎯</div>
+                <h2>Pronostics</h2>
+                <p>Créer des matchs et saisir les résultats pour les pronostics des membres.</p>
+            </a>
+
             <a href="/pages/admin/gestion-site.php" class="dashboard-card card-admin">
                 <div class="card-icon">⚙️</div>
                 <h2>Gestion du site</h2>

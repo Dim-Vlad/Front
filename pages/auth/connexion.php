@@ -95,7 +95,7 @@ if ($error !== '') $defaultTab = 'login';
                     <input type="hidden" name="_action" value="login">
                     <div class="form-group">
                         <label for="username">Identifiant <span class="form-hint">adresse email</span></label>
-                        <input type="email" id="username" name="username"
+                        <input type="text" id="username" name="username"
                                value="<?= htmlspecialchars($_POST['username'] ?? '') ?>"
                                placeholder="exemple@email.com"
                                autocomplete="username" required>
