@@ -3,6 +3,12 @@ require_once __DIR__ . '/../../php/auth.php';
 require_login();
 
 $user = current_user();
+
+$nbAttente = 0;
+if (has_role('admin')) {
+    $pdo = get_pdo();
+    $nbAttente = (int)$pdo->query('SELECT COUNT(*) FROM users WHERE actif = 0')->fetchColumn();
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -47,11 +53,21 @@ $user = current_user();
         <div class="dashboard-cards">
 
             <?php if (has_role('admin')): ?>
-            <a href="/pages/admin/index.php" class="dashboard-card card-admin card-admin--featured">
-                <div class="card-icon">⚙️</div>
-                <h2>Administration</h2>
-                <p>Gestion des utilisateurs.</p>
-            </a>
+            <div class="dashboard-card card-admin card-admin--featured">
+                <?php if ($nbAttente > 0): ?>
+                <a href="/pages/admin/comptes-attente.php" class="card-badge-link" title="Voir les comptes en attente">
+                    <span class="card-badge-number"><?= $nbAttente ?></span>
+                    <span class="card-badge-label">en attente</span>
+                </a>
+                <?php endif; ?>
+                <a href="/pages/admin/index.php" class="card-main-link">
+                    <div class="card-icon">⚙️</div>
+                    <div>
+                        <h2>Administration</h2>
+                        <p>Gestion du site et des utilisateurs.</p>
+                    </div>
+                </a>
+            </div>
             <?php endif; ?>
 
             <a href="/pages/leClub/espace-entraineur.php" class="dashboard-card">

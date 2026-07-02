@@ -57,19 +57,25 @@
 
 .ca-actions {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    align-items: flex-start;
+    gap: 16px;
     flex-wrap: wrap;
 }
 
-.ca-role-select {
-    padding: 7px 10px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-family: inherit;
-    color: #333;
-    background: #f9f9f9;
+.ca-roles {
+    gap: 5px;
+}
+
+.ca-roles .role-check {
+    font-size: 0.8rem;
+    padding: 4px 11px 4px 8px;
+}
+
+.ca-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
 }
 
 .ca-btn {

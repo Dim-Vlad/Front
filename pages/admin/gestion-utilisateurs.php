@@ -10,7 +10,7 @@ $pdo = get_pdo();
 $message = '';
 $messageType = '';
 
-$validRoles = ['entraineur', 'admin', 'arbitre', 'bureau', 'moderateur', 'adherent'];
+$validRoles = ['adherent', 'arbitre', 'entraineur', 'moderateur', 'bureau', 'admin'];
 $roleLabels = [
     'entraineur' => 'Entraineur',
     'admin'      => 'Admin',
@@ -194,9 +194,9 @@ $currentId = (int)(current_user()['id']);
                         <label>Rôle(s)</label>
                         <div class="roles-box">
                             <div class="roles-checkboxes">
-                                <?php foreach ($validRoles as $r): ?>
-                                <label class="role-check">
-                                    <input type="checkbox" name="roles[]" value="<?= $r ?>"<?= $r === 'entraineur' ? ' checked' : '' ?>>
+                                    <?php foreach ($validRoles as $r): ?>
+                                <label class="role-check role-check--<?= $r ?>">
+                                    <input type="checkbox" name="roles[]" value="<?= $r ?>">
                                     <?= $roleLabels[$r] ?>
                                 </label>
                                 <?php endforeach; ?>
@@ -309,7 +309,7 @@ $currentId = (int)(current_user()['id']);
                     <div class="roles-box">
                         <div class="roles-checkboxes">
                             <?php foreach ($validRoles as $r): ?>
-                            <label class="role-check">
+                            <label class="role-check role-check--<?= $r ?>">
                                 <input type="checkbox" name="new_roles[]" value="<?= $r ?>" id="modal-role-<?= $r ?>">
                                 <?= $roleLabels[$r] ?>
                             </label>

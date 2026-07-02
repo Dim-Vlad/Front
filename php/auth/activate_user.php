@@ -11,10 +11,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Méthode invalide']); exit;
 }
 
-$userId = (int)($_POST['user_id'] ?? 0);
-$role   = trim($_POST['role'] ?? '');
+$validRoles = ['adherent', 'arbitre', 'entraineur', 'moderateur', 'bureau', 'admin'];
 
-if (!$userId || $role === '') {
+$userId = (int)($_POST['user_id'] ?? 0);
+$roles  = array_values(array_filter($_POST['roles'] ?? [], fn($r) => in_array($r, $validRoles, true)));
+
+if (!$userId || empty($roles)) {
     ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Données manquantes']); exit;
 }
 
@@ -28,18 +30,14 @@ try {
         ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Compte introuvable']); exit;
     }
 
-    $roleExists = $pdo->prepare('SELECT id FROM roles WHERE name = ?');
-    $roleExists->execute([$role]);
-    if (!$roleExists->fetch()) {
-        ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Rôle invalide']); exit;
-    }
-
     $pdo->prepare('UPDATE users SET actif = 1 WHERE id = ?')->execute([$userId]);
     $pdo->prepare('DELETE FROM user_roles WHERE user_id = ?')->execute([$userId]);
-    $pdo->prepare('INSERT INTO user_roles (user_id, role_id) SELECT ?, id FROM roles WHERE name = ?')
-        ->execute([$userId, $role]);
+    $stmt = $pdo->prepare('INSERT INTO user_roles (user_id, role_id) SELECT ?, id FROM roles WHERE name = ?');
+    foreach ($roles as $role) {
+        $stmt->execute([$userId, $role]);
+    }
 
-    log_activite($pdo, 'modification', 'utilisateur', 'Compte activé : ' . $user['prenom'] . ' ' . $user['nom'] . ' → rôle ' . $role);
+    log_activite($pdo, 'modification', 'utilisateur', 'Compte activé : ' . $user['prenom'] . ' ' . $user['nom'] . ' → rôle(s) ' . implode(', ', $roles));
 
     // Email de confirmation à l'adhérent
     try {

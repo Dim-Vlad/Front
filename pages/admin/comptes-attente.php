@@ -12,7 +12,15 @@ $comptes = $pdo->query(
     'SELECT u.id, u.prenom, u.nom, u.username, u.actif FROM users u WHERE u.actif = 0 ORDER BY u.id DESC'
 )->fetchAll(PDO::FETCH_ASSOC);
 
-$roles = $pdo->query("SELECT name, label FROM roles ORDER BY label")->fetchAll(PDO::FETCH_ASSOC);
+$validRoles = ['adherent', 'arbitre', 'entraineur', 'moderateur', 'bureau', 'admin'];
+$roleLabels = [
+    'adherent'   => 'Adhérent',
+    'arbitre'    => 'Arbitre',
+    'entraineur' => 'Entraineur',
+    'moderateur' => 'Modérateur',
+    'bureau'     => 'Bureau',
+    'admin'      => 'Admin',
+];
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -22,7 +30,8 @@ $roles = $pdo->query("SELECT name, label FROM roles ORDER BY label")->fetchAll(P
     <title>Comptes en attente - VBO</title>
     <link href="/css/styles.css?v=20260624" rel="stylesheet">
     <link href="/css/tableau-de-bord.css?v=20260623" rel="stylesheet">
-    <link href="/css/comptes-attente.css?v=20260626" rel="stylesheet">
+    <link href="/css/admin.css?v=20260702" rel="stylesheet">
+    <link href="/css/comptes-attente.css?v=20260702" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -59,16 +68,18 @@ $roles = $pdo->query("SELECT name, label FROM roles ORDER BY label")->fetchAll(P
                     <span class="ca-email"><?= htmlspecialchars($c['username']) ?></span>
                 </div>
                 <div class="ca-actions">
-                    <select class="ca-role-select" id="role-<?= $c['id'] ?>">
-                        <?php foreach ($roles as $r): ?>
-                        <option value="<?= htmlspecialchars($r['name']) ?>"
-                            <?= $r['name'] === 'adherent' ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($r['label']) ?>
-                        </option>
+                    <div class="roles-checkboxes ca-roles">
+                        <?php foreach ($validRoles as $r): ?>
+                        <label class="role-check role-check--<?= $r ?>">
+                            <input type="checkbox" name="ca-role-<?= $c['id'] ?>[]" value="<?= $r ?>"<?= $r === 'adherent' ? ' checked' : '' ?>>
+                            <?= $roleLabels[$r] ?>
+                        </label>
                         <?php endforeach; ?>
-                    </select>
-                    <button class="ca-btn ca-btn--activate" onclick="activateUser(<?= $c['id'] ?>)">✅ Activer</button>
-                    <button class="ca-btn ca-btn--reject"   onclick="rejectUser(<?= $c['id'] ?>, '<?= htmlspecialchars($c['prenom'] . ' ' . $c['nom'], ENT_QUOTES) ?>')">❌ Refuser</button>
+                    </div>
+                    <div class="ca-btns">
+                        <button class="ca-btn ca-btn--activate" onclick="activateUser(<?= $c['id'] ?>)">✅ Activer</button>
+                        <button class="ca-btn ca-btn--reject"   onclick="rejectUser(<?= $c['id'] ?>, '<?= htmlspecialchars($c['prenom'] . ' ' . $c['nom'], ENT_QUOTES) ?>')">❌ Refuser</button>
+                    </div>
                 </div>
             </li>
             <?php endforeach; ?>
@@ -86,11 +97,12 @@ $roles = $pdo->query("SELECT name, label FROM roles ORDER BY label")->fetchAll(P
         loadHTML('/commun/footer.php', 'footer');
 
         async function activateUser(id) {
-            const role = document.getElementById('role-' + id).value;
-            if (!confirm('Activer ce compte avec le rôle sélectionné ?')) return;
+            const checked = [...document.querySelectorAll('input[name="ca-role-' + id + '[]"]:checked')];
+            if (checked.length === 0) { alert('Veuillez sélectionner au moins un rôle.'); return; }
+            if (!confirm('Activer ce compte avec le(s) rôle(s) sélectionné(s) ?')) return;
             const fd = new FormData();
             fd.append('user_id', id);
-            fd.append('role', role);
+            checked.forEach(cb => fd.append('roles[]', cb.value));
             const res  = await fetch('/php/auth/activate_user.php', { method: 'POST', body: fd });
             const data = await res.json();
             if (data.success) {

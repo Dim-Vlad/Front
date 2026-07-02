@@ -46,32 +46,94 @@
     background: linear-gradient(135deg, #e8f0e8, #d0e4d0);
     border-top: 4px solid #c0392b;
     flex-direction: row;
-    align-items: center;
-    gap: 20px;
-    padding: 28px 36px;
-}
-
-.card-admin--featured .card-icon {
-    font-size: 2.8rem;
-    margin-bottom: 0;
-    flex-shrink: 0;
-}
-
-.card-admin--featured h2 {
-    color: var(--secondary-color);
-    font-size: 1.2rem;
-    margin: 0 0 4px;
-}
-
-.card-admin--featured p {
-    color: #444;
-    margin: 0;
-    font-size: 0.88rem;
+    align-items: stretch;
+    gap: 0;
+    padding: 0;
+    cursor: default;
 }
 
 .card-admin--featured:hover {
     transform: translateY(-3px);
     box-shadow: 0 10px 28px rgba(0,0,0,.12);
+}
+
+/* Zone gauche — badge comptes en attente */
+.card-badge-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.2rem 1.4rem;
+    gap: 6px;
+    text-decoration: none;
+    background: rgba(229, 57, 53, 0.07);
+    border-right: 2px solid rgba(229, 57, 53, 0.18);
+    flex-shrink: 0;
+    transition: background 0.18s;
+    border-radius: 0 0 0 10px;
+}
+
+.card-badge-link:hover {
+    background: rgba(229, 57, 53, 0.16);
+}
+
+.card-badge-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #e53935;
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    font-family: var(--font-poppins);
+}
+
+.card-badge-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #c0392b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-family: var(--font-poppins);
+    text-align: center;
+    line-height: 1.3;
+}
+
+/* Zone droite — lien principal */
+.card-main-link {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 28px 36px;
+    text-decoration: none;
+    color: var(--bg-dark);
+    transition: background 0.15s;
+    border-radius: 0 10px 10px 0;
+}
+
+.card-main-link:hover {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.card-main-link .card-icon {
+    font-size: 2.8rem;
+    flex-shrink: 0;
+}
+
+.card-main-link h2 {
+    color: var(--secondary-color);
+    font-size: 1.2rem;
+    margin: 0 0 4px;
+}
+
+.card-main-link p {
+    color: #444;
+    margin: 0;
+    font-size: 0.88rem;
 }
 
 /* ── Icône ── */
@@ -186,6 +248,59 @@
 
     .dashboard-card p {
         display: none;
+    }
+
+    /* Tuile Administration sur mobile — layout vertical */
+    .card-admin--featured {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .card-main-link {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 1.2rem 1rem 1rem;
+        gap: 8px;
+        border-radius: 0;
+    }
+
+    .card-main-link .card-icon {
+        font-size: 1.8rem;
+    }
+
+    .card-main-link h2 {
+        font-size: 0.95rem;
+        margin: 0;
+    }
+
+    .card-main-link p {
+        display: none;
+    }
+
+    /* Badge en bandeau bas — coins arrondis en haut */
+    .card-badge-link {
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        padding: 0.55rem 1rem;
+        border-right: none;
+        border-top: none;
+        border-radius: 10px 10px 0 0;
+        margin: 0 10px;
+        gap: 8px;
+    }
+
+    .card-badge-number {
+        width: 22px;
+        height: 22px;
+        font-size: 0.75rem;
+    }
+
+    .card-badge-label {
+        font-size: 0.72rem;
+        letter-spacing: 0.03em;
     }
 }
 

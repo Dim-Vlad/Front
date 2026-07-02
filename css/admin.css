@@ -183,24 +183,48 @@
 .roles-checkboxes {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .role-check {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.88rem;
+    gap: 7px;
+    font-size: 0.85rem;
+    font-weight: 500;
     cursor: pointer;
-    color: var(--bg-dark, #223224);
+    padding: 5px 13px 5px 10px;
+    border-radius: 20px;
+    border: 2px solid #ddd;
+    background: #f5f5f5;
+    color: #999;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    user-select: none;
 }
 
 .role-check input[type="checkbox"] {
-    accent-color: var(--secondary-color, #2d6a2d);
-    width: 16px;
-    height: 16px;
+    accent-color: currentColor;
+    width: 15px;
+    height: 15px;
     flex-shrink: 0;
+    cursor: pointer;
 }
+
+/* Couleurs par rôle — état coché */
+.role-check--entraineur:has(input:checked) { background: #e8f4e8; color: #2d6a2d; border-color: #2d6a2d; }
+.role-check--admin:has(input:checked)      { background: #fdebd0; color: #a04000; border-color: #a04000; }
+.role-check--arbitre:has(input:checked)    { background: #e8eaf6; color: #283593; border-color: #283593; }
+.role-check--bureau:has(input:checked)     { background: #f3e5f5; color: #6a1b9a; border-color: #6a1b9a; }
+.role-check--moderateur:has(input:checked) { background: #fce4ec; color: #880e4f; border-color: #880e4f; }
+.role-check--adherent:has(input:checked)   { background: #e0f7fa; color: #006064; border-color: #006064; }
+
+/* Hover non coché */
+.role-check--entraineur:hover { border-color: #2d6a2d; color: #2d6a2d; }
+.role-check--admin:hover      { border-color: #a04000; color: #a04000; }
+.role-check--arbitre:hover    { border-color: #283593; color: #283593; }
+.role-check--bureau:hover     { border-color: #6a1b9a; color: #6a1b9a; }
+.role-check--moderateur:hover { border-color: #880e4f; color: #880e4f; }
+.role-check--adherent:hover   { border-color: #006064; color: #006064; }
 
 .btn-delete {
     padding: 0.35rem 0.9rem;
