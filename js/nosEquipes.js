@@ -10,11 +10,6 @@ document.addEventListener('keydown', function(event) {
     }
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadHTML('/commun/menu.html', 'menu');
-    loadHTML('/commun/footer.php', 'footer');
-});
-
 // ── Modale info ──
 function openModal(name, info, link, imgSrc) {
     const modal = document.getElementById('infoModal');
