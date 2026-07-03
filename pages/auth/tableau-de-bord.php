@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 
@@ -9,6 +9,10 @@ if (has_role('admin')) {
     $pdo = get_pdo();
     $nbAttente = (int)$pdo->query('SELECT COUNT(*) FROM users WHERE actif = 0')->fetchColumn();
 }
+
+$hasSections        = has_any_role(['admin', 'bureau', 'moderateur', 'entraineur', 'arbitre']);
+$hasEntraineur      = $hasSections; // au moins Ressources visible
+$hasCommissions     = has_any_role(['bureau', 'admin', 'moderateur', 'arbitre']);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -17,7 +21,7 @@ if (has_role('admin')) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de bord - VBO</title>
     <link href="/css/styles.css?v=20260624" rel="stylesheet">
-    <link href="/css/tableau-de-bord.css?v=20260623" rel="stylesheet">
+    <link href="/css/tableau-de-bord.css?v=20260703" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -50,8 +54,10 @@ if (has_role('admin')) {
     </div>
 
     <div class="dashboard-container">
-        <div class="dashboard-cards">
 
+        <?php if (has_role('admin') || has_role('moderateur')): ?>
+        <!-- Tuiles privilégiées (pleine largeur, sans titre de section) -->
+        <div class="dashboard-cards">
             <?php if (has_role('admin')): ?>
             <div class="dashboard-card card-admin card-admin--featured">
                 <?php if ($nbAttente > 0): ?>
@@ -70,54 +76,113 @@ if (has_role('admin')) {
             </div>
             <?php endif; ?>
 
-            <a href="/pages/pronostics/index.php" class="dashboard-card">
-                <div class="card-icon">🔮</div>
-                <h2>Pronostics</h2>
-                <p>Pronostiques les résultats des matchs du VBO et grimpez au classement.</p>
-            </a>
-
-            <?php if (has_any_role(['admin', 'bureau', 'moderateur', 'entraineur', 'arbitre'])): ?>
-            <a href="/pages/leClub/espace-entraineur.php" class="dashboard-card">
-                <div class="card-icon">📥</div>
-                <h2>Ressources</h2>
-                <p>Documents téléchargeables et ressources FFVB.</p>
-            </a>
+            <?php if (has_role('moderateur') && !has_role('admin')): ?>
+            <div class="dashboard-card card-admin card-admin--featured">
+                <a href="/pages/moderateur/index.php" class="card-main-link">
+                    <div class="card-icon">🛡️</div>
+                    <div>
+                        <h2>Modération</h2>
+                        <p>Gestion des pronostics et du quiz.</p>
+                    </div>
+                </a>
+            </div>
             <?php endif; ?>
-
-            <?php if (has_any_role(['bureau', 'admin', 'moderateur'])): ?>
-            <a href="/pages/bureau/drive.php" class="dashboard-card">
-                <div class="card-icon">🗂️</div>
-                <h2>Dossiers Commissions</h2>
-                <p>Accédez aux documents partagés sur Google Drive.</p>
-            </a>
-            <?php endif; ?>
-
-            <?php if (has_role('arbitre') || has_role('admin') || has_role('bureau')): ?>
-            <a href="/pages/arbitres/arbitres.php" class="dashboard-card">
-                <div class="card-icon">📣</div>
-                <h2>Arbitres &amp; Marqueurs</h2>
-                <p>Planning et feuilles de match pour les arbitres et marqueurs.</p>
-            </a>
-            <?php endif; ?>
-
-            <?php if (!has_any_role(['arbitre', 'adherent'])): ?>
-            <a href="/pages/leClub/minibus.php" class="dashboard-card">
-                <div class="card-icon">🚌</div>
-                <h2>Réservations Minibus</h2>
-                <p>Consultez les réservations des minibus de la mairie et celui du club.</p>
-            </a>
-
-            <a href="/pages/leClub/presences.php" class="dashboard-card">
-                <div class="card-icon">✅</div>
-                <h2>Pointage Présences</h2>
-                <p>Suivez le pointage des présences aux entraînements et aux matchs.</p>
-            </a>
-            <?php endif; ?>
-
         </div>
+        <?php endif; ?>
+
+        <!-- Section Jeux -->
+        <?php if ($hasSections): ?>
+        <div class="dashboard-section">
+            <h2 class="dashboard-section-title">🎮 Jeux</h2>
+            <div class="dashboard-cards">
+        <?php else: ?>
+        <div class="dashboard-cards">
+        <?php endif; ?>
+
+                <a href="/pages/pronostics/classement.php" class="dashboard-card">
+                    <div class="card-icon">🏆</div>
+                    <h2>Classement</h2>
+                    <p>Voir le classement général des pronostics et du quiz.</p>
+                </a>
+
+                <a href="/pages/pronostics/index.php" class="dashboard-card">
+                    <div class="card-icon">🔮</div>
+                    <h2>Pronostics</h2>
+                    <p>Pronostiques les résultats des matchs du VBO et grimpez au classement.</p>
+                </a>
+
+                <a href="/pages/quiz/index.php" class="dashboard-card">
+                    <div class="card-icon">🧠</div>
+                    <h2>Quiz VBO</h2>
+                    <p>Testez vos connaissances sur le volley-ball et le club.</p>
+                </a>
+
+        <?php if ($hasSections): ?>
+            </div>
+        </div>
+        <?php else: ?>
+        </div>
+        <?php endif; ?>
+
+        <!-- Section Espace Entraîneur -->
+        <?php if ($hasEntraineur): ?>
+        <div class="dashboard-section">
+            <h2 class="dashboard-section-title">🏋️ Espace Entraîneur</h2>
+            <div class="dashboard-cards">
+
+                <?php if (!has_any_role(['arbitre', 'adherent'])): ?>
+                <a href="/pages/leClub/minibus.php" class="dashboard-card">
+                    <div class="card-icon">🚌</div>
+                    <h2>Réservations Minibus</h2>
+                    <p>Consultez les réservations des minibus de la mairie et celui du club.</p>
+                </a>
+
+                <a href="/pages/leClub/presences.php" class="dashboard-card">
+                    <div class="card-icon">✅</div>
+                    <h2>Pointage Présences</h2>
+                    <p>Suivez le pointage des présences aux entraînements et aux matchs.</p>
+                </a>
+                <?php endif; ?>
+
+                <a href="/pages/leClub/espace-entraineur.php" class="dashboard-card">
+                    <div class="card-icon">📥</div>
+                    <h2>Ressources</h2>
+                    <p>Documents téléchargeables et ressources FFVB.</p>
+                </a>
+
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- Section Commissions -->
+        <?php if ($hasCommissions): ?>
+        <div class="dashboard-section">
+            <h2 class="dashboard-section-title">📁 Commissions</h2>
+            <div class="dashboard-cards">
+
+                <?php if (has_any_role(['bureau', 'admin', 'moderateur'])): ?>
+                <a href="/pages/bureau/drive.php" class="dashboard-card">
+                    <div class="card-icon">🗂️</div>
+                    <h2>Dossiers Commissions</h2>
+                    <p>Accédez aux documents partagés sur Google Drive.</p>
+                </a>
+                <?php endif; ?>
+
+                <?php if (has_any_role(['arbitre', 'admin', 'bureau', 'moderateur'])): ?>
+                <a href="/pages/arbitres/arbitres.php" class="dashboard-card">
+                    <div class="card-icon">📣</div>
+                    <h2>Arbitres &amp; Marqueurs</h2>
+                    <p>Planning et feuilles de match pour les arbitres et marqueurs.</p>
+                </a>
+                <?php endif; ?>
+
+            </div>
+        </div>
+        <?php endif; ?>
 
         <a href="/php/logout.php" class="btn-logout"
             onclick="return confirm('Voulez-vous vraiment vous déconnecter ?')">Se déconnecter</a>
+
     </div>
 
     <div id="footer"></div>

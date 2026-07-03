@@ -1,7 +1,7 @@
 ﻿<?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
-if (!has_role('arbitre') && !has_role('admin') && !has_role('bureau')) {
+if (!has_any_role(['arbitre', 'admin', 'bureau', 'moderateur'])) {
     header('Location: /pages/auth/tableau-de-bord.php');
     exit;
 }

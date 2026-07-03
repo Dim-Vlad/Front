@@ -207,6 +207,27 @@
 .badge--moderateur  { background: #fce4ec; color: #880e4f; }
 .badge--adherent    { background: #e0f7fa; color: #006064; }
 
+/* ── Sections ── */
+.dashboard-section {
+    width: 100%;
+    max-width: 980px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.dashboard-section-title {
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #999;
+    margin: 0;
+    padding-bottom: 8px;
+    border-bottom: 1.5px solid #e4e4e4;
+    text-align: left;
+}
+
 /* ── Bouton retour / déconnexion ── */
 .btn-logout {
     display: inline-block;
