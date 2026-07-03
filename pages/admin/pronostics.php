@@ -60,7 +60,11 @@ function match_titre(string $adversaire, int $domicile): string {
         </div>
     </div>
 
-    <a href="/pages/pronostics/index.php" class="back-btn">← Retour aux pronostics</a>
+    <?php if (has_role('admin')): ?>
+    <a href="/pages/admin/index.php" class="back-btn">← Administration</a>
+    <?php else: ?>
+    <a href="/pages/moderateur/index.php" class="back-btn">← Modération</a>
+    <?php endif; ?>
 
     <div class="admin-prono-container">
 

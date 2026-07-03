@@ -10,9 +10,9 @@ $pdo = get_pdo();
 $questions = $pdo->query(
     'SELECT q.*, u.prenom, u.nom,
             (SELECT COUNT(*) FROM quiz_reponses r WHERE r.question_id = q.id) AS nb_reponses
-     FROM quiz_questions q
-     JOIN users u ON u.id = q.created_by
-     ORDER BY q.actif DESC, q.created_at DESC'
+    FROM quiz_questions q
+    JOIN users u ON u.id = q.created_by
+    ORDER BY q.actif DESC, q.created_at DESC'
 )->fetchAll();
 
 $nbTotal  = count($questions);
@@ -44,7 +44,11 @@ $nbActifs = count(array_filter($questions, fn($q) => $q['actif']));
         </div>
     </div>
 
+    <?php if (has_role('admin')): ?>
     <a href="/pages/admin/index.php" class="back-btn">← Administration</a>
+    <?php else: ?>
+    <a href="/pages/moderateur/index.php" class="back-btn">← Modération</a>
+    <?php endif; ?>
 
     <div class="quiz-admin-container">
 
