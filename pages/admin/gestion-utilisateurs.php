@@ -10,13 +10,13 @@ $pdo = get_pdo();
 $message = '';
 $messageType = '';
 
-$validRoles = ['adherent', 'arbitre', 'entraineur', 'moderateur', 'bureau', 'admin'];
+$validRoles = ['admin', 'moderateur', 'bureau', 'entraineur', 'arbitre', 'adherent'];
 $roleLabels = [
-    'entraineur' => 'Entraineur',
     'admin'      => 'Admin',
-    'arbitre'    => 'Arbitre',
-    'bureau'     => 'Bureau',
     'moderateur' => 'Modérateur',
+    'bureau'     => 'Bureau',
+    'entraineur' => 'Entraîneur',
+    'arbitre'    => 'Arbitre',
     'adherent'   => 'Adhérent',
 ];
 

@@ -11,15 +11,25 @@ if (has_role('admin')) {
 }
 
 $hasSections        = has_any_role(['admin', 'bureau', 'moderateur', 'entraineur', 'arbitre']);
-$hasEntraineur      = $hasSections; // au moins Ressources visible
+$hasEntraineur      = $hasSections;
 $hasCommissions     = has_any_role(['bureau', 'admin', 'moderateur', 'arbitre']);
+
+$roleLabels = ['admin'=>'Admin','bureau'=>'Bureau','moderateur'=>'Modérateur','entraineur'=>'Entraîneur','arbitre'=>'Arbitre','adherent'=>'Adhérent'];
+$rolePriority = ['admin','moderateur','bureau','entraineur','arbitre','adherent'];
+$titleRole = 'Membre';
+foreach ($rolePriority as $r) {
+    if (in_array($r, $user['roles'] ?? [])) {
+        $titleRole = $roleLabels[$r];
+        break;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de bord - VBO</title>
+    <title>Tableau de bord - <?= $titleRole ?></title>
     <link href="/css/styles.css?v=20260624" rel="stylesheet">
     <link href="/css/tableau-de-bord.css?v=20260703" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">

@@ -12,14 +12,14 @@ $comptes = $pdo->query(
     'SELECT u.id, u.prenom, u.nom, u.username, u.actif FROM users u WHERE u.actif = 0 ORDER BY u.id DESC'
 )->fetchAll(PDO::FETCH_ASSOC);
 
-$validRoles = ['adherent', 'arbitre', 'entraineur', 'moderateur', 'bureau', 'admin'];
+$validRoles = ['admin', 'moderateur', 'bureau', 'entraineur', 'arbitre', 'adherent'];
 $roleLabels = [
-    'adherent'   => 'Adhérent',
-    'arbitre'    => 'Arbitre',
-    'entraineur' => 'Entraineur',
+    'admin'      => 'Admin',
     'moderateur' => 'Modérateur',
     'bureau'     => 'Bureau',
-    'admin'      => 'Admin',
+    'entraineur' => 'Entraîneur',
+    'arbitre'    => 'Arbitre',
+    'adherent'   => 'Adhérent',
 ];
 ?>
 <!DOCTYPE html>
