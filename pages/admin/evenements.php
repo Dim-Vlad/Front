@@ -268,9 +268,5 @@ try {
 
     <script src="/js/main.js"></script>
     <script src="/js/evenements.js"></script>
-    <script>
-        loadHTML('/commun/menu.html', 'menu');
-        loadHTML('/commun/footer.php', 'footer');
-    </script>
 </body>
 </html>

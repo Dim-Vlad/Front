@@ -67,7 +67,9 @@ function csrf_token(): string {
 
 function check_csrf(): void {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
-    $token = $_POST['_csrf'] ?? '';
+    // Accept token from form field (FormData) or X-CSRF-Token header (JSON fetch)
+    $token = $_POST['_csrf']
+        ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
     if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
         ob_end_clean();
         http_response_code(403);

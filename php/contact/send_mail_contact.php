@@ -15,7 +15,7 @@ try {
     }
 } catch (Exception $e) {}
 
-$selected_subject = $_POST['subject-dropdown'] ?? '';
+$selected_subject = str_replace(["\r", "\n"], '', $_POST['subject-dropdown'] ?? '');
 $email_subject    = 'Nouveau message de contact: ' . $selected_subject;
 
 $rawMail  = $_POST['mail'] ?? '';
@@ -31,7 +31,7 @@ $message = 'Nom: '       . ($_POST['lastname']  ?? '') . "\n"
          . 'Message: '   . ($_POST['subject']   ?? '');
 
 $headers = 'From: webmaster@volleyballollioulais.fr' . "\r\n"
-         . 'X-Mailer: PHP/' . phpversion();
+         . 'X-Mailer: PHP';
 if ($replyTo !== '') {
     $headers .= "\r\nReply-To: " . $replyTo;
 }

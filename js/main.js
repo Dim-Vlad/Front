@@ -5,8 +5,13 @@ let _csrfToken = null;
 // Intercepte tous les fetch POST pour injecter le token CSRF automatiquement
 const _origFetch = window.fetch.bind(window);
 window.fetch = function (url, opts) {
-    if (_csrfToken && opts && opts.method === 'POST' && opts.body instanceof FormData) {
-        opts.body.set('_csrf', _csrfToken);
+    if (_csrfToken && opts && opts.method === 'POST') {
+        if (opts.body instanceof FormData) {
+            opts.body.set('_csrf', _csrfToken);
+        } else {
+            opts.headers = opts.headers || {};
+            opts.headers['X-CSRF-Token'] = _csrfToken;
+        }
     }
     return _origFetch(url, opts);
 };
@@ -428,7 +433,14 @@ function openLogoManager() {
                 if (isActive) _lmSelectedPath = path;
 
                 const name = path.split('/').pop();
-                item.innerHTML = `<img src="/${path}" alt="${name}" loading="lazy"><span>${name}</span>`;
+                const img  = document.createElement('img');
+                img.src     = '/' + path;
+                img.alt     = name;
+                img.loading = 'lazy';
+                const span  = document.createElement('span');
+                span.textContent = name;
+                item.appendChild(img);
+                item.appendChild(span);
 
                 item.addEventListener('click', () => {
                     document.querySelectorAll('.lm-logo-item').forEach(i => i.classList.remove('active'));

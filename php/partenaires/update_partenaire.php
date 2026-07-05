@@ -40,12 +40,12 @@ $logoPath = null;
 if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
     $tmp     = $_FILES['logo']['tmp_name'];
     $type    = mime_content_type($tmp);
-    $allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+    $allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (!in_array($type, $allowed, true)) {
-        http_response_code(400); ob_end_clean(); echo json_encode(['error' => 'Type de fichier non autorisé.']); exit;
+        http_response_code(400); ob_end_clean(); echo json_encode(['error' => 'Type de fichier non autorisé (JPEG, PNG, WebP ou GIF uniquement).']); exit;
     }
     $ext = match($type) {
-        'image/png' => 'png', 'image/webp' => 'webp', 'image/gif' => 'gif', 'image/svg+xml' => 'svg', default => 'jpg',
+        'image/png' => 'png', 'image/webp' => 'webp', 'image/gif' => 'gif', default => 'jpg',
     };
     $uploadDir = __DIR__ . '/../../photos/partenaires/';
     if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);

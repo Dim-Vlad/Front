@@ -6,7 +6,7 @@ header('Cache-Control: no-cache, no-store');
 
 try {
     $pdo  = get_pdo();
-    $saison = $pdo->query("SELECT * FROM saisons_galerie WHERE est_active = 1 LIMIT 1")->fetch();
+    $saison = $pdo->query("SELECT id, label, slug, flickr_url FROM saisons_galerie WHERE est_active = 1 LIMIT 1")->fetch();
 
     if (!$saison) {
         ob_end_clean(); echo json_encode(['success' => true, 'saison' => null, 'photos' => []]);
@@ -14,7 +14,7 @@ try {
     }
 
     $stmt = $pdo->prepare(
-        "SELECT * FROM photos_galerie WHERE saison_id = ? AND statut = 'publiee' ORDER BY ordre ASC, id ASC"
+        "SELECT id, filepath, alt_text, legende FROM photos_galerie WHERE saison_id = ? AND statut = 'publiee' ORDER BY ordre ASC, id ASC"
     );
     $stmt->execute([$saison['id']]);
     $photos = $stmt->fetchAll();

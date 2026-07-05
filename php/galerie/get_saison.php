@@ -12,7 +12,7 @@ if (!preg_match('/^[a-z0-9\-]+$/', $slug)) {
 
 try {
     $pdo  = get_pdo();
-    $stmt = $pdo->prepare("SELECT * FROM saisons_galerie WHERE slug = ? LIMIT 1");
+    $stmt = $pdo->prepare("SELECT id, label, slug, flickr_url FROM saisons_galerie WHERE slug = ? LIMIT 1");
     $stmt->execute([$slug]);
     $saison = $stmt->fetch();
 
@@ -22,7 +22,7 @@ try {
     }
 
     $stmt = $pdo->prepare(
-        "SELECT * FROM photos_galerie WHERE saison_id = ? AND statut = 'publiee' ORDER BY ordre ASC, id ASC"
+        "SELECT id, filepath, alt_text, legende FROM photos_galerie WHERE saison_id = ? AND statut = 'publiee' ORDER BY ordre ASC, id ASC"
     );
     $stmt->execute([$saison['id']]);
     $photos = $stmt->fetchAll();

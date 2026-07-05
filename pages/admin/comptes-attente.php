@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 if (!has_role('admin')) {
@@ -93,8 +93,6 @@ $roleLabels = [
     <div id="footer"></div>
     <script src="/js/main.js"></script>
     <script>
-        loadHTML('/commun/menu.html', 'menu');
-        loadHTML('/commun/footer.php', 'footer');
 
         async function activateUser(id) {
             const checked = [...document.querySelectorAll('input[name="ca-role-' + id + '[]"]:checked')];

@@ -30,11 +30,19 @@ if ($isCli) {
     require_once __DIR__ . '/../auth.php';
     header('Content-Type: application/json');
 
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Méthode non autorisée']);
+        exit;
+    }
+
     if (!has_any_role(['admin'])) {
         http_response_code(403);
         ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Accès refusé']);
         exit;
     }
+
+    check_csrf();
 
     try {
         $pdo = get_pdo();

@@ -3,15 +3,14 @@ ob_start();
 require_once __DIR__ . '/../auth.php';
 header('Content-Type: application/json');
 
-if (!is_logged_in()) {
+if (!is_logged_in() || !has_any_role(['entraineur', 'arbitre', 'bureau', 'moderateur', 'admin'])) {
     ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Non autorisé']); exit;
 }
-check_csrf();
 
 try {
     $pdo      = get_pdo();
-    $sections = $pdo->query("SELECT * FROM entraineur_sections ORDER BY ordre, id")->fetchAll();
-    $docs     = $pdo->query("SELECT * FROM entraineur_documents ORDER BY section_id, ordre, id")->fetchAll();
+    $sections = $pdo->query("SELECT id, label, ordre FROM entraineur_sections ORDER BY ordre, id")->fetchAll();
+    $docs     = $pdo->query("SELECT id, section_id, label, url, type, ordre FROM entraineur_documents ORDER BY section_id, ordre, id")->fetchAll();
 
     $bySection = [];
     foreach ($docs as $doc) {

@@ -54,7 +54,7 @@ function renderSaisonActive(saison, photos) {
 
     var html = '';
     photos.forEach(function (photo) {
-        var src = '/' + photo.filepath;
+        var src = _he('/' + photo.filepath);
         html += '<a href="' + src + '" target="_blank">';
         html += '<img src="' + src + '" alt="' + _he(photo.alt_text || '') + '">';
         if (_galIsAdmin) {
@@ -64,7 +64,7 @@ function renderSaisonActive(saison, photos) {
     });
 
     if (saison.flickr_url) {
-        html += '<a href="' + saison.flickr_url + '" target="_blank" class="gal-more-tile">'
+        html += '<a href="' + _he(saison.flickr_url) + '" target="_blank" class="gal-more-tile">'
               + '<span class="gal-more-arrow">→</span>'
               + '<span class="gal-more-label">Voir plus sur Flickr</span>'
               + '</a>';

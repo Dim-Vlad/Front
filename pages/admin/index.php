@@ -148,9 +148,5 @@ $nbAttente = (int)$pdo->query('SELECT COUNT(*) FROM users WHERE actif = 0')->fet
     <div id="footer"></div>
 
     <script src="/js/main.js"></script>
-    <script>
-        loadHTML('/commun/menu.html', 'menu');
-        loadHTML('/commun/footer.php', 'footer');
-    </script>
 </body>
 </html>

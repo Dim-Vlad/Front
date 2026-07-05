@@ -106,8 +106,6 @@ function extractSrc(string $val): string {
 
     <script src="/js/main.js"></script>
     <script>
-        loadHTML('/commun/menu.html', 'menu');
-        loadHTML('/commun/footer.php', 'footer');
 
         // Auto-resize HelloAsso widget via postMessage
         const HA_ORIGINS = ['https://www.helloasso.com', 'https://helloasso.com'];

@@ -246,8 +246,6 @@ function compute_pts(array $m): ?int {
     <div id="footer"></div>
     <script src="/js/main.js"></script>
     <script>
-        loadHTML('/commun/menu.html', 'menu');
-        loadHTML('/commun/footer.php', 'footer');
 
         const SETS_WIN  = ['3-0', '3-1', '3-2'];
         const SETS_LOSE = ['0-3', '1-3', '2-3'];

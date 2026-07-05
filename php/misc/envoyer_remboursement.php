@@ -8,6 +8,7 @@ if (!is_logged_in()) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    check_csrf();
     $nom   = strip_tags(trim($_POST['nom']   ?? ''));
     $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
 

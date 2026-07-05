@@ -25,6 +25,10 @@ if (!$label) {
     ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Label requis (ex : 2026-2027)']);
     exit;
 }
+if ($flickr_url !== null && !preg_match('#^https?://#i', $flickr_url)) {
+    ob_end_clean(); echo json_encode(['success' => false, 'error' => 'URL Flickr invalide']);
+    exit;
+}
 
 // Auto-generate slug from label if not provided
 if (!$slug) {
@@ -77,6 +81,6 @@ try {
     ob_end_clean(); echo json_encode(['success' => true, 'id' => $newId, 'slug' => $slug, 'active' => $activer]);
 
 } catch (Exception $e) {
-    if ($pdo->inTransaction()) $pdo->rollBack();
+    if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
     ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Erreur serveur']);
 }

@@ -198,9 +198,5 @@ foreach ($rolePriority as $r) {
     <div id="footer"></div>
 
     <script src="/js/main.js"></script>
-    <script>
-        loadHTML('/commun/menu.html', 'menu');
-        loadHTML('/commun/footer.php', 'footer');
-    </script>
 </body>
 </html>

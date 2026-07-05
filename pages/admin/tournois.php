@@ -182,8 +182,6 @@ function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES); }
 
     <script src="/js/main.js"></script>
     <script>
-    loadHTML('/commun/menu.html', 'menu');
-    loadHTML('/commun/footer.php', 'footer');
 
     function openModal(cardEl) {
         document.getElementById('tModalTitle').textContent = cardEl ? 'Modifier la page' : 'Créer une page tournoi';

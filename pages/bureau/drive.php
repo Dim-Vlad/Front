@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 if (!has_any_role(['bureau', 'admin', 'moderateur'])) {
@@ -76,8 +76,6 @@ $isAdmin  = has_role('admin');
 
     <script src="/js/main.js"></script>
     <script>
-        loadHTML('/commun/menu.html', 'menu');
-        loadHTML('/commun/footer.php', 'footer');
 
         function switchTab(btn) {
             document.querySelectorAll('.drive-tab').forEach(t => t.classList.remove('active'));

@@ -146,8 +146,6 @@ $nbActifs = count(array_filter($questions, fn($q) => $q['actif']));
     <div id="footer"></div>
     <script src="/js/main.js"></script>
     <script>
-    loadHTML('/commun/menu.html', 'menu');
-    loadHTML('/commun/footer.php', 'footer');
 
     function createQuestion() {
         const question = document.getElementById('f-question').value.trim();

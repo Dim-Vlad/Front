@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 if (!has_role('admin')) {
@@ -20,98 +20,86 @@ $roleLabels = [
     'adherent'   => 'Adhérent',
 ];
 
-// Suppression
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
-    $id = (int)($_POST['user_id'] ?? 0);
-    $currentId = (int)(current_user()['id']);
-    if ($id > 0 && $id !== $currentId) {
-        $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$id]);
-        $message = 'Utilisateur supprimé.';
-        $messageType = 'success';
-    } else {
-        $message = 'Impossible de supprimer ce compte.';
-        $messageType = 'error';
-    }
+function flash(string $msg, string $type): never {
+    $_SESSION['flash'] = ['msg' => $msg, 'type' => $type];
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
 }
 
-// Modification des rôles
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'change_roles') {
-    $id = (int)($_POST['user_id'] ?? 0);
-    $newRoles = array_values(array_filter($_POST['new_roles'] ?? [], fn($r) => in_array($r, $validRoles, true)));
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    check_csrf();
+    $action    = $_POST['action'] ?? '';
     $currentId = (int)(current_user()['id']);
 
-    if ($id <= 0 || $id === $currentId) {
-        $message = 'Impossible de modifier ce compte.';
-        $messageType = 'error';
-    } elseif (empty($newRoles)) {
-        $message = 'Veuillez sélectionner au moins un rôle.';
-        $messageType = 'error';
-    } else {
-        $pdo->prepare('DELETE FROM user_roles WHERE user_id = ?')->execute([$id]);
-        $stmt = $pdo->prepare('INSERT INTO user_roles (user_id, role_id) SELECT ?, id FROM roles WHERE name = ?');
-        foreach ($newRoles as $r) {
-            $stmt->execute([$id, $r]);
+    if ($action === 'delete') {
+        $id = (int)($_POST['user_id'] ?? 0);
+        if ($id > 0 && $id !== $currentId) {
+            $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$id]);
+            flash('Utilisateur supprimé.', 'success');
         }
-        $message = 'Rôles modifiés avec succès.';
-        $messageType = 'success';
+        flash('Impossible de supprimer ce compte.', 'error');
     }
-}
 
-// Changement de mot de passe
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'change_password') {
-    $id       = (int)($_POST['user_id'] ?? 0);
-    $password = $_POST['new_password'] ?? '';
-
-    if ($id <= 0) {
-        $message = 'Utilisateur invalide.';
-        $messageType = 'error';
-    } elseif (strlen($password) < 8) {
-        $message = 'Le mot de passe doit contenir au moins 8 caractères.';
-        $messageType = 'error';
-    } else {
-        $hash = password_hash($password, PASSWORD_DEFAULT);
-        $pdo->prepare('UPDATE users SET password = ? WHERE id = ?')->execute([$hash, $id]);
-        $message = 'Mot de passe modifié avec succès.';
-        $messageType = 'success';
-    }
-}
-
-// Création
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'create') {
-    $username = trim($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $roles    = array_values(array_filter($_POST['roles'] ?? [], fn($r) => in_array($r, $validRoles, true)));
-    $prenom   = trim($_POST['prenom'] ?? '');
-    $nom      = trim($_POST['nom'] ?? '');
-
-    if (empty($roles)) $roles = ['entraineur'];
-
-    if ($username === '' || $password === '' || $prenom === '' || $nom === '') {
-        $message = 'Tous les champs sont obligatoires.';
-        $messageType = 'error';
-    } elseif (strlen($password) < 8) {
-        $message = 'Le mot de passe doit contenir au moins 8 caractères.';
-        $messageType = 'error';
-    } else {
-        try {
-            $hash = password_hash($password, PASSWORD_DEFAULT);
-            $pdo->prepare('INSERT INTO users (username, password, prenom, nom) VALUES (?, ?, ?, ?)')->execute([$username, $hash, $prenom, $nom]);
-            $newId = (int)$pdo->lastInsertId();
+    if ($action === 'change_roles') {
+        $id       = (int)($_POST['user_id'] ?? 0);
+        $newRoles = array_values(array_filter($_POST['new_roles'] ?? [], fn($r) => in_array($r, $validRoles, true)));
+        if ($id <= 0 || $id === $currentId) {
+            flash('Impossible de modifier ce compte.', 'error');
+        } elseif (empty($newRoles)) {
+            flash('Veuillez sélectionner au moins un rôle.', 'error');
+        } else {
+            $pdo->prepare('DELETE FROM user_roles WHERE user_id = ?')->execute([$id]);
             $stmt = $pdo->prepare('INSERT INTO user_roles (user_id, role_id) SELECT ?, id FROM roles WHERE name = ?');
-            foreach ($roles as $r) {
-                $stmt->execute([$newId, $r]);
+            foreach ($newRoles as $r) { $stmt->execute([$id, $r]); }
+            flash('Rôles modifiés avec succès.', 'success');
+        }
+    }
+
+    if ($action === 'change_password') {
+        $id       = (int)($_POST['user_id'] ?? 0);
+        $password = $_POST['new_password'] ?? '';
+        if ($id <= 0) {
+            flash('Utilisateur invalide.', 'error');
+        } elseif (strlen($password) < 8) {
+            flash('Le mot de passe doit contenir au moins 8 caractères.', 'error');
+        } else {
+            $pdo->prepare('UPDATE users SET password = ? WHERE id = ?')->execute([password_hash($password, PASSWORD_DEFAULT), $id]);
+            flash('Mot de passe modifié avec succès.', 'success');
+        }
+    }
+
+    if ($action === 'create') {
+        $username = trim($_POST['username'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $roles    = array_values(array_filter($_POST['roles'] ?? [], fn($r) => in_array($r, $validRoles, true)));
+        $prenom   = trim($_POST['prenom'] ?? '');
+        $nom      = trim($_POST['nom'] ?? '');
+        if (empty($roles)) $roles = ['entraineur'];
+
+        if ($username === '' || $password === '' || $prenom === '' || $nom === '') {
+            flash('Tous les champs sont obligatoires.', 'error');
+        } elseif (strlen($password) < 8) {
+            flash('Le mot de passe doit contenir au moins 8 caractères.', 'error');
+        } else {
+            try {
+                $pdo->prepare('INSERT INTO users (username, password, prenom, nom) VALUES (?, ?, ?, ?)')->execute([$username, password_hash($password, PASSWORD_DEFAULT), $prenom, $nom]);
+                $newId = (int)$pdo->lastInsertId();
+                $stmt  = $pdo->prepare('INSERT INTO user_roles (user_id, role_id) SELECT ?, id FROM roles WHERE name = ?');
+                foreach ($roles as $r) { $stmt->execute([$newId, $r]); }
+                $rolesStr = implode(', ', array_map(fn($r) => $roleLabels[$r] ?? $r, $roles));
+                flash('Compte de ' . $prenom . ' ' . $nom . ' créé avec le(s) rôle(s) : ' . $rolesStr . '.', 'success');
+            } catch (PDOException $e) {
+                flash(str_contains($e->getMessage(), 'Duplicate entry') ? 'Cet identifiant est déjà utilisé.' : 'Erreur lors de la création.', 'error');
             }
-            $rolesStr = implode(', ', array_map(fn($r) => $roleLabels[$r] ?? $r, $roles));
-            $message = 'Compte de ' . htmlspecialchars($prenom) . ' ' . htmlspecialchars($nom) . ' créé avec le(s) rôle(s) : ' . $rolesStr . '.';
-            $messageType = 'success';
-        } catch (PDOException $e) {
-            $message = str_contains($e->getMessage(), 'Duplicate entry')
-                ? 'Cet identifiant est déjà utilisé.'
-                : 'Erreur lors de la création.';
-            $messageType = 'error';
         }
     }
 }
+
+// Read flash message set by PRG redirect
+$flash       = $_SESSION['flash'] ?? null;
+unset($_SESSION['flash']);
+$message     = $flash['msg']  ?? '';
+$messageType = $flash['type'] ?? '';
 
 $users = $pdo->query(
     "SELECT u.id, u.username, u.prenom, u.nom, u.created_at,
@@ -165,6 +153,7 @@ $currentId = (int)(current_user()['id']);
             <h2>Créer un compte</h2>
             <form method="POST" class="admin-form">
                 <input type="hidden" name="action" value="create">
+                <input type="hidden" name="_csrf" value="<?= csrf_token() ?>">
                 <div class="form-row">
                     <div class="form-group">
                         <label for="prenom">Prénom</label>
@@ -247,6 +236,7 @@ $currentId = (int)(current_user()['id']);
                             <form method="POST" onsubmit="return confirm('Supprimer «<?= htmlspecialchars($u['username']) ?>» ?')" style="display:inline">
                                 <input type="hidden" name="action" value="delete">
                                 <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
+                                <input type="hidden" name="_csrf" value="<?= csrf_token() ?>">
                                 <button type="submit" class="btn-delete">Supprimer</button>
                             </form>
                             <?php endif; ?>
@@ -268,6 +258,7 @@ $currentId = (int)(current_user()['id']);
             <form method="POST" class="admin-form" id="modal-form">
                 <input type="hidden" name="action" value="change_password">
                 <input type="hidden" name="user_id" id="modal-user-id">
+                <input type="hidden" name="_csrf" value="<?= csrf_token() ?>">
                 <div class="form-group">
                     <label>Nouveau mot de passe <span class="hint">(8 caractères min.)</span></label>
                     <div class="password-wrapper">
@@ -304,6 +295,7 @@ $currentId = (int)(current_user()['id']);
             <form method="POST" class="admin-form">
                 <input type="hidden" name="action" value="change_roles">
                 <input type="hidden" name="user_id" id="modal-role-user-id">
+                <input type="hidden" name="_csrf" value="<?= csrf_token() ?>">
                 <div class="form-group">
                     <label>Rôle(s) <span class="hint">(au moins un requis)</span></label>
                     <div class="roles-box">
@@ -329,8 +321,6 @@ $currentId = (int)(current_user()['id']);
 
     <script src="/js/main.js"></script>
     <script>
-        loadHTML('/commun/menu.html', 'menu');
-        loadHTML('/commun/footer.php', 'footer');
 
         function togglePassword(btn) {
             const input = btn.closest('.password-wrapper').querySelector('input');

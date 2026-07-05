@@ -177,8 +177,6 @@ $youtube  = gs_param($pdo, 'social_youtube',       'https://www.youtube.com/@Vol
 
     <script src="/js/main.js"></script>
     <script>
-        loadHTML('/commun/menu.html', 'menu');
-        loadHTML('/commun/footer.php', 'footer');
 
         const alert = document.getElementById('gs-alert');
 

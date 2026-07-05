@@ -121,8 +121,6 @@ $repondues = array_values(array_filter($allQuestions, fn($q) => $q['mon_choix'] 
     <div id="footer"></div>
     <script src="/js/main.js"></script>
     <script>
-    loadHTML('/commun/menu.html', 'menu');
-    loadHTML('/commun/footer.php', 'footer');
 
     function repondre(qid, choix, clickedBtn) {
         const card = document.getElementById('quiz-card-' + qid);
