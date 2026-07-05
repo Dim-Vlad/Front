@@ -73,16 +73,7 @@ function initializeMenu() {
 let _authData = null;
 
 function updateHomeCard(data) {
-    const btn  = document.getElementById('home-member-btn');
-    const desc = document.getElementById('home-member-desc');
-    if (!btn) return;
-    if (data.logged_in) {
-        btn.textContent  = 'Mon espace';
-        if (desc) desc.textContent = 'Bonjour ' + (data.display_short || data.username) + ' ! Retrouvez votre tableau de bord et vos outils.';
-    } else {
-        btn.textContent  = 'Se connecter';
-        if (desc) desc.textContent = 'Entraineurs, arbitres ou membres du bureau, accédez à votre espace dédié.';
-    }
+    // Contenu géré côté PHP (home.php) — rien à faire ici
 }
 
 function renderAuthButton(data) {
@@ -178,7 +169,7 @@ function initLogoManager() {
         .logo-edit-wrapper {
             position: relative;
             display: inline-block;
-            width: 110px;
+            width: 150px;
             flex-shrink: 0;
         }
         .logo-edit-wrapper > img {

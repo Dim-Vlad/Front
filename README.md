@@ -95,7 +95,7 @@ migration_boutique.sql         — articles boutique + URL HelloAsso
 │   ├── evenements.js
 │   └── ...
 ├── pages/
-│   ├── home.html
+│   ├── home.php
 │   ├── boutique.html
 │   ├── nousContacter.html
 │   ├── auth/            Connexion et tableau de bord membres
