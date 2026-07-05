@@ -6,6 +6,7 @@ header('Content-Type: application/json');
 if (!is_logged_in() || !has_any_role(['admin', 'moderateur'])) {
     ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Non autorisé']); exit;
 }
+check_csrf();
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Méthode invalide']); exit;
 }

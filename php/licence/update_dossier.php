@@ -12,6 +12,7 @@ if (!is_logged_in() || !has_role('admin')) {
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405); ob_end_clean(); echo json_encode(['error' => 'Méthode non autorisée.']); exit;
 }
+check_csrf();
 
 if (!isset($_FILES['dossier']) || $_FILES['dossier']['error'] !== UPLOAD_ERR_OK) {
     http_response_code(400); ob_end_clean(); echo json_encode(['error' => 'Aucun fichier reçu.']); exit;

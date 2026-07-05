@@ -10,6 +10,7 @@ if (!has_any_role(['admin', 'moderateur'])) {
     echo json_encode(['success' => false, 'error' => 'Accès refusé']);
     exit;
 }
+check_csrf();
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['success' => false, 'error' => 'Méthode non autorisée']);

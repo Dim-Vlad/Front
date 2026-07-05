@@ -12,6 +12,7 @@ if (!is_logged_in() || !has_any_role(['moderateur', 'admin'])) {
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405); ob_end_clean(); echo json_encode(['error' => 'Méthode non autorisée.']); exit;
 }
+check_csrf();
 
 $validJours    = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
 $validColspans = ['111','21','12','3'];

@@ -7,6 +7,7 @@ header('Content-Type: application/json');
 if (!is_logged_in() || !has_role('admin')) {
     ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Non autorisé']); exit;
 }
+check_csrf();
 
 $nom = trim($_POST['nom'] ?? '');
 $url = trim($_POST['url'] ?? '');

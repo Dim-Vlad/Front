@@ -6,6 +6,7 @@ header('Content-Type: application/json');
 if (!is_logged_in() || !has_any_role(['moderateur','admin'])) {
     ob_end_clean(); echo json_encode(['success'=>false,'error'=>'Non autorisé']); exit;
 }
+check_csrf();
 
 if (!isset($_FILES['photo']) || $_FILES['photo']['error'] !== UPLOAD_ERR_OK) {
     ob_end_clean(); echo json_encode(['success'=>false,'error'=>'Fichier manquant']); exit;

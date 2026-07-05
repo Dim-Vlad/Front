@@ -110,8 +110,9 @@ function extractSrc(string $val): string {
         loadHTML('/commun/footer.php', 'footer');
 
         // Auto-resize HelloAsso widget via postMessage
+        const HA_ORIGINS = ['https://www.helloasso.com', 'https://helloasso.com'];
         window.addEventListener('message', function(e) {
-            if (!e.origin.includes('helloasso.com')) return;
+            if (!HA_ORIGINS.includes(e.origin)) return;
             const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
             if (data?.action === 'resize' && data?.params?.height) {
                 const frame = document.getElementById('haWidgetInscription');

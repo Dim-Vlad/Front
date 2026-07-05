@@ -5,6 +5,7 @@ header('Content-Type: application/json');
 if (!is_logged_in()) {
     echo json_encode(['success' => false, 'error' => 'Connexion requise']); exit;
 }
+check_csrf();
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'error' => 'Méthode invalide']); exit;
 }

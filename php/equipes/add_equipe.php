@@ -11,6 +11,7 @@ if (!is_logged_in() || !has_any_role(['moderateur', 'admin'])) {
     ob_end_clean(); echo json_encode(['error' => 'Accès refusé.']);
     exit;
 }
+check_csrf();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);

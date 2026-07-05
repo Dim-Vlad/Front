@@ -6,6 +6,7 @@ header('Content-Type: application/json');
 if (!is_logged_in() || !has_any_role(['bureau', 'admin', 'moderateur'])) {
     ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Non autorisé']); exit;
 }
+check_csrf();
 
 try {
     $pdo  = get_pdo();

@@ -6,6 +6,7 @@ header('Content-Type: application/json');
 if (!is_logged_in() || !has_role('admin')) {
     echo json_encode(['success' => false, 'error' => 'Réservé aux administrateurs']); exit;
 }
+check_csrf();
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'error' => 'Méthode invalide']); exit;
 }

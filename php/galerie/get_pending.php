@@ -9,6 +9,7 @@ if (!has_any_role(['admin', 'moderateur'])) {
     ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Accès refusé']);
     exit;
 }
+check_csrf();
 
 try {
     $pdo  = get_pdo();

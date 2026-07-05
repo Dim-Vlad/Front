@@ -7,6 +7,7 @@ header('Content-Type: application/json');
 if (!is_logged_in() || !has_any_role(['moderateur','admin'])) {
     ob_end_clean(); echo json_encode(['success'=>false,'error'=>'Non autorisé']); exit;
 }
+check_csrf();
 
 $id          = (int)($_POST['id'] ?? 0);
 $nom         = trim($_POST['nom']        ?? '');

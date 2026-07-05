@@ -1,4 +1,4 @@
-﻿const CACHE_VERSION = 'vbo-v4.1.0';
+const CACHE_VERSION = 'vbo-v4.2.0';
 
 const STATIC_ASSETS = [
     '/',
@@ -6,13 +6,11 @@ const STATIC_ASSETS = [
     '/css/styles.css',
     '/js/main.js',
     '/commun/menu.html',
-    '/commun/footer.php',
     '/images/logo-club/LogoVBO.png',
     '/images/logo-club/Logo-VBO-blanc.png',
     '/images/favicon-36x36.png',
 ];
 
-// Précharge les assets statiques à l'installation
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_VERSION).then(cache => cache.addAll(STATIC_ASSETS))
@@ -20,7 +18,6 @@ self.addEventListener('install', event => {
     self.skipWaiting();
 });
 
-// Supprime les anciens caches à l'activation
 self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(keys =>
@@ -34,15 +31,24 @@ self.addEventListener('fetch', event => {
     const { request } = event;
     const url = new URL(request.url);
 
-    // Ignore les requêtes non-GET et hors domaine
     if (request.method !== 'GET' || url.origin !== location.origin) return;
 
-    // Pages PHP et HTML : network-first, fallback offline
-    if (url.pathname.endsWith('.php') || url.pathname === '/' || url.pathname.endsWith('.html')) {
+    // PHP = contenu dynamique et/ou authentifié — jamais mis en cache
+    if (url.pathname.endsWith('.php')) {
+        event.respondWith(
+            fetch(request).catch(() => caches.match('/offline.html'))
+        );
+        return;
+    }
+
+    // Assets versionnés (?v=...) : cache HTTP du navigateur, pas le SW
+    if (url.search.includes('v=')) return;
+
+    // HTML statique et / : network-first avec fallback offline
+    if (url.pathname === '/' || url.pathname.endsWith('.html')) {
         event.respondWith(
             fetch(request)
                 .then(response => {
-                    // Met en cache une copie fraîche si succès
                     if (response.ok) {
                         const clone = response.clone();
                         caches.open(CACHE_VERSION).then(cache => cache.put(request, clone));
@@ -56,12 +62,7 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Assets versionnés (?v=...) : toujours depuis le réseau, jamais mis en cache
-    if (url.search.includes('v=')) {
-        return; // laisse le navigateur gérer avec son propre cache HTTP
-    }
-
-    // Assets statiques sans version (CSS/JS/images) : cache-first
+    // CSS / JS / images : cache-first
     event.respondWith(
         caches.match(request).then(cached => {
             if (cached) return cached;

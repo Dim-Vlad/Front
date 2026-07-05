@@ -1,4 +1,17 @@
-﻿/* ── Logo actif ──────────────────────────────────────────────────── */
+﻿/* ── CSRF ────────────────────────────────────────────────────────── */
+
+let _csrfToken = null;
+
+// Intercepte tous les fetch POST pour injecter le token CSRF automatiquement
+const _origFetch = window.fetch.bind(window);
+window.fetch = function (url, opts) {
+    if (_csrfToken && opts && opts.method === 'POST' && opts.body instanceof FormData) {
+        opts.body.set('_csrf', _csrfToken);
+    }
+    return _origFetch(url, opts);
+};
+
+/* ── Logo actif ──────────────────────────────────────────────────── */
 
 let logoActif = null;
 
@@ -86,7 +99,8 @@ function renderAuthButton(data) {
     const container = document.createElement('div');
     container.id = 'nav-auth';
 
-    _authData = data;
+    _authData    = data;
+    _csrfToken   = data.csrf_token || null;
     updateHomeCard(data);
 
     if (data.logged_in) {

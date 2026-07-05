@@ -11,6 +11,7 @@ if (!is_logged_in() || !has_any_role(['moderateur', 'admin'])) {
     echo json_encode(['success' => false, 'error' => 'Accès refusé']);
     exit;
 }
+check_csrf();
 
 $dir     = realpath(__DIR__ . '/../../images/logo-club');
 $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];

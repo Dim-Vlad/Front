@@ -1,9 +1,7 @@
 <?php
 ob_start();
 ini_set('display_errors', 0);
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/auth.php';
 header('Content-Type: application/json');
 header('Cache-Control: no-cache, no-store');
 
@@ -16,9 +14,11 @@ if ($prenom !== '') {
     $display_short = $_SESSION['username'] ?? null;
 }
 
-ob_end_clean(); echo json_encode([
+ob_end_clean();
+echo json_encode([
     'logged_in'     => isset($_SESSION['user_id']),
     'username'      => $_SESSION['username'] ?? null,
     'display_short' => $display_short,
     'roles'         => $_SESSION['roles'] ?? [],
+    'csrf_token'    => csrf_token(),
 ]);
