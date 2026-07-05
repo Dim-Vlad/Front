@@ -102,12 +102,12 @@ $message     = $flash['msg']  ?? '';
 $messageType = $flash['type'] ?? '';
 
 $users = $pdo->query(
-    "SELECT u.id, u.username, u.prenom, u.nom, u.created_at,
+    "SELECT u.id, u.username, u.prenom, u.nom, u.created_at, u.actif,
             GROUP_CONCAT(r.name ORDER BY r.name SEPARATOR ',') AS roles
     FROM users u
     LEFT JOIN user_roles ur ON ur.user_id = u.id
     LEFT JOIN roles r ON r.id = ur.role_id
-    GROUP BY u.id, u.username, u.prenom, u.nom, u.created_at
+    GROUP BY u.id, u.username, u.prenom, u.nom, u.created_at, u.actif
     ORDER BY u.created_at DESC"
 )->fetchAll();
 $currentId = (int)(current_user()['id']);
@@ -154,36 +154,39 @@ $currentId = (int)(current_user()['id']);
             <form method="POST" class="admin-form">
                 <input type="hidden" name="action" value="create">
                 <input type="hidden" name="_csrf" value="<?= csrf_token() ?>">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="prenom">Prénom</label>
-                        <input type="text" id="prenom" name="prenom" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="nom">Nom</label>
-                        <input type="text" id="nom" name="nom" required>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="username">Identifiant <span class="hint">(pour la connexion)</span></label>
-                        <input type="text" id="username" name="username" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Mot de passe <span class="hint">(8 caractères min.)</span></label>
-                        <div class="password-wrapper">
-                            <input type="password" id="password" name="password" required minlength="8">
-                            <button type="button" class="btn-toggle-password" onclick="togglePassword(this)" aria-label="Voir le mot de passe">
-                                <svg class="icon-eye" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                <svg class="icon-eye-off" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                            </button>
+                <div class="form-split">
+                    <div class="form-split__left">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="prenom">Prénom</label>
+                                <input type="text" id="prenom" name="prenom" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="nom">Nom</label>
+                                <input type="text" id="nom" name="nom" required>
+                            </div>
                         </div>
+                        <div class="form-group">
+                            <label for="username">Identifiant <span class="hint">(pour la connexion)</span></label>
+                            <input type="text" id="username" name="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Mot de passe <span class="hint">(8 caractères min.)</span></label>
+                            <div class="password-wrapper">
+                                <input type="password" id="password" name="password" required minlength="8">
+                                <button type="button" class="btn-toggle-password" onclick="togglePassword(this)" aria-label="Voir le mot de passe">
+                                    <svg class="icon-eye" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    <svg class="icon-eye-off" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-admin">Créer le compte</button>
                     </div>
-                    <div class="form-group">
+                    <div class="form-split__right">
                         <label>Rôle(s)</label>
                         <div class="roles-box">
                             <div class="roles-checkboxes">
-                                    <?php foreach ($validRoles as $r): ?>
+                                <?php foreach ($validRoles as $r): ?>
                                 <label class="role-check role-check--<?= $r ?>">
                                     <input type="checkbox" name="roles[]" value="<?= $r ?>">
                                     <?= $roleLabels[$r] ?>
@@ -193,13 +196,26 @@ $currentId = (int)(current_user()['id']);
                         </div>
                     </div>
                 </div>
-                <button type="submit" class="btn-admin">Créer le compte</button>
             </form>
         </div>
 
         <!-- Liste des utilisateurs -->
         <div class="admin-card">
-            <h2>Comptes existants (<?= count($users) ?>)</h2>
+            <h2>Comptes existants (<span id="user-count"><?= count($users) ?></span>)</h2>
+            <div class="user-filters">
+                <div class="filter-search-wrap">
+                    <input type="text" id="filter-search" placeholder="Rechercher par nom, prénom ou identifiant…">
+                    <button type="button" id="filter-clear" class="filter-clear" aria-label="Effacer la recherche" style="display:none">&#x2715;</button>
+                </div>
+                <div class="filter-roles">
+                    <button type="button" class="filter-role-btn active" data-role="all">Tous</button>
+                    <button type="button" class="filter-role-btn filter-role-btn--pending" data-role="pending">En attente</button>
+                    <?php foreach ($validRoles as $r): ?>
+                    <button type="button" class="filter-role-btn filter-role-btn--<?= $r ?>" data-role="<?= $r ?>"><?= $roleLabels[$r] ?></button>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <p id="filter-empty" class="filter-empty" style="display:none">Aucun utilisateur ne correspond à votre recherche.</p>
             <table class="admin-table">
                 <thead>
                     <tr>
@@ -214,10 +230,13 @@ $currentId = (int)(current_user()['id']);
                     <?php foreach ($users as $u):
                         $userRoles = $u['roles'] ? explode(',', $u['roles']) : [];
                     ?>
-                    <tr>
+                    <tr data-name="<?= htmlspecialchars($u['prenom'] . ' ' . $u['nom'] . ' ' . $u['username']) ?>" data-roles="<?= htmlspecialchars($u['roles'] ?? '') ?>" data-actif="<?= (int)($u['actif'] ?? 1) ?>">
                         <td data-label="Nom"><?= htmlspecialchars($u['prenom'] . ' ' . $u['nom']) ?></td>
                         <td data-label="Identifiant"><?= htmlspecialchars($u['username']) ?></td>
                         <td data-label="Rôle(s)">
+                            <?php if (!(int)$u['actif']): ?>
+                            <span class="badge badge--pending">En attente</span>
+                            <?php endif; ?>
                             <?php foreach ($userRoles as $r): ?>
                             <span class="badge badge--<?= htmlspecialchars($r) ?>"><?= htmlspecialchars($roleLabels[$r] ?? $r) ?></span>
                             <?php endforeach; ?>
@@ -375,6 +394,65 @@ $currentId = (int)(current_user()['id']);
                 alert('Les mots de passe ne correspondent pas.');
             }
         });
+
+        (function () {
+            var search    = document.getElementById('filter-search');
+            var clearBtn  = document.getElementById('filter-clear');
+            var countEl   = document.getElementById('user-count');
+            var emptyEl   = document.getElementById('filter-empty');
+            var tableBody = document.querySelector('.admin-table tbody');
+            if (!search || !countEl || !emptyEl || !tableBody) return;
+
+            var activeRole = 'all';
+
+            document.querySelectorAll('.filter-role-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    document.querySelectorAll('.filter-role-btn').forEach(function (b) { b.classList.remove('active'); });
+                    btn.classList.add('active');
+                    activeRole = btn.dataset.role;
+                    applyFilters();
+                });
+            });
+
+            search.addEventListener('input', function () {
+                if (clearBtn) clearBtn.style.display = search.value ? '' : 'none';
+                applyFilters();
+            });
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function () {
+                    search.value = '';
+                    clearBtn.style.display = 'none';
+                    search.focus();
+                    applyFilters();
+                });
+            }
+
+            function applyFilters() {
+                var term = search.value.toLowerCase().trim();
+                var rows = tableBody.querySelectorAll('tr');
+                var visible = 0;
+                rows.forEach(function (row) {
+                    var name  = (row.dataset.name  || '');
+                    var roles = (row.dataset.roles || '');
+                    var actif = row.dataset.actif;
+                    var matchSearch = term === '' || name.toLowerCase().indexOf(term) !== -1;
+                    var matchRole;
+                    if (activeRole === 'all') {
+                        matchRole = true;
+                    } else if (activeRole === 'pending') {
+                        matchRole = actif === '0';
+                    } else {
+                        matchRole = roles.split(',').indexOf(activeRole) !== -1;
+                    }
+                    var show = matchSearch && matchRole;
+                    row.style.display = show ? '' : 'none';
+                    if (show) visible++;
+                });
+                countEl.textContent = visible;
+                emptyEl.style.display = visible === 0 ? '' : 'none';
+            }
+        })();
     </script>
 </body>
 </html>
