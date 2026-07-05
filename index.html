@@ -42,9 +42,7 @@
 
   <script src="js/main.js"></script>
   <script>
-    loadHTML('/commun/menu.html', 'menu');
     loadHTML('/pages/home.php', 'content');
-    loadHTML('/commun/footer.php', 'footer');
 
     async function toggleHomeEventVisible(id, btn, e) {
         e.preventDefault();
@@ -74,10 +72,6 @@
             else alert(data.error || 'Erreur');
         } catch { alert('Erreur réseau'); }
     }
-
-    window.addEventListener('error', function() {
-        window.location.href = '/pages/404.html';
-    });
 </script>
 </body>
 </html>
