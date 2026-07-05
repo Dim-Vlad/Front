@@ -8,6 +8,16 @@ window.fetch = function (url, opts) {
     if (_csrfToken && opts && opts.method === 'POST') {
         if (opts.body instanceof FormData) {
             opts.body.set('_csrf', _csrfToken);
+        } else if (typeof opts.body === 'string') {
+            // Corps JSON : on injecte _csrf dans le payload
+            try {
+                var _parsed = JSON.parse(opts.body);
+                _parsed._csrf = _csrfToken;
+                opts.body = JSON.stringify(_parsed);
+            } catch (e) {
+                opts.headers = opts.headers || {};
+                opts.headers['X-CSRF-Token'] = _csrfToken;
+            }
         } else {
             opts.headers = opts.headers || {};
             opts.headers['X-CSRF-Token'] = _csrfToken;
