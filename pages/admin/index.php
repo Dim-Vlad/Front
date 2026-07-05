@@ -30,7 +30,7 @@ $nbAttente = (int)$pdo->query('SELECT COUNT(*) FROM users WHERE actif = 0')->fet
             <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club">
             <div class="text-content">
                 <h1>Administration</h1>
-                <p>Connecté en tant que <strong><?= htmlspecialchars($user['username']) ?></strong></p>
+                <p>Connecté en tant que <strong><?= htmlspecialchars($user['prenom'] . ' ' . $user['nom']) ?></strong></p>
             </div>
         </div>
     </div>
