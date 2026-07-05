@@ -14,7 +14,7 @@ $roleLabels   = [
     'bureau'     => 'Bureau',
     'adherent'   => 'Adhérent',
 ];
-$rolePriority = ['admin', 'moderateur', 'entraineur', 'arbitre', 'bureau', 'adherent'];
+$rolePriority = ['admin', 'moderateur', 'bureau', 'entraineur', 'arbitre', 'adherent'];
 $primaryRole  = null;
 if ($user) {
     foreach ($rolePriority as $r) {
@@ -74,8 +74,13 @@ function formatHomeDate(?string $debut, ?string $fin): string {
       <h1>Volley Ball<br>Ollioulais</h1>
       <?php if ($user && !empty($user['prenom'])): ?>
       <p class="hero-sub">Bonjour <strong><?= h($user['prenom']) ?></strong>, bienvenue sur le site officiel du club.</p>
-      <?php if ($primaryRole): ?>
-      <span class="hero-role-badge hero-role-badge--<?= $primaryRole ?>"><?= $roleLabels[$primaryRole] ?></span>
+      <?php if (!empty($user['roles'])): ?>
+      <div class="hero-roles">
+        <?php foreach ($rolePriority as $r):
+            if (!in_array($r, $user['roles'], true)) continue; ?>
+        <span class="hero-role-badge hero-role-badge--<?= $r ?>"><?= $roleLabels[$r] ?></span>
+        <?php endforeach; ?>
+      </div>
       <?php endif; ?>
       <?php else: ?>
       <p class="hero-sub">Bienvenue sur le site officiel du club</p>
