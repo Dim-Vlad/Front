@@ -14,7 +14,7 @@ $user = current_user();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modération - VBO</title>
     <link href="/css/styles.css?v=20260624" rel="stylesheet">
-    <link href="/css/tableau-de-bord.css?v=20260623" rel="stylesheet">
+    <link href="/css/tableau-de-bord.css?v=20260705" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,25 +34,48 @@ $user = current_user();
     </div>
 
     <div class="dashboard-container">
-        <div class="dashboard-cards">
 
-            <a href="/pages/admin/tournois.php" class="dashboard-card card-admin">
-                <div class="card-icon">🏐</div>
-                <h2>Pages Tournois</h2>
-                <p>Créer et gérer les pages des tournois (inscription, tableau des scores).</p>
-            </a>
+        <div class="dashboard-two-col">
 
-            <a href="/pages/admin/pronostics.php" class="dashboard-card card-admin">
-                <div class="card-icon">🎯</div>
-                <h2>Pronostics</h2>
-                <p>Créer des matchs et saisir les résultats pour les pronostics des membres.</p>
-            </a>
+            <!-- Ligne 1 gauche : Événements -->
+            <div class="dashboard-section">
+                <h2 class="dashboard-section-title">📅 Événements</h2>
+                <div class="dashboard-cards">
 
-            <a href="/pages/admin/quiz.php" class="dashboard-card card-admin">
-                <div class="card-icon">🧠</div>
-                <h2>Quiz</h2>
-                <p>Créer et gérer les questions du quiz pour les membres.</p>
-            </a>
+                    <a href="/pages/admin/evenements.php" class="dashboard-card card-admin">
+                        <div class="card-icon">📅</div>
+                        <h2>Événements</h2>
+                        <p>Créer et gérer les événements du club (tournois, stages, loto…).</p>
+                    </a>
+
+                    <a href="/pages/admin/tournois.php" class="dashboard-card card-admin">
+                        <div class="card-icon">🏐</div>
+                        <h2>Pages Tournois</h2>
+                        <p>Créer et gérer les pages des tournois (inscription, tableau des scores).</p>
+                    </a>
+
+                </div>
+            </div>
+
+            <!-- Ligne 1 droite : Jeux -->
+            <div class="dashboard-section">
+                <h2 class="dashboard-section-title">🎮 Jeux</h2>
+                <div class="dashboard-cards">
+
+                    <a href="/pages/admin/pronostics.php" class="dashboard-card card-admin">
+                        <div class="card-icon">🎯</div>
+                        <h2>Pronostics</h2>
+                        <p>Créer des matchs et saisir les résultats pour les pronostics des membres.</p>
+                    </a>
+
+                    <a href="/pages/admin/quiz.php" class="dashboard-card card-admin">
+                        <div class="card-icon">🧠</div>
+                        <h2>Quiz</h2>
+                        <p>Créer et gérer les questions du quiz pour les membres.</p>
+                    </a>
+
+                </div>
+            </div>
 
         </div>
 

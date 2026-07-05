@@ -121,6 +121,9 @@ function formatHomeDate(?string $debut, ?string $fin): string {
       <div class="home-ev-body">
         <span class="home-ev-date"><?= h(formatHomeDate($ev['date_debut'], $ev['date_fin'])) ?></span>
         <h3 class="home-ev-title"><?= h($ev['titre']) ?></h3>
+        <?php if (!empty($ev['description'])): ?>
+        <p class="home-ev-desc"><?= nl2br(h($ev['description'])) ?></p>
+        <?php endif; ?>
         <?php if (!empty($ev['lieu'])): ?>
         <p class="home-ev-lieu">📍 <?= h($ev['lieu']) ?></p>
         <?php endif; ?>

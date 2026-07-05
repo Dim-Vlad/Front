@@ -207,6 +207,31 @@
 .badge--moderateur  { background: #fce4ec; color: #880e4f; }
 .badge--adherent    { background: #e0f7fa; color: #006064; }
 
+/* ── Deux colonnes (admin index) ── */
+.dashboard-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    width: 100%;
+    max-width: 980px;
+    align-items: stretch;
+}
+
+.dashboard-two-col .dashboard-section {
+    max-width: none;
+}
+
+.dashboard-two-col .dashboard-cards {
+    flex: 1;
+    max-width: none;
+    grid-template-columns: repeat(2, 1fr);
+    align-content: start;
+}
+
+.dashboard-two-col .dashboard-card {
+    height: 100%;
+}
+
 /* ── Sections ── */
 .dashboard-section {
     width: 100%;
@@ -249,6 +274,12 @@
 }
 
 /* ── Responsive ── */
+@media (max-width: 700px) {
+    .dashboard-two-col {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 600px) {
     .dashboard-cards {
         grid-template-columns: 1fr 1fr;
