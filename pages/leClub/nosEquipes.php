@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../../php/auth.php';
 
 $canEdit = is_logged_in() && has_any_role(['moderateur', 'admin']);
@@ -20,7 +20,7 @@ try {
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nos équipes - VBO</title>
-    <link href="/css/styles.css?v=20260624" rel="stylesheet">
+    <link href="/css/styles.css?v=20260705" rel="stylesheet">
     <link href="/css/leClub/nosEquipes.css?v=20260623" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -248,7 +248,7 @@ try {
 
     <div id="footer"></div>
 
-    <script src="/js/main.js"></script>
+    <script src="/js/main.js?v=20260705"></script>
     <script src="/js/nosEquipes.js"></script>
 </body>
 </html>

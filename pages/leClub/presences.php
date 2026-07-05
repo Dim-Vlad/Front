@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 if (has_role('arbitre')) {
@@ -23,7 +23,7 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Pointage des présences - VBO">
-    <link href="/css/styles.css?v=20260624" rel="stylesheet">
+    <link href="/css/styles.css?v=20260705" rel="stylesheet">
     <link href="/css/leClub/minibus.css?v=20260623" rel="stylesheet">
     <title>Pointage Présences - VBO</title>
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
@@ -144,6 +144,6 @@ try {
 
     <div id="footer"></div>
 
-    <script src="/js/main.js"></script>
+    <script src="/js/main.js?v=20260705"></script>
 </body>
 </html>

@@ -68,23 +68,42 @@ function injectLogoEditButtons() {
     });
 }
 
-/* ── Menu burger ─────────────────────────────────────────────────── */
+/* ── Menu burger / overlay ───────────────────────────────────────── */
 
-function toggleMenu() {
+function _menuIsOpen() {
+    const menu = document.querySelector('.navbar-links');
+    return menu && menu.classList.contains('show');
+}
+
+function _setMenuOpen(open) {
     const menu    = document.querySelector('.navbar-links');
     const toggler = document.querySelector('.navbar-toggler');
-    if (menu) {
-        menu.classList.toggle('show');
-        toggler.classList.toggle('close');
+    if (!menu) return;
+    if (open) {
+        menu.classList.add('show');
+        toggler.textContent = '✕';
+        document.body.style.overflow = 'hidden';
+    } else {
+        menu.classList.remove('show');
+        toggler.textContent = '☰';
+        document.body.style.overflow = '';
+        menu.querySelectorAll('.dropdown.active').forEach(function (d) {
+            d.classList.remove('active');
+        });
     }
 }
 
+function toggleMenu() {
+    _setMenuOpen(!_menuIsOpen());
+}
+
 function closeMenu(event) {
+    if (!_menuIsOpen()) return;
     const menu    = document.querySelector('.navbar-links');
     const toggler = document.querySelector('.navbar-toggler');
-    if (menu && !menu.contains(event.target) && !toggler.contains(event.target)) {
-        menu.classList.remove('show');
-        toggler.classList.remove('close');
+    // Fermer si clic en dehors du menu ET du toggler
+    if (!menu.contains(event.target) && !toggler.contains(event.target)) {
+        _setMenuOpen(false);
     }
 }
 
@@ -93,7 +112,34 @@ function initializeMenu() {
     if (navbarToggler) {
         navbarToggler.addEventListener('click', toggleMenu);
     }
+    // Fermer au clic sur un lien direct (pas les boutons dropdown)
+    const menu = document.querySelector('.navbar-links');
+    if (menu) {
+        menu.querySelectorAll('a').forEach(function (link) {
+            link.addEventListener('click', function () { _setMenuOpen(false); });
+        });
+        // Ouvrir/fermer les dropdowns au clic (overlay mobile)
+        menu.querySelectorAll('.dropdown > button').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var dropdown = btn.closest('.dropdown');
+                var wasActive = dropdown.classList.contains('active');
+                menu.querySelectorAll('.dropdown.active').forEach(function (d) {
+                    d.classList.remove('active');
+                });
+                if (!wasActive) dropdown.classList.add('active');
+            });
+        });
+        // Fermer au clic sur le fond de l'overlay (pas sur un enfant)
+        menu.addEventListener('click', function (e) {
+            if (e.target === menu) _setMenuOpen(false);
+        });
+    }
     document.addEventListener('click', closeMenu);
+    // Fermer avec Échap
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && _menuIsOpen()) _setMenuOpen(false);
+    });
 }
 
 /* ── Auth button ─────────────────────────────────────────────────── */

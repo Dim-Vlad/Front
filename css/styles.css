@@ -446,12 +446,11 @@ body {
 }
 
 
-/* === Tablettes & mobiles (≤ 1300px) : panel latéral === */
+/* === Tablettes & mobiles (≤ 1300px) : overlay plein écran === */
 @media (max-width: 1300px) {
 
   .logo-club { width: 90px; }
 
-  /* Conteneur en flex sur une ligne */
   .navbar-container-menu {
     display: flex;
     justify-content: space-between;
@@ -473,8 +472,16 @@ body {
     order: 3;
     display: block;
     margin: 0;
-    margin-bottom: 0;
-    transform: scale(1.3);
+    font-size: 1.4rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: background .2s;
+    z-index: 1060;
+    position: relative;
   }
 
   .navbar-links { order: 4; }
@@ -492,125 +499,138 @@ body {
     white-space: nowrap;
   }
 
-  /* ── Panel latéral slide-in ── */
+  /* ── Overlay plein écran ── */
   .navbar-links {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
     position: fixed;
     top: 60px;
     left: 0;
-    width: 270px;
-    height: calc(100vh - 60px);
-    background: var(--bg-dark);
-    border-right: 1px solid rgba(255,255,255,.08);
-    box-shadow: 6px 0 24px rgba(0,0,0,.45);
-    z-index: 1001;
-    transform: translateX(-100%);
-    transition: transform .3s ease;
-    overflow-y: auto;
-    padding: 10px 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     gap: 0;
+    background: rgba(18, 28, 19, 0.97);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 1040;
+    overflow-y: auto;
+    padding: 24px 0 40px;
+    /* État caché */
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-10px);
+    transition: opacity .25s ease, transform .25s ease;
   }
 
-  .navbar-links.show { transform: translateX(0); }
+  .navbar-links.show {
+    opacity: 1;
+    pointer-events: all;
+    transform: translateY(0);
+  }
 
-  /* Liens dans le panel */
-  .navbar-links a {
-    color: rgba(255,255,255,.85);
-    font-size: 1rem;
-    font-weight: 500;
-    padding: 14px 24px;
+  /* Liens dans l'overlay */
+  .navbar-links > a {
+    color: rgba(255,255,255,.88);
+    font-size: 1.3rem;
+    font-weight: 600;
+    padding: 16px 48px;
     width: 100%;
+    max-width: 380px;
     display: block;
-    text-align: left;
+    text-align: center;
     border-radius: 0;
     background: none;
-    border-bottom: 1px solid rgba(255,255,255,.06);
-    transition: background .15s, color .15s;
-    white-space: normal;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    transition: color .15s;
+    letter-spacing: .01em;
   }
 
-  .navbar-links a:hover {
-    background: rgba(255,255,255,.08);
-    color: #fff;
-  }
+  .navbar-links > a:first-child { border-top: 1px solid rgba(255,255,255,.07); }
 
-  /* Dropdowns dans le panel */
+  .navbar-links > a:hover { color: var(--primary-color); background: none; }
+
+  /* Dropdowns dans l'overlay */
   .dropdown {
     width: 100%;
-    text-align: left;
+    max-width: 380px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,.07);
   }
 
   .dropdown button {
-    color: rgba(255,255,255,.85);
-    font-size: 1rem;
-    font-weight: 500;
-    padding: 14px 24px;
+    color: rgba(255,255,255,.88);
+    font-size: 1.3rem;
+    font-weight: 600;
+    padding: 16px 48px;
     width: 100%;
-    text-align: left;
+    text-align: center;
     border-radius: 0;
     background: none;
-    border-bottom: 1px solid rgba(255,255,255,.06);
+    border: none;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
-    transition: background .15s;
+    gap: 8px;
+    cursor: pointer;
+    transition: color .15s;
+    letter-spacing: .01em;
   }
 
   .dropdown button::after {
     content: "▾";
-    font-size: 11px;
+    font-size: 12px;
     opacity: .55;
-    margin-left: 0;
-    float: none;
+    margin-left: 4px;
+    transition: transform .2s;
   }
 
-  .dropdown:hover button,
-  .dropdown.active button {
-    background: rgba(255,255,255,.06);
-    color: #fff;
-  }
+  .dropdown.active button::after { transform: rotate(180deg); }
+
+  .dropdown button:hover,
+  .dropdown.active button { color: var(--primary-color); background: none; }
 
   .dropdown-content {
     display: none;
     position: static;
     transform: none;
-    background: rgba(0,0,0,.22);
+    background: rgba(0,0,0,.18);
     box-shadow: none;
     border: none;
     border-radius: 0;
-    padding: 0;
+    padding: 4px 0 12px;
     min-width: auto;
     width: 100%;
   }
 
   .dropdown-content a {
-    color: rgba(255,255,255,.6);
-    padding: 12px 24px 12px 40px;
-    font-size: 0.9rem;
+    color: #fff;
+    padding: 11px 48px;
+    font-size: 1.05rem;
+    font-weight: 500;
     border-radius: 0;
-    border-bottom: 1px solid rgba(255,255,255,.04);
+    border-bottom: none;
     background: none;
+    text-align: center;
+    opacity: .75;
+    transition: opacity .15s;
   }
   .dropdown-content a:first-child,
   .dropdown-content a:last-child { border-radius: 0; }
 
-  .dropdown-content a:hover {
-    background: rgba(255,255,255,.07);
-    color: rgba(255,255,255,.9);
-  }
+  .dropdown-content a:hover { opacity: 1; background: none; }
 
-  .dropdown:hover .dropdown-content,
-  .dropdown.active .dropdown-content {
-    display: block;
-  }
+  .dropdown.active .dropdown-content { display: block; }
+
+  /* Neutralise le :hover desktop qui déclencherait les dropdowns au toucher */
+  .dropdown:hover .dropdown-content { display: none; }
+  .dropdown.active .dropdown-content { display: block; }
 }
 
 /* === Mobiles (≤ 790px) === */
 @media (max-width: 790px) {
-  .navbar-toggler { display: block; transform: scale(1.3); }
+  .navbar-toggler { display: flex; }
 
   .footer { padding: 16px 0 8px; }
   .footer-content { gap: 4px; padding: 0 8px; margin-bottom: 10px; }
@@ -636,7 +656,6 @@ body {
 
 /* === Téléphones (≤ 600px) : navbar sur deux lignes === */
 @media (max-width: 600px) {
-  /* Conteneur : deux lignes */
   .navbar-container-menu {
     height: auto;
     padding: 8px 14px 6px;
@@ -645,10 +664,8 @@ body {
     align-items: center;
   }
 
-  /* Ligne 1 : logo + nom du club (toute la largeur) */
   .navbar-brand { flex: 0 0 100%; order: 1; }
 
-  /* Ligne 2 gauche : auth */
   #nav-auth {
     order: 2;
     flex: 1;
@@ -657,19 +674,16 @@ body {
     margin-right: 0;
   }
 
-  /* Ligne 2 droite : burger */
   .navbar-toggler {
     order: 3;
     flex: 0 0 auto;
-    margin-right: 22px;
+    margin-right: 4px;
     margin-bottom: 4px;
-    transform: scale(1.3);
   }
 
-  /* Le panel part plus bas (navbar = ~100px en deux lignes) */
+  /* L'overlay part plus bas (navbar ≈ 100px sur deux lignes) */
   .navbar-links {
     top: 100px;
-    height: calc(100vh - 100px);
   }
 }
 

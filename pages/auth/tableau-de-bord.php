@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 
@@ -30,7 +30,7 @@ foreach ($rolePriority as $r) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de bord - <?= $titleRole ?></title>
-    <link href="/css/styles.css?v=20260624" rel="stylesheet">
+    <link href="/css/styles.css?v=20260705" rel="stylesheet">
     <link href="/css/tableau-de-bord.css?v=20260703" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -197,6 +197,6 @@ foreach ($rolePriority as $r) {
 
     <div id="footer"></div>
 
-    <script src="/js/main.js"></script>
+    <script src="/js/main.js?v=20260705"></script>
 </body>
 </html>

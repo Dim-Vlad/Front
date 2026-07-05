@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 if (!has_any_role(['admin', 'moderateur'])) {
@@ -39,7 +39,7 @@ function match_titre(string $adversaire, int $domicile): string {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gérer les pronostics - VBO</title>
-    <link href="/css/styles.css?v=20260624" rel="stylesheet">
+    <link href="/css/styles.css?v=20260705" rel="stylesheet">
     <link href="/css/tableau-de-bord.css?v=20260623" rel="stylesheet">
     <link href="/css/pronostics.css?v=20260702" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
@@ -221,7 +221,7 @@ function match_titre(string $adversaire, int $domicile): string {
     </div>
 
     <div id="footer"></div>
-    <script src="/js/main.js"></script>
+    <script src="/js/main.js?v=20260705"></script>
     <script>
 
         const SETS_WIN  = ['3-0', '3-1', '3-2'];

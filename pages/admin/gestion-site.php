@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 if (!has_role('admin')) {
@@ -31,7 +31,7 @@ $youtube  = gs_param($pdo, 'social_youtube',       'https://www.youtube.com/@Vol
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion du site - VBO</title>
-    <link href="/css/styles.css?v=20260702" rel="stylesheet">
+    <link href="/css/styles.css?v=20260705" rel="stylesheet">
     <link href="/css/tableau-de-bord.css?v=20260623" rel="stylesheet">
     <link href="/css/admin.css?v=20260702" rel="stylesheet">
     <link href="/css/admin/gestion-site.css?v=20260702" rel="stylesheet">
@@ -175,7 +175,7 @@ $youtube  = gs_param($pdo, 'social_youtube',       'https://www.youtube.com/@Vol
 
     <div id="footer"></div>
 
-    <script src="/js/main.js"></script>
+    <script src="/js/main.js?v=20260705"></script>
     <script>
 
         const alert = document.getElementById('gs-alert');

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../../php/auth.php';
 
 $canEdit = is_logged_in() && has_any_role(['moderateur', 'admin']);
@@ -43,7 +43,7 @@ function renderCell(string $text): string {
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Planning des entraînements - VBO</title>
-    <link href="/css/styles.css?v=20260624" rel="stylesheet">
+    <link href="/css/styles.css?v=20260705" rel="stylesheet">
     <link href="/css/leClub/entrainements.css?v=20260629" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -340,7 +340,7 @@ function renderCell(string $text): string {
         const CAN_EDIT    = <?= $canEdit ? 'true' : 'false' ?>;
         let   TABLE_VISIBLE = <?= $visible ? 'true' : 'false' ?>;
     </script>
-    <script src="/js/main.js"></script>
+    <script src="/js/main.js?v=20260705"></script>
     <script src="/js/entrainements.js"></script>
 </body>
 </html>

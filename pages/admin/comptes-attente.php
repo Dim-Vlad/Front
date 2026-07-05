@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 if (!has_role('admin')) {
@@ -28,7 +28,7 @@ $roleLabels = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comptes en attente - VBO</title>
-    <link href="/css/styles.css?v=20260624" rel="stylesheet">
+    <link href="/css/styles.css?v=20260705" rel="stylesheet">
     <link href="/css/tableau-de-bord.css?v=20260623" rel="stylesheet">
     <link href="/css/admin.css?v=20260702" rel="stylesheet">
     <link href="/css/comptes-attente.css?v=20260702" rel="stylesheet">
@@ -91,7 +91,7 @@ $roleLabels = [
     </div>
 
     <div id="footer"></div>
-    <script src="/js/main.js"></script>
+    <script src="/js/main.js?v=20260705"></script>
     <script>
 
         async function activateUser(id) {

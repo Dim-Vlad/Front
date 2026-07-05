@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../../php/auth.php';
 
 $canEdit = is_logged_in() && has_any_role(['moderateur', 'admin']);
@@ -60,7 +60,7 @@ function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fiche de renseignements - VBO</title>
-    <link href="/css/styles.css?v=20260624" rel="stylesheet">
+    <link href="/css/styles.css?v=20260705" rel="stylesheet">
     <link href="/css/leClub/inscription.css?v=20260626" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -519,7 +519,7 @@ function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8')
 
     <div id="footer"></div>
 
-    <script src="/js/main.js"></script>
+    <script src="/js/main.js?v=20260705"></script>
     <script src="/js/inscription.js?v=4"></script>
     <script>
         document.dispatchEvent(new Event("inscriptionLoaded"));
