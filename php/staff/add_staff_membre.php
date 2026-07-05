@@ -20,6 +20,9 @@ $validSections = ['bureau','membres','commissions','entraineurs'];
 if (!in_array($section, $validSections, true) || $nom === '') {
     ob_end_clean(); echo json_encode(['success'=>false,'error'=>'Données invalides']); exit;
 }
+if ($lien_vcard !== null && !preg_match('#^https?://#i', $lien_vcard)) {
+    ob_end_clean(); echo json_encode(['success'=>false,'error'=>'URL vCard invalide']); exit;
+}
 
 try {
     $pdo = get_pdo();

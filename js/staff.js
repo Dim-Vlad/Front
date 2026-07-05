@@ -17,8 +17,17 @@ function openViewModal(card) {
     document.getElementById('modal-title').textContent    = title;
     document.getElementById('modal-subtitle').textContent = subtitle;
 
-    const desc = (typeof STAFF_DESC !== 'undefined' && STAFF_DESC[id]) ? STAFF_DESC[id] : '<p>Description à venir.</p>';
-    document.getElementById('modal-description').innerHTML = desc;
+    const rawDesc = (typeof STAFF_DESC !== 'undefined' && STAFF_DESC[id]) ? STAFF_DESC[id] : '<p>Description à venir.</p>';
+    const descEl  = document.getElementById('modal-description');
+    descEl.innerHTML = '';
+    const tmp = document.createElement('template');
+    tmp.innerHTML = rawDesc;
+    tmp.content.querySelectorAll('*').forEach(el => {
+        for (const attr of [...el.attributes]) {
+            if (/^on/i.test(attr.name) || (attr.name === 'href' && /^javascript:/i.test(attr.value))) el.removeAttribute(attr.name);
+        }
+    });
+    descEl.appendChild(tmp.content);
 
     const links = document.getElementById('modal-links');
     links.innerHTML = '';

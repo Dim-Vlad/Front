@@ -22,6 +22,9 @@ $desc      = trim($_POST['description'] ?? '');
 $lienUrl   = trim($_POST['lien_url']    ?? '');
 $lienLabel = trim($_POST['lien_label']  ?? '') ?: 'En savoir plus';
 $termine   = isset($_POST['termine']) ? 1 : 0;
+if ($lienUrl !== '' && !preg_match('#^https?://#i', $lienUrl)) {
+    ob_end_clean(); echo json_encode(['success'=>false,'error'=>'URL invalide (doit commencer par http:// ou https://)']); exit;
+}
 $imageUrl  = trim($_POST['image_url_existing'] ?? '');
 
 if (!empty($_FILES['image']['name'])) {

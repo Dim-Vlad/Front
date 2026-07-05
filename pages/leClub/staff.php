@@ -375,7 +375,7 @@ function cardAttrs(array $m): string {
 
     <script>
         const CAN_EDIT         = <?= $canEdit ? 'true' : 'false' ?>;
-        const STAFF_DESC       = <?= json_encode($descMap) ?>;
+        const STAFF_DESC       = <?= json_encode($descMap, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
     </script>
     <script src="/js/main.js"></script>
     <script src="/js/staff.js"></script>

@@ -17,6 +17,9 @@ $description = trim($_POST['description'] ?? '') ?: null;
 $lien_vcard  = trim($_POST['lien_vcard']  ?? '') ?: null;
 
 if (!$id) { ob_end_clean(); echo json_encode(['success'=>false,'error'=>'ID manquant']); exit; }
+if ($lien_vcard !== null && !preg_match('#^https?://#i', $lien_vcard)) {
+    ob_end_clean(); echo json_encode(['success'=>false,'error'=>'URL vCard invalide']); exit;
+}
 
 try {
     $pdo  = get_pdo();

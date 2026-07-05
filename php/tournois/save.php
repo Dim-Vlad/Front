@@ -16,6 +16,13 @@ $description    = trim($_POST['description']    ?? '') ?: null;
 $inscriptionUrl = trim($_POST['inscription_url'] ?? '') ?: null;
 $sheetUrl       = trim($_POST['sheet_url']       ?? '') ?: null;
 
+if ($inscriptionUrl !== null && !preg_match('#^https?://#i', $inscriptionUrl)) {
+    ob_end_clean(); echo json_encode(['success'=>false,'error'=>'URL d\'inscription invalide']); exit;
+}
+if ($sheetUrl !== null && !preg_match('#^https?://#i', $sheetUrl)) {
+    ob_end_clean(); echo json_encode(['success'=>false,'error'=>'URL feuille invalide']); exit;
+}
+
 if ($titre === '') {
     ob_end_clean(); echo json_encode(['success'=>false,'error'=>'Le titre est requis']); exit;
 }
