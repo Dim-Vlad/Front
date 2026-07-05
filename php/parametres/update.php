@@ -11,12 +11,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Méthode invalide']); exit;
 }
 
-$allowedKeys = ['arbitres_sheet_url', 'minibus_sheet_url'];
+$staticKeys = ['arbitres_sheet_url', 'minibus_sheet_url', 'presences_sheet_url'];
 
 $cle    = $_POST['cle']    ?? '';
 $valeur = trim($_POST['valeur'] ?? '');
 
-if (!in_array($cle, $allowedKeys, true)) {
+$isTournoiKey = (bool)preg_match('/^tournoi_\d+_(inscription|sheet)$/', $cle);
+if (!in_array($cle, $staticKeys, true) && !$isTournoiKey) {
     ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Clé invalide']); exit;
 }
 if ($valeur === '') {

@@ -103,6 +103,20 @@ $nbAttente = (int)$pdo->query('SELECT COUNT(*) FROM users WHERE actif = 0')->fet
             </div>
         </div>
 
+        <!-- Section Événements -->
+        <div class="dashboard-section">
+            <h2 class="dashboard-section-title">📅 Événements</h2>
+            <div class="dashboard-cards">
+
+                <a href="/pages/admin/tournois.php" class="dashboard-card card-admin">
+                    <div class="card-icon">🏐</div>
+                    <h2>Pages Tournois</h2>
+                    <p>Créer et gérer les pages des tournois (inscription, tableau des scores).</p>
+                </a>
+
+            </div>
+        </div>
+
         <!-- Section Paramètres -->
         <div class="dashboard-section">
             <h2 class="dashboard-section-title">⚙️ Paramètres</h2>

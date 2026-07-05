@@ -36,6 +36,12 @@ $user = current_user();
     <div class="dashboard-container">
         <div class="dashboard-cards">
 
+            <a href="/pages/admin/tournois.php" class="dashboard-card card-admin">
+                <div class="card-icon">🏐</div>
+                <h2>Pages Tournois</h2>
+                <p>Créer et gérer les pages des tournois (inscription, tableau des scores).</p>
+            </a>
+
             <a href="/pages/admin/pronostics.php" class="dashboard-card card-admin">
                 <div class="card-icon">🎯</div>
                 <h2>Pronostics</h2>

@@ -21,7 +21,7 @@ function formatDate(?string $debut, ?string $fin): string {
 function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES); }
 
 try {
-    $pdo = get_pdo();
+    $pdo  = get_pdo();
     $rows = $pdo->query("SELECT * FROM evenements ORDER BY termine ASC, ordre ASC, id ASC")->fetchAll();
     foreach ($rows as $ev) {
         if ($ev['termine']) $termines[] = $ev;
@@ -93,7 +93,7 @@ try {
                     <p class="ev-lieu">📍 <?= h($ev['lieu']) ?></p>
                     <?php endif; ?>
                     <?php if ($ev['lien_url']): ?>
-                    <a href="<?= h($ev['lien_url']) ?>" class="ev-btn" target="_blank" rel="noopener">
+                    <a href="<?= h($ev['lien_url']) ?>" class="ev-btn">
                         <?= h($ev['lien_label'] ?: 'En savoir plus') ?> →
                     </a>
                     <?php endif; ?>
