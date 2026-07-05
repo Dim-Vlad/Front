@@ -16,7 +16,7 @@ $confirm  = $_POST['password_confirm'] ?? '';
 if ($prenom === '' || $nom === '' || $username === '' || $password === '') {
     ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Tous les champs sont obligatoires.']); exit;
 }
-if (!filter_var($username, FILTER_VALIDATE_EMAIL)) {
+if (!LOCAL_DEV && !filter_var($username, FILTER_VALIDATE_EMAIL)) {
     ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Adresse email invalide.']); exit;
 }
 if (strlen($password) < 8) {

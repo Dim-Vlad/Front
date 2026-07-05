@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/config.php';
 date_default_timezone_set('Europe/Paris');
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -18,7 +19,6 @@ if (session_status() === PHP_SESSION_NONE) {
 function get_pdo(): PDO {
     static $pdo = null;
     if ($pdo === null) {
-        require_once __DIR__ . '/config.php';
         $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
         $pdo = new PDO($dsn, DB_USER, DB_PASS, [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,

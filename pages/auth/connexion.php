@@ -94,10 +94,10 @@ if ($error !== '') $defaultTab = 'login';
                 <form method="POST" action="/pages/auth/connexion.php">
                     <input type="hidden" name="_action" value="login">
                     <div class="form-group">
-                        <label for="username">Identifiant <span class="form-hint">adresse email</span></label>
-                        <input type="email" id="username" name="username"
+                        <label for="username">Identifiant <?= LOCAL_DEV ? '' : '<span class="form-hint">adresse email</span>' ?></label>
+                        <input type="<?= LOCAL_DEV ? 'text' : 'email' ?>" id="username" name="username"
                                value="<?= htmlspecialchars($_POST['username'] ?? '') ?>"
-                               placeholder="exemple@email.com"
+                               placeholder="<?= LOCAL_DEV ? 'ex: admin' : 'exemple@email.com' ?>"
                                autocomplete="username" required>
                     </div>
                     <div class="form-group">
@@ -137,8 +137,8 @@ if ($error !== '') $defaultTab = 'login';
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="reg-username">Adresse email <span class="form-hint">(sert d'identifiant pour la connexion)</span></label>
-                        <input type="email" id="reg-username" name="username" placeholder="exemple@email.com" autocomplete="email" required>
+                        <label for="reg-username"><?= LOCAL_DEV ? 'Identifiant' : 'Adresse email <span class="form-hint">(sert d\'identifiant pour la connexion)</span>' ?></label>
+                        <input type="<?= LOCAL_DEV ? 'text' : 'email' ?>" id="reg-username" name="username" placeholder="<?= LOCAL_DEV ? 'ex: admin' : 'exemple@email.com' ?>" autocomplete="<?= LOCAL_DEV ? 'username' : 'email' ?>" required>
                     </div>
                     <div class="form-group">
                         <label for="reg-password">Mot de passe <span class="form-hint">(8 caractères minimum)</span></label>
