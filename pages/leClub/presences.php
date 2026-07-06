@@ -1,11 +1,16 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 if (has_role('arbitre')) {
     header('Location: /pages/auth/tableau-de-bord.php');
     exit;
 }
-$isAdmin = has_role('admin');
+
+$isAdmin      = has_role('admin');
+$isPrivileged = has_role('admin') || has_role('moderateur') || has_role('bureau');
+$isEntraineur = has_role('entraineur');
+$me           = current_user();
+$myFullName   = trim(($me['prenom'] ?? '') . ' ' . ($me['nom'] ?? ''));
 
 try {
     $pdo  = get_pdo();
@@ -15,6 +20,72 @@ try {
     $sheetUrl = ($row && $row['valeur']) ? $row['valeur'] : '';
 } catch (Exception $e) {
     $sheetUrl = '';
+}
+
+// ------- Fetch CSV (pubhtml URL → pub?output=csv) -------
+function fetchCsv(string $url): string|false {
+    if (ini_get('allow_url_fopen')) {
+        $ctx = stream_context_create(['http' => ['timeout' => 6, 'ignore_errors' => true]]);
+        return @file_get_contents($url, false, $ctx);
+    }
+    if (function_exists('curl_init')) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_TIMEOUT        => 6,
+        ]);
+        $r = curl_exec($ch);
+        return $r ?: false;
+    }
+    return false;
+}
+
+$header     = [];
+$rows       = [];
+$fetchError = '';
+
+if ($sheetUrl) {
+    $csvUrl = '';
+    if (preg_match('#(https://docs\.google\.com/spreadsheets/d/e/[^/]+)#', $sheetUrl, $m)) {
+        $csvUrl = $m[1] . '/pub?output=csv';
+    }
+
+    if ($csvUrl) {
+        $raw = fetchCsv($csvUrl);
+        if ($raw !== false && trim($raw) !== '') {
+            $lines  = preg_split('/\r\n|\r|\n/', trim($raw));
+            $parsed = array_values(array_filter(
+                array_map(fn($l) => str_getcsv($l, ',', '"', ''), $lines),
+                fn($r) => array_filter($r, fn($v) => trim($v) !== '') !== []
+            ));
+            if (!empty($parsed)) {
+                $header = array_shift($parsed);
+                if ($isPrivileged || !$isEntraineur) {
+                    $rows = $parsed;
+                } else {
+                    // Entraîneur : colonne B (index 1) = Prénom + Nom
+                    $rows = array_values(array_filter(
+                        $parsed,
+                        fn($r) => isset($r[1]) && strcasecmp(trim($r[1]), $myFullName) === 0
+                    ));
+                }
+            }
+        } else {
+            $fetchError = 'Impossible de récupérer le tableau (sheet inaccessible ou non publié).';
+        }
+    }
+}
+
+// Noms uniques de la colonne B pour le filtre admin/modérateur
+$trainerNames = [];
+if ($isPrivileged && !empty($rows)) {
+    foreach ($rows as $r) {
+        $name = trim($r[1] ?? '');
+        if ($name !== '') $trainerNames[$name] = true;
+    }
+    $trainerNames = array_keys($trainerNames);
+    sort($trainerNames);
 }
 ?>
 <!DOCTYPE html>
@@ -30,6 +101,129 @@ try {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .presences-table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 10px;
+            border: 1px solid #e4ebe4;
+        }
+        .presences-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+            white-space: nowrap;
+        }
+        .presences-table thead tr {
+            background: var(--secondary-color);
+        }
+        .presences-table th {
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.6rem 0.9rem;
+            text-align: left;
+        }
+        .presences-table th:first-child { border-radius: 9px 0 0 0; }
+        .presences-table th:last-child  { border-radius: 0 9px 0 0; }
+        .presences-table td {
+            padding: 0.45rem 0.9rem;
+            border-bottom: 1px solid #edf2ed;
+            color: var(--bg-dark);
+            vertical-align: middle;
+        }
+        .presences-table tbody tr:nth-child(even) td { background: #f6fbf6; }
+        .presences-table tr:last-child td { border-bottom: none; }
+        .presences-table tbody tr:hover td {
+            background: #eaf4ea;
+            transition: background 0.12s;
+        }
+        .presences-meta {
+            font-size: 0.82rem;
+            color: #888;
+            margin-bottom: 0.8rem;
+            padding: 0.9rem 0.9rem 0;
+        }
+        .presences-meta strong { color: var(--secondary-color); }
+        .presences-empty {
+            color: #888;
+            font-style: italic;
+            text-align: center;
+            padding: 1.5rem 0;
+        }
+        .presences-filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            margin-bottom: 0.9rem;
+            flex-wrap: wrap;
+            padding: 0 0.9rem;
+        }
+        .presences-filter-bar label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--bg-dark);
+            white-space: nowrap;
+        }
+        .presences-filter-select {
+            padding: 0.4rem 0.75rem;
+            border: 1.5px solid #ccc;
+            border-radius: 7px;
+            font-family: inherit;
+            font-size: 0.82rem;
+            color: var(--bg-dark);
+            background: #fafafa;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            min-width: 180px;
+        }
+        .presences-filter-select:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            background: #fff;
+        }
+        .presences-filter-reset {
+            background: none;
+            border: none;
+            font-size: 0.8rem;
+            color: #aaa;
+            cursor: pointer;
+            padding: 0.3rem 0.5rem;
+            border-radius: 5px;
+            transition: color 0.15s;
+            display: none;
+        }
+        .presences-filter-reset.visible { display: inline-block; }
+        .presences-filter-reset:hover { color: var(--bg-dark); }
+        .url-modal-steps {
+            margin: 0.5rem 0 0.75rem 1.1rem;
+            padding: 0;
+            font-size: .83rem;
+            color: #444;
+            line-height: 1.8;
+        }
+        .url-modal-steps li { padding-left: 0.2rem; }
+        .url-modal-format {
+            margin: 0;
+            font-size: .8rem;
+            color: #666;
+            line-height: 1.6;
+        }
+        .url-modal-format code {
+            display: inline-block;
+            margin-top: 0.2rem;
+            background: #eef2ee;
+            border: 1px solid #d0dcd0;
+            border-radius: 5px;
+            padding: 0.2rem 0.5rem;
+            font-family: monospace;
+            font-size: .78rem;
+            color: var(--secondary-color);
+            word-break: break-all;
+        }
+    </style>
 </head>
 <body>
     <div id="menu"></div>
@@ -55,18 +249,63 @@ try {
             <?php endif; ?>
         </div>
 
-        <?php if ($sheetUrl): ?>
+        <?php if (!empty($header)): ?>
         <div class="sheet-card">
-            <iframe
-                id="sheet-frame"
-                src="<?= htmlspecialchars($sheetUrl) ?>"
-                title="Pointage présences"
-                loading="lazy"
-                allowfullscreen>
-            </iframe>
+            <p class="presences-meta">
+                <?php if ($isEntraineur && !$isPrivileged): ?>
+                    Affichage des interventions de <strong><?= htmlspecialchars($myFullName) ?></strong> —
+                <?php endif; ?>
+                <span id="presences-row-count"><?= count($rows) ?></span> ligne<?= count($rows) !== 1 ? 's' : '' ?>
+            </p>
+            <?php if ($isPrivileged && !empty($trainerNames)): ?>
+            <div class="presences-filter-bar">
+                <label for="presences-filter">Entraîneur :</label>
+                <select id="presences-filter" class="presences-filter-select">
+                    <option value="">Tous</option>
+                    <?php foreach ($trainerNames as $n): ?>
+                    <option value="<?= htmlspecialchars($n) ?>"><?= htmlspecialchars($n) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="button" class="presences-filter-reset" id="presences-filter-reset" title="Réinitialiser">✕ Tous</button>
+            </div>
+            <?php endif; ?>
+            <?php if (empty($rows)): ?>
+            <p class="presences-empty">
+                <?= ($isEntraineur && !$isPrivileged)
+                    ? 'Aucune intervention enregistrée pour votre nom.'
+                    : 'Aucune donnée dans ce tableau.' ?>
+            </p>
+            <?php else: ?>
+            <div class="presences-table-wrap">
+                <table class="presences-table">
+                    <thead>
+                        <tr>
+                            <?php foreach ($header as $col): ?>
+                            <th><?= htmlspecialchars($col) ?></th>
+                            <?php endforeach; ?>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($rows as $row): ?>
+                        <tr>
+                            <?php foreach ($header as $i => $_): ?>
+                            <td><?= htmlspecialchars($row[$i] ?? '') ?></td>
+                            <?php endforeach; ?>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php endif; ?>
         </div>
+
+        <?php elseif ($fetchError): ?>
+        <div class="sheet-info-card" style="text-align:center; color:#c0392b;">
+            <p><?= htmlspecialchars($fetchError) ?></p>
+        </div>
+
         <?php else: ?>
-        <div class="sheet-info-card" style="text-align:center; color: var(--text-muted, #888);">
+        <div class="sheet-info-card" style="text-align:center; color:var(--text-muted,#888);">
             <?php if ($isAdmin): ?>
                 <p>Aucun lien configuré. Cliquez sur <strong>✎ Modifier le lien</strong> pour ajouter le Google Sheet.</p>
             <?php else: ?>
@@ -77,14 +316,55 @@ try {
 
     </main>
 
+    <?php if ($isPrivileged && !empty($trainerNames)): ?>
+    <script>
+    (function () {
+        var sel   = document.getElementById('presences-filter');
+        var reset = document.getElementById('presences-filter-reset');
+        var tbody = document.querySelector('.presences-table tbody');
+        var counter = document.getElementById('presences-row-count');
+        if (!sel || !tbody) return;
+
+        function applyFilter() {
+            var val = sel.value.trim().toLowerCase();
+            var count = 0;
+            Array.from(tbody.rows).forEach(function (tr) {
+                var cell = tr.cells[1] ? tr.cells[1].textContent.trim().toLowerCase() : '';
+                var show = !val || cell === val;
+                tr.style.display = show ? '' : 'none';
+                if (show) count++;
+            });
+            if (counter) counter.textContent = count;
+            reset.classList.toggle('visible', val !== '');
+        }
+
+        sel.addEventListener('change', applyFilter);
+        reset.addEventListener('click', function () {
+            sel.value = '';
+            applyFilter();
+        });
+    })();
+    </script>
+    <?php endif; ?>
+
     <?php if ($isAdmin): ?>
     <div id="urlModal" class="url-modal" onclick="if(event.target===this)closeUrlModal()">
         <div class="url-modal-content">
             <h2 class="url-modal-title">Modifier le lien Google Sheet</h2>
-            <p class="url-modal-desc">
-                Collez l'URL <strong>« Publier sur le web »</strong> du Google Sheet.<br>
-                Dans Google Sheet : <strong>Fichier → Partager → Publier sur le web</strong>, puis copiez le lien (format pubhtml).
-            </p>
+            <div class="url-modal-desc">
+                <strong>Comment récupérer le lien ?</strong>
+                <ol class="url-modal-steps">
+                    <li>Ouvrez le Google Sheet des présences.</li>
+                    <li>Dans le menu : <strong>Fichier → Partager → Publier sur le web</strong>.</li>
+                    <li>Dans la fenêtre, sélectionnez la feuille souhaitée (le format n'a pas d'importance).</li>
+                    <li>Cliquez sur <strong>« Publier »</strong>, puis confirmez.</li>
+                    <li>Copiez le lien généré et collez-le ci-dessous.</li>
+                </ol>
+                <p class="url-modal-format">
+                    Format attendu :<br>
+                    <code>https://docs.google.com/spreadsheets/d/e/<em>…ID…</em>/pubhtml?…</code>
+                </p>
+            </div>
             <input type="url" id="sheetUrlInput" class="url-input"
                    value="<?= htmlspecialchars($sheetUrl) ?>"
                    placeholder="https://docs.google.com/spreadsheets/…/pubhtml?…">
@@ -123,15 +403,9 @@ try {
             const res  = await fetch('/php/parametres/update.php', { method: 'POST', body: fd });
             const json = await res.json();
             if (!json.success) throw new Error(json.error || 'Erreur inconnue');
-            const frame = document.getElementById('sheet-frame');
-            if (frame) {
-                frame.src = url;
-            } else {
-                location.reload();
-            }
             statusEl.textContent = '✓ Lien mis à jour !';
             statusEl.className   = 'url-status ok';
-            setTimeout(closeUrlModal, 1400);
+            setTimeout(() => location.reload(), 1000);
         } catch (err) {
             statusEl.textContent = err.message;
         } finally {
