@@ -197,6 +197,14 @@ if ($isPrivileged && !empty($rows)) {
         }
         .presences-filter-reset.visible { display: inline-block; }
         .presences-filter-reset:hover { color: var(--bg-dark); }
+        /* Modal : ne dépasse pas l'écran */
+        .url-modal-content {
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        @media (max-width: 600px) {
+            .url-modal-content { padding: 1.25rem; }
+        }
         .url-modal-steps {
             margin: 0.5rem 0 0.75rem 1.1rem;
             padding: 0;
@@ -346,6 +354,40 @@ if ($isPrivileged && !empty($rows)) {
     })();
     </script>
     <?php endif; ?>
+
+    <script>
+    (function () {
+        var wrap = document.querySelector('.presences-table-wrap');
+        var tbl  = document.querySelector('.presences-table');
+        if (!wrap || !tbl || !('ontouchstart' in window)) return;
+
+        var curScale = 1, startScale = 1, startDist = 0;
+
+        // Taille réduite par défaut sur mobile
+        if (window.matchMedia('(max-width: 700px)').matches) {
+            curScale = 0.75;
+            tbl.style.zoom = curScale;
+        }
+
+        function pinchDist(t) {
+            return Math.hypot(t[1].clientX - t[0].clientX, t[1].clientY - t[0].clientY);
+        }
+
+        wrap.addEventListener('touchstart', function (e) {
+            if (e.touches.length === 2) {
+                startDist  = pinchDist(e.touches);
+                startScale = curScale;
+            }
+        }, { passive: true });
+
+        wrap.addEventListener('touchmove', function (e) {
+            if (e.touches.length !== 2) return;
+            e.preventDefault();
+            curScale = Math.min(3, Math.max(0.4, startScale * pinchDist(e.touches) / startDist));
+            tbl.style.zoom = curScale;
+        }, { passive: false });
+    })();
+    </script>
 
     <?php if ($isAdmin): ?>
     <div id="urlModal" class="url-modal" onclick="if(event.target===this)closeUrlModal()">
