@@ -8,6 +8,12 @@ if (!has_role('admin')) {
 $user      = current_user();
 $pdo       = get_pdo();
 $nbAttente = (int)$pdo->query('SELECT COUNT(*) FROM users WHERE actif = 0')->fetchColumn();
+
+$dernierePurge  = $pdo->query("SELECT valeur FROM parametres WHERE cle = 'derniere_purge_logs'")->fetchColumn() ?: null;
+$dernierVidage  = $pdo->query("SELECT valeur FROM parametres WHERE cle = 'dernier_vidage_logs'")->fetchColumn() ?: null;
+
+$nbConnexions = (int)$pdo->query('SELECT COUNT(*) FROM journal_connexions')->fetchColumn();
+$nbActivites  = (int)$pdo->query('SELECT COUNT(*) FROM journal_activites')->fetchColumn();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -127,6 +133,48 @@ $nbAttente = (int)$pdo->query('SELECT COUNT(*) FROM users WHERE actif = 0')->fet
 
         </div>
 
+        <!-- Section RGPD — pleine largeur -->
+        <div class="dashboard-section">
+            <h2 class="dashboard-section-title">🔒 RGPD — Purge des journaux</h2>
+            <div class="rgpd-card">
+                <div class="rgpd-retention">
+                    <div class="rgpd-row">
+                        <span class="rgpd-label">Journal des connexions</span>
+                        <span class="rgpd-meta">Rétention <strong>90 jours</strong> · <span id="rgpd-nb-connexions"><?= $nbConnexions ?> entrée<?= $nbConnexions > 1 ? 's' : '' ?></span></span>
+                    </div>
+                    <div class="rgpd-row">
+                        <span class="rgpd-label">Journal des activités</span>
+                        <span class="rgpd-meta">Rétention <strong>365 jours</strong> · <span id="rgpd-nb-activites"><?= $nbActivites ?> entrée<?= $nbActivites > 1 ? 's' : '' ?></span></span>
+                    </div>
+                    <div class="rgpd-row">
+                        <span class="rgpd-label">Dernière purge RGPD</span>
+                        <span class="rgpd-meta" id="rgpd-last-purge">
+                            <?php if ($dernierePurge): ?>
+                                <?= (new DateTime($dernierePurge))->format('d/m/Y à H\hi') ?>
+                            <?php else: ?>
+                                <em>Jamais effectuée</em>
+                            <?php endif; ?>
+                        </span>
+                    </div>
+                    <div class="rgpd-row rgpd-row--last">
+                        <span class="rgpd-label">Dernier vidage manuel</span>
+                        <span class="rgpd-meta" id="rgpd-last-vidage">
+                            <?php if ($dernierVidage): ?>
+                                <?= (new DateTime($dernierVidage))->format('d/m/Y à H\hi') ?>
+                            <?php else: ?>
+                                <em>Jamais effectué</em>
+                            <?php endif; ?>
+                        </span>
+                    </div>
+                </div>
+                <div class="rgpd-actions">
+                    <button id="btn-purge" class="btn-purge" onclick="purgerLogs()">🗑 Purger maintenant</button>
+                    <button id="btn-clear" class="btn-clear-logs" onclick="viderLogs()">✕ Tout vider</button>
+                    <p id="purge-status" class="purge-status"></p>
+                </div>
+            </div>
+        </div>
+
         <!-- Section Paramètres — pleine largeur -->
         <div class="dashboard-section">
             <h2 class="dashboard-section-title">⚙️ Paramètres</h2>
@@ -148,5 +196,84 @@ $nbAttente = (int)$pdo->query('SELECT COUNT(*) FROM users WHERE actif = 0')->fet
     <div id="footer"></div>
 
     <script src="/js/main.js?v=20260705"></script>
+    <script>
+    async function viderLogs() {
+        if (!confirm('⚠️ Supprimer TOUTES les entrées des deux journaux, sans condition de date ?\n\nCette action est irréversible.')) return;
+        const btn    = document.getElementById('btn-clear');
+        const status = document.getElementById('purge-status');
+        btn.disabled     = true;
+        btn.textContent  = 'Suppression…';
+        status.textContent = '';
+        status.className   = 'purge-status';
+        try {
+            const fd = new FormData();
+            fd.append('_csrf', '<?= csrf_token() ?>');
+            const res  = await fetch('/php/rgpd/clear_logs.php', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (data.success) {
+                status.textContent = '✅ Journaux entièrement vidés.';
+                status.className   = 'purge-status purge-ok';
+                document.getElementById('rgpd-nb-connexions').textContent = '0 entrée';
+                document.getElementById('rgpd-nb-activites').textContent  = '0 entrée';
+                if (data.date_vidage) {
+                    const d = new Date(data.date_vidage.replace(' ', 'T'));
+                    document.getElementById('rgpd-last-vidage').textContent =
+                        d.toLocaleDateString('fr-FR') + ' à ' +
+                        String(d.getHours()).padStart(2,'0') + 'h' + String(d.getMinutes()).padStart(2,'0');
+                }
+            } else {
+                status.textContent = '❌ ' + (data.error || 'Erreur inconnue');
+                status.className   = 'purge-status purge-err';
+            }
+        } catch {
+            status.textContent = '❌ Erreur réseau.';
+            status.className   = 'purge-status purge-err';
+        } finally {
+            btn.disabled    = false;
+            btn.textContent = '✕ Tout vider';
+        }
+    }
+
+    async function purgerLogs() {
+        if (!confirm('Supprimer les entrées anciennes ?\n\n• Connexions de plus de 90 jours\n• Activités de plus de 365 jours')) return;
+        const btn    = document.getElementById('btn-purge');
+        const status = document.getElementById('purge-status');
+        btn.disabled     = true;
+        btn.textContent  = 'Purge en cours…';
+        status.textContent = '';
+        status.className   = 'purge-status';
+        try {
+            const fd = new FormData();
+            fd.append('_csrf', '<?= csrf_token() ?>');
+            const res = await fetch('/php/rgpd/purge_logs.php', {
+                method: 'POST',
+                body: fd
+            });
+            const data = await res.json();
+            if (data.success) {
+                status.textContent = '✅ ' + data.connexions_supprimees + ' connexion(s) et ' + data.activites_supprimees + ' activité(s) supprimée(s).';
+                status.className   = 'purge-status purge-ok';
+                const fmt = n => n + ' entrée' + (n > 1 ? 's' : '');
+                document.getElementById('rgpd-nb-connexions').textContent = fmt(data.connexions_restantes);
+                document.getElementById('rgpd-nb-activites').textContent  = fmt(data.activites_restantes);
+                if (data.date_purge) {
+                    const d = new Date(data.date_purge.replace(' ', 'T'));
+                    document.getElementById('rgpd-last-purge').textContent =
+                        d.toLocaleDateString('fr-FR') + ' à ' +
+                        String(d.getHours()).padStart(2,'0') + 'h' + String(d.getMinutes()).padStart(2,'0');
+                }
+            } else {
+                status.textContent = '❌ ' + (data.error || 'Erreur inconnue');
+                status.className   = 'purge-status purge-err';
+            }
+        } catch {
+            status.textContent = '❌ Erreur réseau.';
+            status.className   = 'purge-status purge-err';
+        } finally {
+            btn.disabled    = false;
+            btn.textContent = '🗑 Purger maintenant';
+        }
+    }
+    </script>
 </body>
 </html>

@@ -253,6 +253,111 @@
     text-align: left;
 }
 
+/* ── Carte RGPD ── */
+.rgpd-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.07);
+    border-left: 4px solid #c0392b;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    flex-wrap: wrap;
+    width: 100%;
+    max-width: 980px;
+    box-sizing: border-box;
+}
+
+.rgpd-retention {
+    flex: 1;
+    min-width: 260px;
+    display: flex;
+    flex-direction: column;
+    gap: .55rem;
+}
+
+.rgpd-row {
+    display: flex;
+    align-items: baseline;
+    gap: .75rem;
+    padding-bottom: .55rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+.rgpd-row--last { border-bottom: none; padding-bottom: 0; }
+
+.rgpd-label {
+    font-size: .82rem;
+    font-weight: 600;
+    color: #444;
+    min-width: 190px;
+    flex-shrink: 0;
+}
+
+.rgpd-meta {
+    font-size: .82rem;
+    color: #777;
+}
+.rgpd-meta strong { color: #333; }
+.rgpd-meta em { color: #bbb; }
+
+.rgpd-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: .5rem;
+    flex-shrink: 0;
+}
+
+.btn-purge {
+    background: #c0392b;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: .6rem 1.3rem;
+    font-family: inherit;
+    font-size: .88rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .2s, transform .15s;
+}
+.btn-purge:hover    { background: #a93226; transform: translateY(-1px); }
+.btn-purge:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+.btn-clear-logs {
+    background: transparent;
+    color: #c0392b;
+    border: 1.5px solid #c0392b;
+    border-radius: 8px;
+    padding: .6rem 1.3rem;
+    font-family: inherit;
+    font-size: .88rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .2s, color .2s, transform .15s;
+}
+.btn-clear-logs:hover    { background: #c0392b; color: #fff; transform: translateY(-1px); }
+.btn-clear-logs:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+.purge-status {
+    font-size: .8rem;
+    min-height: 1.2em;
+    margin: 0;
+    text-align: right;
+}
+.purge-ok  { color: #1a6a32; }
+.purge-err { color: #c0392b; }
+
+@media (max-width: 640px) {
+    .rgpd-card    { flex-direction: column; align-items: flex-start; }
+    .rgpd-actions { align-items: stretch; width: 100%; }
+    .btn-purge    { width: 100%; text-align: center; }
+    .purge-status { text-align: center; }
+}
+
 /* ── Bouton retour / déconnexion ── */
 .btn-logout {
     display: inline-block;

@@ -63,14 +63,24 @@ try {
     $s2->execute();
     $n2 = $s2->rowCount();
 
+    // Mémorisation de la date de dernière purge
+    $now = date('Y-m-d H:i:s');
+    $pdo->prepare("INSERT INTO parametres (cle, valeur) VALUES ('derniere_purge_logs', ?) ON DUPLICATE KEY UPDATE valeur = ?")
+        ->execute([$now, $now]);
+
     if ($isCli) {
         echo '[purge_logs] Terminé — journal_connexions : ' . $n1 . ' ligne(s) supprimée(s)'
             . ', journal_activites : ' . $n2 . ' ligne(s) supprimée(s)' . PHP_EOL;
     } else {
+        $r1 = (int)$pdo->query('SELECT COUNT(*) FROM journal_connexions')->fetchColumn();
+        $r2 = (int)$pdo->query('SELECT COUNT(*) FROM journal_activites')->fetchColumn();
         ob_end_clean(); echo json_encode([
-            'success'               => true,
-            'connexions_supprimees' => $n1,
-            'activites_supprimees'  => $n2,
+            'success'                => true,
+            'connexions_supprimees'  => $n1,
+            'activites_supprimees'   => $n2,
+            'connexions_restantes'   => $r1,
+            'activites_restantes'    => $r2,
+            'date_purge'             => $now,
         ]);
     }
 } catch (Exception $e) {

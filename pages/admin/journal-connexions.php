@@ -17,6 +17,15 @@ $nbPages = max(1, (int)ceil($nbTotal / $parPage));
 $entrees = $pdo->prepare('SELECT * FROM journal_connexions ORDER BY created_at DESC LIMIT ' . $parPage . ' OFFSET ' . $offset);
 $entrees->execute();
 $entrees = $entrees->fetchAll(PDO::FETCH_ASSOC);
+
+$roleLabels = [
+    'admin'      => 'Admin',
+    'moderateur' => 'Modérateur',
+    'bureau'     => 'Bureau',
+    'entraineur' => 'Entraîneur',
+    'arbitre'    => 'Arbitre',
+    'adherent'   => 'Adhérent',
+];
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -26,7 +35,8 @@ $entrees = $entrees->fetchAll(PDO::FETCH_ASSOC);
     <title>Journal des connexions - VBO</title>
     <link href="/css/styles.css?v=20260705" rel="stylesheet">
     <link href="/css/tableau-de-bord.css?v=20260623" rel="stylesheet">
-    <link href="/css/journal.css?v=20260623" rel="stylesheet">
+    <link href="/css/journal.css?v=20260707" rel="stylesheet">
+    <link href="/css/admin.css?v=20260623" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -58,20 +68,34 @@ $entrees = $entrees->fetchAll(PDO::FETCH_ASSOC);
             <?php foreach ($entrees as $e):
                 $dt      = new DateTime($e['created_at']);
                 $dateStr = $dt->format('d/m/Y à H\hi');
+                $succes  = (int)($e['succes'] ?? 1);
+                $badgeClass = $succes ? 'badge-connexion' : 'badge-echec';
+                $icon       = $succes ? '🔑' : '⚠️';
+
+                $roleList = $e['roles'] ? array_filter(array_map('trim', explode(',', $e['roles']))) : [];
+                $showRoles = $succes && !empty($roleList) && ($e['roles'] !== 'Compte en attente');
+
+                $details = [];
+                if (!$succes && $e['roles'] === 'Compte en attente') $details[] = 'Compte en attente de validation';
+                elseif (!$succes) $details[] = 'Identifiant ou mot de passe incorrect';
+                if (!empty($e['appareil'])) $details[] = htmlspecialchars($e['appareil']);
+                $details[] = 'IP : ' . htmlspecialchars($e['ip'] ?: '—');
             ?>
             <li class="journal-entry">
-                <span class="journal-icon badge-connexion">🔑</span>
+                <span class="journal-icon <?= $badgeClass ?>"><?= $icon ?></span>
                 <div class="journal-body">
                     <div class="journal-meta">
                         <strong><?= htmlspecialchars($e['username']) ?></strong>
                         <span class="journal-date"><?= $dateStr ?></span>
-                    </div>
-                    <p class="journal-details">
-                        <?php if (!empty($e['roles'])): ?>
-                        <span class="journal-roles"><?= htmlspecialchars($e['roles']) ?></span> —
+                        <?php if ($showRoles):
+                            foreach ($roleList as $r): ?>
+                        <span class="badge badge--<?= htmlspecialchars($r) ?>"><?= htmlspecialchars($roleLabels[$r] ?? ucfirst($r)) ?></span>
+                        <?php endforeach; endif; ?>
+                        <?php if (!$succes): ?>
+                        <span class="journal-echec-label">Échec</span>
                         <?php endif; ?>
-                        IP : <?= htmlspecialchars($e['ip'] ?: '—') ?>
-                    </p>
+                    </div>
+                    <p class="journal-details"><?= implode(' · ', $details) ?></p>
                 </div>
             </li>
             <?php endforeach; ?>

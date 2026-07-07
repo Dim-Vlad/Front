@@ -41,6 +41,7 @@
 .badge-suppression { background: #fde8e8; color: #c0392b; }
 .badge-modif       { background: #fff3cd; color: #7a5c00; }
 .badge-connexion   { background: #e8eaf6; color: #3949ab; }
+.badge-echec       { background: #fde8e8; color: #c0392b; }
 
 .journal-roles {
   font-weight: 500;
@@ -70,6 +71,46 @@
   color: #888;
 }
 
+.journal-page {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--secondary-color);
+  background: rgba(6,62,11,.08);
+  border: 1px solid rgba(6,62,11,.18);
+  border-radius: 20px;
+  padding: .1rem .55rem;
+  white-space: nowrap;
+  letter-spacing: .02em;
+}
+
+.journal-action-text {
+  font-size: 0.72rem;
+  color: #999;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+/* Badges rôles dans les entrées du journal connexions */
+.journal-meta .badge {
+  margin: 0;
+  vertical-align: middle;
+  font-size: 0.68rem;
+  padding: .1rem .55rem;
+}
+
+.journal-echec-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #c0392b;
+  background: #fde8e8;
+  border: 1px solid rgba(192,57,43,.25);
+  border-radius: 20px;
+  padding: .1rem .55rem;
+  white-space: nowrap;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
 .journal-details {
   margin: 0;
   font-size: 0.82rem;
@@ -77,11 +118,50 @@
   line-height: 1.4;
 }
 
-/* ── Compteur ── */
+/* ── Barre d'outils (compteur + filtre) ── */
+.journal-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
 .journal-total-line {
   font-size: 0.78rem;
   color: #888;
-  margin: 0 0 20px;
+  margin: 0;
+}
+
+/* ── Chips de filtre ── */
+.journal-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.journal-chip {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: .3rem .85rem;
+  border-radius: 20px;
+  border: 1.5px solid #ddd;
+  color: #666;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.journal-chip:hover {
+  border-color: var(--secondary-color);
+  color: var(--secondary-color);
+  background: rgba(6,62,11,.05);
+}
+.journal-chip.active {
+  background: var(--secondary-color);
+  border-color: var(--secondary-color);
+  color: #fff;
 }
 
 /* ── Vide ── */

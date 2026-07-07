@@ -6,6 +6,27 @@ if (is_logged_in()) {
     exit;
 }
 
+function parseUserAgent(string $ua): string {
+    if ($ua === '') return 'Inconnu';
+    if (str_contains($ua, 'Edg/'))                                          $browser = 'Edge';
+    elseif (str_contains($ua, 'OPR/') || str_contains($ua, 'Opera/'))      $browser = 'Opera';
+    elseif (str_contains($ua, 'YaBrowser'))                                 $browser = 'Yandex';
+    elseif (str_contains($ua, 'Chrome/') && !str_contains($ua, 'Chromium'))$browser = 'Chrome';
+    elseif (str_contains($ua, 'Chromium/'))                                 $browser = 'Chromium';
+    elseif (str_contains($ua, 'Firefox/'))                                  $browser = 'Firefox';
+    elseif (str_contains($ua, 'Safari/') && !str_contains($ua, 'Chrome/')) $browser = 'Safari';
+    else                                                                     $browser = 'Navigateur';
+
+    if (str_contains($ua, 'Android'))                                       $os = 'Android';
+    elseif (str_contains($ua, 'iPhone') || str_contains($ua, 'iPad'))      $os = 'iOS';
+    elseif (str_contains($ua, 'Windows'))                                   $os = 'Windows';
+    elseif (str_contains($ua, 'Macintosh') || str_contains($ua, 'Mac OS')) $os = 'macOS';
+    elseif (str_contains($ua, 'Linux'))                                     $os = 'Linux';
+    else                                                                     $os = '';
+
+    return $os ? "$browser · $os" : $browser;
+}
+
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['_action']) && $_POST['_action'] === 'login') {
@@ -15,6 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['_action']) && $_POST[
     if ($username === '' || $password === '') {
         $error = 'Veuillez remplir tous les champs.';
     } else {
+        $ip       = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '';
+        $appareil = parseUserAgent($_SERVER['HTTP_USER_AGENT'] ?? '');
         try {
             $pdo  = get_pdo();
             $stmt = $pdo->prepare('SELECT id, username, password, prenom, nom, actif FROM users WHERE username = ?');
@@ -23,6 +46,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['_action']) && $_POST[
 
             if ($user && password_verify($password, $user['password']) && ($user['actif'] ?? 1) == 0) {
                 $error = 'Votre compte est en attente de validation par un administrateur.';
+                $nomComplet = trim(($user['prenom'] ?? '') . ' ' . ($user['nom'] ?? '')) ?: $user['username'];
+                try {
+                    $pdo->prepare('INSERT INTO journal_connexions (user_id, username, roles, ip, succes, appareil) VALUES (?, ?, ?, ?, 0, ?)')
+                        ->execute([$user['id'], $nomComplet, 'Compte en attente', $ip, $appareil]);
+                } catch (Exception $e) {}
+
             } elseif ($user && password_verify($password, $user['password'])) {
                 $rolesStmt = $pdo->prepare(
                     'SELECT r.name FROM roles r
@@ -38,18 +67,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['_action']) && $_POST[
                 $_SESSION['prenom']   = $user['prenom'];
                 $_SESSION['nom']      = $user['nom'];
 
-                $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '';
                 try {
                     $nomComplet = trim(($user['prenom'] ?? '') . ' ' . ($user['nom'] ?? '')) ?: ($user['username'] ?? 'Inconnu');
                     $rolesStr   = implode(', ', $roles);
-                    $pdo->prepare('INSERT INTO journal_connexions (user_id, username, roles, ip) VALUES (?, ?, ?, ?)')
-                        ->execute([$user['id'], $nomComplet, $rolesStr, $ip]);
+                    $pdo->prepare('INSERT INTO journal_connexions (user_id, username, roles, ip, succes, appareil) VALUES (?, ?, ?, ?, 1, ?)')
+                        ->execute([$user['id'], $nomComplet, $rolesStr, $ip, $appareil]);
                 } catch (Exception $e) {}
 
                 header('Location: /pages/auth/tableau-de-bord.php');
                 exit;
             } else {
                 $error = 'Identifiant ou mot de passe incorrect.';
+                try {
+                    $pdo->prepare('INSERT INTO journal_connexions (user_id, username, roles, ip, succes, appareil) VALUES (0, ?, ?, ?, 0, ?)')
+                        ->execute([$username, '', $ip, $appareil]);
+                } catch (Exception $e) {}
             }
         } catch (PDOException $e) {
             $error = 'Erreur de connexion à la base de données.';

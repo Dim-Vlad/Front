@@ -214,6 +214,8 @@ function toggleDocType() {
     const isPdf = document.querySelector('input[name="docType"]:checked')?.value === 'pdf';
     document.getElementById('pdfGroup').style.display  = isPdf ? '' : 'none';
     document.getElementById('linkGroup').style.display = isPdf ? 'none' : '';
+    document.getElementById('docFile').required = isPdf && !_editingDocId;
+    document.getElementById('docUrl').required  = !isPdf;
     if (!isPdf) document.getElementById('pdfKeepHint').style.display = 'none';
     if (isPdf && _editingDocId) document.getElementById('pdfKeepHint').style.display = 'block';
 }
