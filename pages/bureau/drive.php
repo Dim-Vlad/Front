@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../../php/auth.php';
 require_login();
 if (!has_any_role(['bureau', 'admin', 'moderateur'])) {
@@ -15,9 +15,11 @@ $isAdmin  = has_role('admin');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Dossiers partagés des commissions du VBO.">
     <title>Dossiers Commissions - VBO</title>
     <link href="/css/styles.css?v=20260705" rel="stylesheet">
-    <link href="/css/bureau/drive.css?v=20260624" rel="stylesheet">
+    <link href="/css/leClub/minibus.css?v=20260623" rel="stylesheet">
+    <link href="/css/bureau/drive.css?v=20260707" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,15 +33,24 @@ $isAdmin  = has_role('admin');
             <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club">
             <div class="text-content">
                 <h1>Dossiers Commissions</h1>
-                <p>Documents partagés réservés aux membres des commissions.</p>
+                <p class="explication">Documents partagés réservés aux membres des commissions.</p>
             </div>
         </div>
     </div>
 
-    <div class="drive-container">
+    <a href="/pages/auth/tableau-de-bord.php" class="back-btn">← Retour au tableau de bord</a>
+
+    <main class="sheet-main">
+
+        <div class="sheet-info-card">
+            <p>Accès aux dossiers des <strong>commissions du club</strong> hébergés sur le Drive VBO. Sélectionnez une commission via les onglets ci-dessous.</p>
+            <?php if ($isAdmin): ?>
+            <a href="/pages/admin/drive-dossiers.php" class="btn-edit-url">⚙ Gérer les dossiers</a>
+            <?php endif; ?>
+        </div>
 
         <?php if (empty($dossiers)): ?>
-        <div class="drive-empty">
+        <div class="sheet-card drive-empty">
             <p>Aucun dossier configuré.</p>
             <?php if ($isAdmin): ?>
             <a href="/pages/admin/drive-dossiers.php" class="btn-drive-admin">Ajouter des dossiers</a>
@@ -48,40 +59,37 @@ $isAdmin  = has_role('admin');
 
         <?php else: ?>
 
-        <div class="drive-tabs">
-            <?php foreach ($dossiers as $i => $d): ?>
-            <button class="drive-tab<?= $i === 0 ? ' active' : '' ?>"
-                    data-url="<?= htmlspecialchars($d['url'], ENT_QUOTES) ?>"
-                    onclick="switchTab(this)">
-                <?= htmlspecialchars($d['nom']) ?>
-            </button>
-            <?php endforeach; ?>
-            <?php if ($isAdmin): ?>
-            <a href="/pages/admin/drive-dossiers.php" class="drive-tab drive-tab--admin" title="Gérer les dossiers">+</a>
-            <?php endif; ?>
-        </div>
-
-        <div class="drive-iframe-wrapper">
-            <iframe id="drive-frame"
-                    src="<?= htmlspecialchars($dossiers[0]['url'], ENT_QUOTES) ?>"
-                    allowfullscreen></iframe>
+        <div class="drive-wrapper">
+            <div class="drive-tabs">
+                <?php foreach ($dossiers as $i => $d): ?>
+                <?php $label = trim(preg_replace('/\bcommission\b\s*/i', '', $d['nom'])); ?>
+                <button class="drive-tab<?= $i === 0 ? ' active' : '' ?>"
+                        data-url="<?= htmlspecialchars($d['url'], ENT_QUOTES) ?>"
+                        onclick="switchTab(this)">
+                    <?= htmlspecialchars($label ?: $d['nom']) ?>
+                </button>
+                <?php endforeach; ?>
+            </div>
+            <div class="drive-card">
+                <iframe id="drive-frame"
+                        src="<?= htmlspecialchars($dossiers[0]['url'], ENT_QUOTES) ?>"
+                        allowfullscreen></iframe>
+            </div>
         </div>
 
         <?php endif; ?>
 
-        <a href="/pages/auth/tableau-de-bord.php" class="back-btn">← Retour au tableau de bord</a>
-    </div>
+    </main>
 
     <div id="footer"></div>
 
     <script src="/js/main.js?v=20260705"></script>
     <script>
-
-        function switchTab(btn) {
-            document.querySelectorAll('.drive-tab').forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById('drive-frame').src = btn.dataset.url;
-        }
+    function switchTab(btn) {
+        document.querySelectorAll('.drive-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('drive-frame').src = btn.dataset.url;
+    }
     </script>
 </body>
 </html>

@@ -9,7 +9,13 @@
     padding: 0 1rem 4rem;
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 2rem;
+}
+
+#sections-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
 }
 
 /* ── Admin toolbar ───────────────────────────────────────────────────────────── */
@@ -219,6 +225,17 @@
     font-size: .85rem;
     color: #444;
 }
+
+.ent-ffvb-notice {
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    border-radius: 8px;
+    padding: .5rem .9rem;
+    font-size: .85rem;
+    color: #5d4037;
+    line-height: 1.6;
+}
+.ent-ffvb-notice strong { color: #e65100; }
 
 .btn-ent-link {
     display: inline-block;

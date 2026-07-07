@@ -14,7 +14,7 @@ $dossiers = $pdo->query("SELECT id, nom, url FROM drive_dossiers ORDER BY ordre 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dossiers Bureau - Admin VBO</title>
+    <title>Gestion des dossiers - Admin VBO</title>
     <link href="/css/styles.css?v=20260705" rel="stylesheet">
     <link href="/css/tableau-de-bord.css?v=20260623" rel="stylesheet">
     <link href="/css/admin/drive-dossiers.css?v=20260624" rel="stylesheet">
@@ -30,8 +30,8 @@ $dossiers = $pdo->query("SELECT id, nom, url FROM drive_dossiers ORDER BY ordre 
         <div class="header-content">
             <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club">
             <div class="text-content">
-                <h1>Dossiers Bureau</h1>
-                <p>Gérer les dossiers Google Drive accessibles au bureau.</p>
+                <h1>Gestion des dossiers commissions</h1>
+                <p>Gérer les dossiers Google Drive accessibles aux membres du bureau.</p>
             </div>
         </div>
     </div>
@@ -70,7 +70,7 @@ $dossiers = $pdo->query("SELECT id, nom, url FROM drive_dossiers ORDER BY ordre 
 
                 <label for="dd-url">Lien de partage Google Drive</label>
                 <input type="url" id="dd-url" name="url"
-                       placeholder="https://drive.google.com/drive/folders/..." required>
+                        placeholder="https://drive.google.com/drive/folders/..." required>
                 <small>Colle le lien de partage du dossier Drive (accès "toute personne avec le lien").</small>
 
                 <button type="submit" class="dd-btn-submit">Ajouter</button>
@@ -98,8 +98,8 @@ $dossiers = $pdo->query("SELECT id, nom, url FROM drive_dossiers ORDER BY ordre 
         </div>
 
         <div class="dd-nav">
-            <a href="/pages/bureau/drive.php" class="back-btn">← Voir la page Bureau</a>
-            <a href="/pages/admin/index.php" class="back-btn">← Retour admin</a>
+            <a href="/pages/bureau/drive.php" class="back-btn">← Retour</a>
+            <a href="/pages/admin/index.php" class="back-btn">← Retour tableau de bord admin</a>
         </div>
     </div>
 

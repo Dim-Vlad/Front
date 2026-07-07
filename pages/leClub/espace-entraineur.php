@@ -55,9 +55,8 @@ $isMod = has_any_role(['admin', 'moderateur']);
             <div class="ent-ffvb-body">
                 <h2>Ressources Volley</h2>
                 <p>Retrouvez des documents et ressources utiles mis à disposition par la FFVB.</p>
-                <div class="ent-credentials">
-                    <span>Identifiant : <strong>ffvolley</strong></span>
-                    <span>Mot de passe : <strong>ffvolley2021</strong></span>
+                <div class="ent-ffvb-notice">
+                    Créez votre propre compte sur le site avec votre adresse mail et un mot de passe personnel.
                 </div>
             </div>
             <a href="https://ressourcesvolley.com/" target="_blank" rel="noopener" class="btn-ent-link">Accéder au site ↗</a>
