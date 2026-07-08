@@ -42,6 +42,7 @@ function openEditModal(cardEl) {
     const ev = JSON.parse(cardEl.dataset.ev);
 
     document.getElementById('edit-ev-id').value             = ev.id;
+    document.getElementById('edit-ev-type').value           = ev.type         || 'autre';
     document.getElementById('edit-ev-titre').value          = ev.titre        || '';
     document.getElementById('edit-ev-desc').value           = ev.description  || '';
     document.getElementById('edit-ev-date-debut').value     = ev.date_debut   || '';

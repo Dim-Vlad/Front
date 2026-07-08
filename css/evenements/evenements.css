@@ -432,10 +432,307 @@ details[open] .ev-past-summary::before { transform: rotate(90deg); }
     display: block;
 }
 
+/* ── Onglets ────────────────────────────────────────────────────── */
+
+.ev-tabs {
+    display: flex;
+    gap: .4rem;
+    margin: 1.6rem 0 0;
+    border-bottom: 2px solid #dde8dd;
+    padding-bottom: 0;
+}
+
+.ev-tab {
+    font-family: inherit;
+    font-size: .9rem;
+    font-weight: 600;
+    padding: .55rem 1.2rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: #777;
+    border-radius: 8px 8px 0 0;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: color .2s, background .2s, border-color .2s;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+.ev-tab:hover { background: #f0f5f0; color: var(--secondary-color); }
+.ev-tab.active {
+    color: var(--secondary-color);
+    border-bottom-color: var(--primary-color);
+    background: #fff;
+}
+
+.ev-tab-count {
+    background: var(--primary-color);
+    color: var(--secondary-color);
+    font-size: .7rem;
+    font-weight: 700;
+    padding: .1rem .42rem;
+    border-radius: 10px;
+    min-width: 1.2rem;
+    text-align: center;
+}
+
+.ev-tab-panel { padding-top: .5rem; }
+
+/* ── Badges de type événement ───────────────────────────────────── */
+
+.ev-type-badge {
+    align-self: flex-start;
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding: .15rem .6rem;
+    border-radius: 10px;
+    display: inline-block;
+}
+
+.ev-type-tournoi  { background: #e8f5e9; color: #2e7d32; }
+.ev-type-match    { background: #fff3e0; color: #e65100; }
+.ev-type-loto     { background: #e8eaf6; color: #3949ab; }
+.ev-type-tombola  { background: #fce4ec; color: #c62828; }
+.ev-type-stage    { background: #e1f5fe; color: #0277bd; }
+.ev-type-autre    { background: #f5f5f5; color: #555; }
+
+/* ── Ligne en deux colonnes dans la modale ──────────────────────── */
+
+.ev-form-row--half {
+    grid-template-columns: 1fr !important;
+}
+.ev-form-row--half > div {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    align-items: start;
+    gap: .5rem;
+    margin-bottom: .4rem;
+}
+.ev-form-row--half > div label {
+    font-size: .87rem;
+    font-weight: 600;
+    color: var(--bg-dark);
+    padding-top: .35rem;
+}
+
+/* ── Select dans formulaire ─────────────────────────────────────── */
+
+.ev-form-row select {
+    width: 100%;
+    padding: .5rem .7rem;
+    border: 1.5px solid #d5ddd5;
+    border-radius: 7px;
+    font-size: .87rem;
+    font-family: inherit;
+    background: #fafafa;
+    box-sizing: border-box;
+    transition: border-color .2s, box-shadow .2s;
+    cursor: pointer;
+}
+.ev-form-row select:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(6,62,11,.1);
+    background: #fff;
+}
+
+/* ── Séparateur de section dans la modale ───────────────────────── */
+
+.ev-form-section-title {
+    font-size: .74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--secondary-color);
+    border-top: 1px solid #e8ece8;
+    padding-top: .9rem;
+    margin-top: .3rem;
+    margin-bottom: .1rem;
+}
+
+/* ── Hint inline sous un input dans une modale ──────────────────── */
+
+.t-insc-hint {
+    font-size: .78rem;
+    color: #999;
+    margin: .2rem 0 0;
+    line-height: 1.4;
+}
+
+/* ── Inputs tel/email dans ev-form-row ──────────────────────────── */
+
+.ev-form-row input[type="tel"],
+.ev-form-row input[type="email"] {
+    width: 100%;
+    padding: .5rem .7rem;
+    border: 1.5px solid #d5ddd5;
+    border-radius: 7px;
+    font-size: .87rem;
+    font-family: inherit;
+    background: #fafafa;
+    box-sizing: border-box;
+    transition: border-color .2s, box-shadow .2s;
+}
+.ev-form-row input[type="tel"]:focus,
+.ev-form-row input[type="email"]:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(6,62,11,.1);
+    background: #fff;
+}
+
+.t-card-meta {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+    margin-top: .25rem;
+}
+
+/* ── Hint sous les champs ───────────────────────────────────────── */
+
+.ev-section-hint {
+    font-size: .84rem;
+    color: #777;
+    margin: -.5rem 0 1.2rem;
+    line-height: 1.5;
+}
+.ev-form-hint {
+    grid-column: 2;
+    font-size: .78rem;
+    color: #999;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* ── Liste des pages tournois ───────────────────────────────────── */
+
+.t-list {
+    display: flex;
+    flex-direction: column;
+    gap: .8rem;
+}
+
+.t-card {
+    background: #fff;
+    border-radius: 10px;
+    border-left: 4px solid var(--primary-color);
+    box-shadow: 0 1px 6px rgba(0,0,0,.07);
+    padding: 1rem 1.2rem;
+}
+
+.t-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.t-card-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--bg-dark);
+    margin: 0 0 .2rem;
+}
+
+.t-card-saison {
+    font-size: .78rem;
+    color: #888;
+    background: #f0f4f0;
+    padding: .1rem .5rem;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+.t-card-actions {
+    display: flex;
+    gap: .45rem;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.t-url {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-top: .6rem;
+    padding-top: .6rem;
+    border-top: 1px solid #eee;
+    flex-wrap: wrap;
+}
+.t-url span {
+    font-size: .8rem;
+    color: #888;
+    font-family: monospace;
+    word-break: break-all;
+}
+
+.btn-view {
+    font-size: .78rem;
+    font-weight: 600;
+    padding: .25rem .65rem;
+    border: 1px solid var(--secondary-color);
+    background: transparent;
+    color: var(--secondary-color);
+    border-radius: 8px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+    white-space: nowrap;
+}
+.btn-view:hover { background: var(--secondary-color); color: #fff; }
+
+.btn-edit-t {
+    font-size: .78rem;
+    font-weight: 600;
+    padding: .25rem .65rem;
+    border: 1px solid #a8c4d4;
+    background: transparent;
+    color: #1565c0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .2s;
+    white-space: nowrap;
+}
+.btn-edit-t:hover { background: #e3f2fd; }
+
+.btn-del-t {
+    font-size: .78rem;
+    padding: .25rem .55rem;
+    border: 1px solid #e0a0a0;
+    background: transparent;
+    color: #c0392b;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .2s;
+}
+.btn-del-t:hover { background: #fdecea; }
+
+.btn-copy {
+    font-size: .75rem;
+    padding: .2rem .55rem;
+    border: 1px solid #ccc;
+    background: #f5f5f5;
+    color: #555;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.btn-copy:hover { background: #e8e8e8; }
+
 /* ── Responsive ────────────────────────────────────────────────── */
 
 @media (max-width: 600px) {
     .evenements-main { padding: 0 1rem 3rem; }
     .ev-grid { grid-template-columns: 1fr; }
     .ev-form-row { grid-template-columns: 1fr; }
+    .ev-form-row--half > div { grid-template-columns: 1fr; }
+    .ev-tabs { overflow-x: auto; }
+    .t-card-top { flex-direction: column; }
 }

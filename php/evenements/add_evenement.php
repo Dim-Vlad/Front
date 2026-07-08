@@ -14,6 +14,8 @@ if ($titre === '') {
     ob_end_clean(); echo json_encode(['success'=>false,'error'=>'Le titre est requis']); exit;
 }
 
+$validTypes = ['tournoi','match','loto','tombola','stage','autre'];
+$type      = in_array($_POST['type'] ?? '', $validTypes) ? $_POST['type'] : 'autre';
 $dateDebut = trim($_POST['date_debut'] ?? '') ?: null;
 $dateFin   = trim($_POST['date_fin']   ?? '') ?: null;
 $lieu      = trim($_POST['lieu']       ?? '');
@@ -21,8 +23,8 @@ $desc      = trim($_POST['description'] ?? '');
 $lienUrl   = trim($_POST['lien_url']   ?? '');
 $lienLabel = trim($_POST['lien_label'] ?? '') ?: 'En savoir plus';
 $termine   = isset($_POST['termine']) ? 1 : 0;
-if ($lienUrl !== '' && !preg_match('#^https?://#i', $lienUrl)) {
-    ob_end_clean(); echo json_encode(['success'=>false,'error'=>'URL invalide (doit commencer par http:// ou https://)']); exit;
+if ($lienUrl !== '' && !preg_match('#^(https?://|/)#i', $lienUrl)) {
+    ob_end_clean(); echo json_encode(['success'=>false,'error'=>'URL invalide (doit commencer par http://, https:// ou /)']); exit;
 }
 $imageUrl  = null;
 
@@ -62,10 +64,10 @@ try {
     $ordre = (int)$stmtMax->fetchColumn();
 
     $stmt = $pdo->prepare(
-        "INSERT INTO evenements (titre, description, date_debut, date_fin, lieu, lien_url, lien_label, termine, ordre, image_url)
-         VALUES (?,?,?,?,?,?,?,?,?,?)"
+        "INSERT INTO evenements (titre, type, description, date_debut, date_fin, lieu, lien_url, lien_label, termine, ordre, image_url)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?)"
     );
-    $stmt->execute([$titre, $desc, $dateDebut, $dateFin, $lieu, $lienUrl, $lienLabel, $termine, $ordre, $imageUrl]);
+    $stmt->execute([$titre, $type, $desc, $dateDebut, $dateFin, $lieu, $lienUrl, $lienLabel, $termine, $ordre, $imageUrl]);
     $id = (int)$pdo->lastInsertId();
 
     log_activite($pdo, 'Ajout événement', 'evenements', $titre);

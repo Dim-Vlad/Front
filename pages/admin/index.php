@@ -111,21 +111,15 @@ $nbActivites  = (int)$pdo->query('SELECT COUNT(*) FROM journal_activites')->fetc
                 </div>
             </div>
 
-            <!-- Ligne 2 droite : Événements -->
+            <!-- Ligne 2 droite : Agenda -->
             <div class="dashboard-section">
-                <h2 class="dashboard-section-title">📅 Événements</h2>
+                <h2 class="dashboard-section-title">📅 Agenda</h2>
                 <div class="dashboard-cards">
 
                     <a href="/pages/admin/evenements.php" class="dashboard-card card-admin">
                         <div class="card-icon">📅</div>
-                        <h2>Événements</h2>
-                        <p>Créer et gérer les événements du club (tournois, stages, loto…).</p>
-                    </a>
-
-                    <a href="/pages/admin/tournois.php" class="dashboard-card card-admin">
-                        <div class="card-icon">🏐</div>
-                        <h2>Pages Tournois</h2>
-                        <p>Créer et gérer les pages des tournois (inscription, tableau des scores).</p>
+                        <h2>Agenda du club</h2>
+                        <p>Gérer les événements (matchs, tournois, stages, loto…) et les pages de tournois.</p>
                     </a>
 
                 </div>

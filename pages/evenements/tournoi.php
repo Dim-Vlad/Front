@@ -22,6 +22,11 @@ function extractSrc(string $val): string {
     }
     return $val;
 }
+
+function formatTel(string $tel): string {
+    $digits = preg_replace('/\D/', '', $tel);
+    return trim(chunk_split($digits, 2, ' '));
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -63,30 +68,51 @@ function extractSrc(string $val): string {
         <?php endif; ?>
 
         <!-- ── Inscription ─────────────────────────────────────── -->
+        <?php
+        $inscUrl   = $t['inscription_url']   ?? $t['inscription_contact'] ?? '';
+        $inscTel   = $t['inscription_tel']   ?? '';
+        $inscEmail = $t['inscription_email'] ?? '';
+        $hasAnyInsc = $inscUrl || $inscTel || $inscEmail;
+        ?>
         <section class="tournoi-section">
             <h2 class="tournoi-section-title">Inscription</h2>
-            <?php
-            $inscSrc = $t['inscription_url'] ? extractSrc($t['inscription_url']) : '';
-            ?>
-            <?php if ($inscSrc): ?>
-            <div class="sheet-card tournoi-inscription-card">
-                <iframe
-                    id="haWidgetInscription"
-                    src="<?= h($inscSrc) ?>"
-                    title="Inscription"
-                    scrolling="auto"
-                    allowtransparency="true">
-                </iframe>
-            </div>
-            <?php else: ?>
+            <?php if (!$hasAnyInsc): ?>
             <p class="tournoi-empty">Les inscriptions seront bientôt disponibles.</p>
+            <?php else: ?>
+                <?php if ($inscUrl): ?>
+                <div class="sheet-card tournoi-inscription-card">
+                    <iframe
+                        id="haWidgetInscription"
+                        src="<?= h(extractSrc($inscUrl)) ?>"
+                        title="Inscription"
+                        scrolling="auto"
+                        allowtransparency="true">
+                    </iframe>
+                </div>
+                <?php endif; ?>
+                <?php if ($inscTel || $inscEmail): ?>
+                <div class="tournoi-contact-card<?= $inscUrl ? ' tournoi-contact-card--below' : '' ?>">
+                    <?php if ($inscUrl): ?><p class="tournoi-contact-label">Vous pouvez également contacter :</p><?php else: ?><p class="tournoi-contact-label">Pour s'inscrire, contactez-nous :</p><?php endif; ?>
+                    <?php if ($inscTel): ?>
+                    <a class="tournoi-contact-value" href="tel:<?= h(preg_replace('/\D/', '', $inscTel)) ?>">📞 <?= h(formatTel($inscTel)) ?></a>
+                    <?php endif; ?>
+                    <?php if ($inscEmail): ?>
+                    <a class="tournoi-contact-value" href="mailto:<?= h($inscEmail) ?>">✉️ <?= h($inscEmail) ?></a>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
             <?php endif; ?>
         </section>
 
         <!-- ── Tableau des scores ──────────────────────────────── -->
+        <?php
+        $typesAvecScores = ['tournoi', 'match', 'stage', 'autre'];
+        $showScores = !empty($t['sheet_url']) || in_array($t['type'] ?? 'tournoi', $typesAvecScores);
+        ?>
+        <?php if ($showScores): ?>
         <section class="tournoi-section">
             <h2 class="tournoi-section-title">Tableau des scores</h2>
-            <?php if ($t['sheet_url']): ?>
+            <?php if (!empty($t['sheet_url'])): ?>
             <div class="sheet-card">
                 <iframe
                     src="<?= h($t['sheet_url']) ?>"
@@ -99,6 +125,7 @@ function extractSrc(string $val): string {
             <p class="tournoi-empty">Le tableau des scores n'est pas encore disponible.</p>
             <?php endif; ?>
         </section>
+        <?php endif; ?>
 
     </main>
 

@@ -99,6 +99,34 @@
     margin: 0;
 }
 
+/* ── Carte contact (tel / email) ────────────────────────── */
+
+.tournoi-contact-card {
+    display: inline-flex;
+    flex-direction: column;
+    gap: .5rem;
+    background: #f5f9f5;
+    border: 1.5px solid #c8ddc8;
+    border-radius: 12px;
+    padding: 1.2rem 1.6rem;
+}
+.tournoi-contact-card--below { margin-top: 1.2rem; }
+
+.tournoi-contact-label {
+    font-size: .9rem;
+    color: #555;
+    margin: 0;
+}
+
+.tournoi-contact-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+    text-decoration: none;
+    word-break: break-all;
+}
+.tournoi-contact-value:hover { text-decoration: underline; }
+
 /* ── Bouton modifier (admin) ────────────────────────────── */
 
 .btn-edit-url {
