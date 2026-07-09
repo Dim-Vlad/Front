@@ -92,7 +92,8 @@ function renderCell(string $text): string {
 
                 <?php if ($canEdit && !$visible): ?>
                 <div class="table-hidden-banner" id="table-hidden-banner">
-                    ⚠ Tableau masqué pour les visiteurs — seuls les modérateurs et admins peuvent le voir
+                    ⚠ Tableau masqué pour les visiteurs ⚠<br>
+                    Seuls les admin, modérateurs, membres du bureau et entraineurs peuvent le voir.
                 </div>
                 <?php endif; ?>
 
@@ -106,7 +107,8 @@ function renderCell(string $text): string {
                 <?php else: ?>
                 <?php if ($canPreview && !$visible): ?>
                 <div class="table-preview-banner">
-                    👁 Aperçu — Ce planning n'est pas encore publié. Il n'est visible que pour vous (Membres du bureau &amp; Entraîneurs).
+                    👁 Aperçu, tableau masqué pour les visiteurs 👁<br>
+                    Ce planning n'est pas encore publié. Il n'est visible que pour vous (Membres du bureau &amp; Entraîneurs).
                 </div>
                 <?php endif; ?>
                 <div class="table-scroll-wrap<?= (!$visible && ($canEdit || $canPreview)) ? ' table-scroll-wrap--hidden' : '' ?>" id="table-scroll-wrap">
