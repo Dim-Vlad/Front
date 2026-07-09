@@ -1,7 +1,8 @@
 ﻿<?php
 require_once __DIR__ . '/../../php/auth.php';
 
-$canEdit = is_logged_in() && has_any_role(['moderateur', 'admin']);
+$canEdit    = is_logged_in() && has_any_role(['moderateur', 'admin']);
+$canPreview = is_logged_in() && has_any_role(['bureau', 'entraineur']);
 
 $slots  = [];
 $saison = '2026-2027';
@@ -95,7 +96,7 @@ function renderCell(string $text): string {
                 </div>
                 <?php endif; ?>
 
-                <?php if (!$visible && !$canEdit): ?>
+                <?php if (!$visible && !$canEdit && !$canPreview): ?>
                 <div class="table-placeholder">
                     <span class="placeholder-icon">📋</span>
                     <p class="placeholder-title">Planning en cours d'élaboration</p>
@@ -103,7 +104,12 @@ function renderCell(string $text): string {
                     <a href="/pages/nousContacter.html" class="btn-cat-contact">Nous contacter pour plus d'informations →</a>
                 </div>
                 <?php else: ?>
-                <div class="table-scroll-wrap" id="table-scroll-wrap">
+                <?php if ($canPreview && !$visible): ?>
+                <div class="table-preview-banner">
+                    👁 Aperçu — Ce planning n'est pas encore publié. Il n'est visible que pour vous (Membres du bureau &amp; Entraîneurs).
+                </div>
+                <?php endif; ?>
+                <div class="table-scroll-wrap<?= (!$visible && ($canEdit || $canPreview)) ? ' table-scroll-wrap--hidden' : '' ?>" id="table-scroll-wrap">
                     <table class="entr-table" id="entr-table">
                         <thead>
                             <tr>

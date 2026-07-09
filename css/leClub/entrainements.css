@@ -115,6 +115,24 @@
     text-align: center;
 }
 
+/* Tableau masqué — contour rouge */
+.table-scroll-wrap--hidden {
+    border: 3px solid #e53935;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(229,57,53,.20);
+}
+
+/* Bannière aperçu bureau / entraîneurs */
+.table-preview-banner {
+    background: #fdecea;
+    color: #a61c0c;
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 0.55rem 1.25rem;
+    border-bottom: 1px solid #f5b3ad;
+    text-align: center;
+}
+
 /* Placeholder visiteurs */
 .table-placeholder {
     display: flex;
