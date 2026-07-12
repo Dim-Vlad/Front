@@ -23,27 +23,32 @@
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.45);
+  background: rgba(0,0,0,.55);
   z-index: 1100;
   align-items: flex-start;
-  justify-content: flex-end;
+  justify-content: center;
+  padding: 2rem 1rem;
+  overflow-y: auto;
 }
 #insc-edit-overlay.open { display: flex; }
 
-/* ── Panneau latéral ── */
+/* ── Modale ── */
 #insc-edit-panel {
   background: #fff;
   width: 100%;
-  max-width: 420px;
-  height: 100vh;
+  max-width: 520px;
+  max-height: calc(100vh - 4rem);
   display: flex;
   flex-direction: column;
-  box-shadow: -4px 0 24px rgba(0,0,0,.18);
-  animation: inscPanelIn .25s ease;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0,0,0,.22);
+  animation: inscModalIn .2s ease;
+  margin: auto;
 }
-@keyframes inscPanelIn {
-  from { transform: translateX(100%); }
-  to   { transform: translateX(0); }
+@keyframes inscModalIn {
+  from { opacity: 0; transform: scale(.96) translateY(-8px); }
+  to   { opacity: 1; transform: scale(1)  translateY(0); }
 }
 
 .insc-edit-header {
@@ -69,7 +74,7 @@
 .insc-edit-body {
   flex: 1;
   overflow-y: auto;
-  padding: 1.2rem 1.4rem;
+  padding: 1.4rem 1.5rem;
 }
 
 .insc-edit-section {
@@ -113,20 +118,74 @@
   margin-top: .3rem;
 }
 
-.insc-edit-tarif {
+.insc-edit-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  margin-bottom: .85rem;
+  padding-bottom: .35rem;
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.insc-edit-section-head .insc-edit-group-title {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.ie-add-btn {
+  background: none;
+  border: 1.5px dashed #b0c0b0;
+  border-radius: 6px;
+  color: var(--secondary-color);
+  font-size: .75rem;
+  font-weight: 600;
+  font-family: var(--font-poppins);
+  padding: .2rem .6rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .2s, border-color .2s;
+}
+.ie-add-btn:hover { background: #f4f8f4; border-color: var(--secondary-color); }
+
+.insc-edit-card {
   background: #f8faf8;
   border: 1px solid #e0e8e0;
   border-radius: 10px;
-  padding: .85rem 1rem;
-  margin-bottom: .75rem;
-}
-
-.insc-edit-tarif-label {
-  font-size: .88rem;
-  font-weight: 600;
-  color: var(--secondary-color);
+  padding: .75rem 1rem;
   margin-bottom: .65rem;
 }
+
+.insc-edit-card-head {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: .55rem;
+}
+
+.insc-edit-card-head .ie-label-input {
+  flex: 1;
+  font-weight: 600;
+}
+
+.ie-delete-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid #e0e0e0;
+  border-radius: 5px;
+  color: #c0392b;
+  font-size: .7rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .15s, border-color .15s;
+  padding: 0;
+}
+.ie-delete-btn:hover { background: #fef2f2; border-color: #c0392b; }
 
 .insc-edit-row {
   display: grid;

@@ -165,10 +165,15 @@ function renderAuthButton(data) {
     updateHomeCard(data);
 
     if (data.logged_in) {
-        const userLink = document.createElement('a');
-        userLink.href        = '/pages/auth/tableau-de-bord.php';
-        userLink.textContent = data.display_short || data.username;
-        userLink.className   = 'nav-btn-user';
+        const dashboardLink = document.createElement('a');
+        dashboardLink.href      = '/pages/auth/tableau-de-bord.php';
+        dashboardLink.className = 'nav-btn-dashboard';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = data.display_short || data.username;
+        nameSpan.className   = 'nav-btn-dashboard__name';
+        dashboardLink.appendChild(nameSpan);
+        dashboardLink.appendChild(document.createTextNode('Tableau de bord'));
 
         const logoutLink = document.createElement('a');
         logoutLink.href        = '/php/logout.php';
@@ -181,7 +186,7 @@ function renderAuthButton(data) {
             }
         });
 
-        container.appendChild(userLink);
+        container.appendChild(dashboardLink);
         container.appendChild(logoutLink);
     } else {
         const loginLink = document.createElement('a');
@@ -789,8 +794,23 @@ function _pwaInjectBtn() {
         }
     });
 
-    const navAuth = document.getElementById('nav-auth');
-    if (navAuth) navAuth.insertBefore(btn, navAuth.firstChild);
+    if (window.innerWidth <= 600) {
+        // Mobile : à l'intérieur du brand, même ligne que le logo
+        const brand = document.querySelector('.navbar-brand');
+        if (brand) {
+            btn.style.marginLeft = 'auto';
+            btn.style.flexShrink = '0';
+            brand.appendChild(btn);
+        }
+    } else if (window.innerWidth <= 1300) {
+        // Tablette/burger : dans #nav-auth, côté droit (comportement original)
+        const navAuth = document.getElementById('nav-auth');
+        if (navAuth) navAuth.insertBefore(btn, navAuth.firstChild);
+    } else {
+        // Desktop : avant le logo dans la navbar
+        const navContainer = document.querySelector('.navbar-container-menu');
+        if (navContainer) navContainer.insertBefore(btn, navContainer.firstChild);
+    }
 }
 
 function _pwaShowTooltip() {

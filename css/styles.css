@@ -101,7 +101,7 @@ body {
 
 .navbar-container-menu {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto auto 1fr auto;
   align-items: center;
   max-width: 1400px;
   margin: 0 auto;
@@ -231,6 +231,9 @@ body {
   display: block;
 }
 
+/* === Bouton installer (desktop uniquement) === */
+#pwa-install-btn { margin-right: 1.2rem; }
+
 /* === Boutons auth navbar === */
 #nav-auth {
   display: flex;
@@ -239,22 +242,46 @@ body {
   padding-left: 16px;
 }
 
-.nav-btn-user {
-  color: rgba(255,255,255,.8);
+.nav-user-name {
+  color: rgba(255,255,255,.7);
   font-weight: 500;
   font-size: 0.88rem;
   padding: 6px 10px;
-  text-decoration: none;
   font-family: var(--font-poppins);
   max-width: 130px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   display: inline-block;
-  border-radius: 8px;
-  transition: background .2s, color .2s;
 }
-.nav-btn-user:hover { background: rgba(255,255,255,.1); color: #fff; }
+
+.nav-btn-dashboard {
+  background: var(--primary-color);
+  color: var(--secondary-color);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  text-decoration: none;
+  font-family: var(--font-poppins);
+  transition: background .2s, transform .15s;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.nav-btn-dashboard:hover {
+  background: #c5d6c4;
+  color: var(--secondary-color);
+  transform: translateY(-1px);
+}
+.nav-btn-dashboard__name {
+  font-weight: 500;
+  font-size: 0.82rem;
+  opacity: 0.75;
+  border-right: 1px solid rgba(6,62,11,.3);
+  padding-right: 0.5rem;
+}
 
 .nav-btn-login {
   background: var(--primary-color);
@@ -488,16 +515,10 @@ body {
 
   /* Auth réduits */
   .nav-btn-login,
-  .nav-btn-logout { font-size: 0.78rem; padding: 4px 10px; }
+  .nav-btn-logout,
+  .nav-btn-dashboard { font-size: 0.78rem; padding: 4px 10px; }
 
-  .nav-btn-user {
-    font-size: 0.78rem;
-    padding: 4px 6px;
-    max-width: 80px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+  .nav-btn-dashboard__name { display: none; }
 
   /* ── Overlay plein écran ── */
   .navbar-links {
@@ -664,7 +685,9 @@ body {
     align-items: center;
   }
 
-  .navbar-brand { flex: 0 0 100%; order: 1; }
+  .navbar-brand { flex: 0 0 100%; order: 1; overflow: hidden; }
+
+  #pwa-install-btn { display: inline-flex !important; margin-right: 0; }
 
   #nav-auth {
     order: 2;
@@ -689,14 +712,9 @@ body {
 
 /* === Très petits écrans (<= 480px) === */
 @media (max-width: 480px) {
-  .nav-btn-user {
-    font-size: 0.72rem;
-    padding: 3px 8px;
-    max-width: 110px;
-  }
-
   .nav-btn-login,
-  .nav-btn-logout {
+  .nav-btn-logout,
+  .nav-btn-dashboard {
     font-size: 0.72rem;
     padding: 3px 8px;
   }

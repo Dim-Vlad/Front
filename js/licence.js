@@ -4,14 +4,14 @@
 
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
-            closeDocModal(); closeLienModal(); closeTutoModal(); closeSaisonModal();
+            closeDocModal(); closeLienModal(); closeTutoModal(); closeSaisonModal(); closeTarifsModal();
         }
     });
 
-    ['docModal','lienModal','tutoModal','saisonModal'].forEach(id => {
+    ['docModal','lienModal','tutoModal','saisonModal','tarifsModal'].forEach(id => {
         document.getElementById(id)?.addEventListener('click', e => {
             if (e.target === document.getElementById(id)) {
-                closeDocModal(); closeLienModal(); closeTutoModal(); closeSaisonModal();
+                closeDocModal(); closeLienModal(); closeTutoModal(); closeSaisonModal(); closeTarifsModal();
             }
         });
     });
@@ -73,6 +73,38 @@
         } catch { status.textContent = 'Erreur réseau.'; status.className = 'modal-status error'; }
     });
 
+    // Formulaire tarifs
+    document.getElementById('tarifs-form')?.addEventListener('submit', async e => {
+        e.preventDefault();
+        const status = document.getElementById('tarifs-status');
+        status.textContent = 'Enregistrement…'; status.className = 'modal-status';
+        const rows = [];
+        document.querySelectorAll('#tarifs-modal-rows .tarif-modal-row').forEach(row => {
+            const label   = row.querySelector('.tarif-modal-label')?.value.trim() || '';
+            const prix    = Math.max(0, Math.min(9999, parseInt(row.querySelector('.tarif-modal-prix-input')?.value) || 0));
+            const comment = row.querySelector('.tarif-modal-comment')?.value.trim() || '';
+            if (label) rows.push({ label, prix, supplement: false, comment });
+        });
+        if (!rows.length) {
+            status.textContent = 'Ajoutez au moins une ligne.'; status.className = 'modal-status error'; return;
+        }
+        const note = document.getElementById('tarifs-modal-note')?.value.trim() || '';
+        const fd = new FormData();
+        fd.append('tarifs_json', JSON.stringify(rows));
+        fd.append('tarifs_note', note);
+        try {
+            const res  = await fetch('/php/licence/save_tarifs.php', { method: 'POST', body: fd });
+            const json = await res.json();
+            if (json.success) {
+                updateTarifsDOM(json.tarifs, json.note);
+                status.textContent = 'Enregistré ✓'; status.className = 'modal-status success';
+                setTimeout(closeTarifsModal, 900);
+            } else {
+                status.textContent = json.error || 'Erreur.'; status.className = 'modal-status error';
+            }
+        } catch { status.textContent = 'Erreur réseau.'; status.className = 'modal-status error'; }
+    });
+
     // Formulaire saison
     document.getElementById('saison-form')?.addEventListener('submit', async e => {
         e.preventDefault();
@@ -88,6 +120,8 @@
                         h.textContent = 'Documents licence ' + json.valeur;
                     }
                 });
+                const tarifsTitle = document.getElementById('tarifs-saison-title');
+                if (tarifsTitle) tarifsTitle.textContent = 'Tarifs saison ' + json.valeur;
                 status.textContent = 'Enregistré ✓'; status.className = 'modal-status success';
                 setTimeout(closeSaisonModal, 900);
             } else {
@@ -173,6 +207,83 @@ function updateTutoInDOM(num, titre, url) {
             thumb.innerHTML = '<div class="tuto-no-video">📹 Vidéo à configurer</div>';
         }
     }
+}
+
+// ── Modale tarifs ─────────────────────────────────
+
+function openTarifsModal() {
+    const container = document.getElementById('tarifs-modal-rows');
+    container.innerHTML = '';
+    document.querySelectorAll('.tarif-row').forEach(row => {
+        const prix    = parseInt((row.querySelector('.tarif-price')?.textContent || '0').replace(/[^0-9]/g, '')) || 0;
+        const comment = row.querySelector('.tarif-comment')?.textContent || '';
+        addTarifModalRow(
+            row.querySelector('.tarif-label')?.textContent || '',
+            prix,
+            row.classList.contains('tarif-row--supplement'),
+            comment
+        );
+    });
+    const noteEl = document.getElementById('tarifs-modal-note');
+    if (noteEl) noteEl.value = document.getElementById('tarifs-global-note')?.textContent || '';
+    document.getElementById('tarifs-status').textContent = '';
+    document.getElementById('tarifs-status').className  = 'modal-status';
+    document.getElementById('tarifsModal').classList.add('open');
+}
+
+function closeTarifsModal() {
+    document.getElementById('tarifsModal')?.classList.remove('open');
+}
+
+function addTarifModalRow(label, prix, supplement, comment) {
+    const container = document.getElementById('tarifs-modal-rows');
+    const div = document.createElement('div');
+    div.className = 'tarif-modal-row';
+    div.innerHTML =
+        '<div class="tarif-modal-top">' +
+            '<input type="text" class="tarif-modal-label" placeholder="Catégorie" required>' +
+            '<div class="tarif-modal-prix">' +
+                '<input type="number" class="tarif-modal-prix-input" min="0" max="9999" required>' +
+                '<span class="tarif-input-suffix">€</span>' +
+            '</div>' +
+            '<button type="button" class="tarif-modal-delete" title="Supprimer cette ligne">✕</button>' +
+        '</div>' +
+        '<input type="text" class="tarif-modal-comment" placeholder="Commentaire (optionnel)">';
+    div.querySelector('.tarif-modal-label').value      = label   ?? '';
+    div.querySelector('.tarif-modal-prix-input').value = prix    ?? 0;
+    div.querySelector('.tarif-modal-comment').value    = comment ?? '';
+    div.querySelector('.tarif-modal-delete').addEventListener('click', () => div.remove());
+    container.appendChild(div);
+}
+
+function updateTarifsDOM(tarifs, note) {
+    const grid = document.querySelector('.tarifs-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    tarifs.forEach(t => {
+        const div   = document.createElement('div');
+        div.className = 'tarif-row' + (t.supplement ? ' tarif-row--supplement' : '');
+        const price = document.createElement('span');
+        price.className   = 'tarif-price';
+        price.textContent = (t.supplement ? '+' : '') + t.prix + '€';
+        const info  = document.createElement('div');
+        info.className = 'tarif-info';
+        const lbl   = document.createElement('span');
+        lbl.className   = 'tarif-label';
+        lbl.textContent = t.label;
+        info.appendChild(lbl);
+        if (t.comment) {
+            const cmt = document.createElement('span');
+            cmt.className   = 'tarif-comment';
+            cmt.textContent = t.comment;
+            info.appendChild(cmt);
+        }
+        div.appendChild(price);
+        div.appendChild(info);
+        grid.appendChild(div);
+    });
+    const noteEl = document.getElementById('tarifs-global-note');
+    if (noteEl) noteEl.textContent = note ?? '';
 }
 
 // ── Modale saison ──────────────────────────────────

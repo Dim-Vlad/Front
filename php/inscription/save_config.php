@@ -18,31 +18,26 @@ if (!preg_match('/^\d{4}-\d{4}$/', $saison)) {
 }
 
 // Reconstruction des tarifs depuis POST
-$tarifs = [
-    'jeunes' => [],
-    'seniors' => [],
-];
+$tarifs    = ['jeunes' => [], 'seniors' => []];
+$tarifsRaw = trim($_POST['tarifs_json'] ?? '');
 
-$labelsJeunes  = ['M7 – Baby Volley', 'M9 à M15', 'M18 et M21'];
-$valuesJeunes  = ['M7', 'M9-M15', 'M18-M21'];
-$labelsSeniors = ['Seniors', 'Seniors Loisirs', 'Compet Lib'];
-$valuesSeniors = ['Seniors', 'Seniors Loisirs', 'Compet Lib'];
-
-foreach ($valuesJeunes as $i => $val) {
-    $tarifs['jeunes'][] = [
-        'value'   => $val,
-        'label'   => $labelsJeunes[$i],
-        'prix'    => trim($_POST['prix_j_' . $i]    ?? ''),
-        'cheques' => trim($_POST['cheques_j_' . $i] ?? ''),
-    ];
-}
-foreach ($valuesSeniors as $i => $val) {
-    $tarifs['seniors'][] = [
-        'value'   => $val,
-        'label'   => $labelsSeniors[$i],
-        'prix'    => trim($_POST['prix_s_' . $i]    ?? ''),
-        'cheques' => trim($_POST['cheques_s_' . $i] ?? ''),
-    ];
+if ($tarifsRaw !== '') {
+    $decoded = json_decode($tarifsRaw, true);
+    if (is_array($decoded)) {
+        foreach (['jeunes', 'seniors'] as $group) {
+            if (!isset($decoded[$group]) || !is_array($decoded[$group])) continue;
+            foreach ($decoded[$group] as $card) {
+                $label = substr(strip_tags(trim($card['label'] ?? '')), 0, 100);
+                if ($label === '') continue;
+                $tarifs[$group][] = [
+                    'value'   => substr(strip_tags(trim($card['value'] ?? $label)), 0, 100),
+                    'label'   => $label,
+                    'prix'    => substr(strip_tags(trim($card['prix']    ?? '')), 0, 200),
+                    'cheques' => substr(strip_tags(trim($card['cheques'] ?? '')), 0, 200),
+                ];
+            }
+        }
+    }
 }
 
 try {

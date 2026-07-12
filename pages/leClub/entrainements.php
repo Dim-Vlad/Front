@@ -65,6 +65,16 @@ function renderCell(string $text): string {
     </div>
 
     <main class="entr-main">
+
+        <div class="entr-notice">
+            <div class="entr-notice-icon">🚗</div>
+            <div class="entr-notice-body">
+                <h3 class="entr-notice-title">Organisation des déplacements en compétition</h3>
+                <p>Nous comptons sur la précieuse collaboration des parents dont les enfants participent aux compétitions pour contribuer à l'organisation des déplacements. Votre aide est essentielle pour permettre à nos jeunes sportifs de vivre pleinement ces moments !</p>
+                <p>Le club s'engage à rembourser les frais de transport sur présentation des justificatifs. Les remboursements se font sur demande via la page <a href="/pages/leClub/remboursement.html" class="entr-notice-link">"remboursement de frais"</a>.</p>
+            </div>
+        </div>
+
         <div class="entr-layout">
 
             <!-- ── Tableau ── -->

@@ -432,46 +432,24 @@ function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8')
                 <div class="insc-edit-section">
                     <label class="insc-edit-label">Saison</label>
                     <input type="text" id="ie_saison" class="insc-edit-input"
-                           value="<?= h($saison) ?>" placeholder="2026-2027" pattern="\d{4}-\d{4}">
+                            value="<?= h($saison) ?>" placeholder="2026-2027" pattern="\d{4}-\d{4}">
                     <small class="insc-edit-hint">Les dates de naissance des catégories sont recalculées automatiquement.</small>
                 </div>
 
                 <div class="insc-edit-section">
-                    <div class="insc-edit-group-title">Tarifs Jeunes</div>
-                    <?php foreach ($tarifs['jeunes'] as $i => $t): ?>
-                    <div class="insc-edit-tarif">
-                        <div class="insc-edit-tarif-label"><?= h($t['label']) ?></div>
-                        <div class="insc-edit-row">
-                            <label>Prix</label>
-                            <input type="text" id="ie_prix_j_<?= $i ?>" class="insc-edit-input"
-                                   value="<?= h($t['prix']) ?>" placeholder="Ex : 140 € + 47 €">
-                        </div>
-                        <div class="insc-edit-row">
-                            <label>Info chèques</label>
-                            <input type="text" id="ie_cheques_j_<?= $i ?>" class="insc-edit-input"
-                                   value="<?= h($t['cheques']) ?>" placeholder="Ex : 2 chèques">
-                        </div>
+                    <div class="insc-edit-section-head">
+                        <div class="insc-edit-group-title">Tarifs Jeunes</div>
+                        <button type="button" class="ie-add-btn" onclick="addInscCard('jeunes')">+ Ajouter</button>
                     </div>
-                    <?php endforeach; ?>
+                    <div id="ie-jeunes-rows"></div>
                 </div>
 
                 <div class="insc-edit-section">
-                    <div class="insc-edit-group-title">Tarifs Seniors</div>
-                    <?php foreach ($tarifs['seniors'] as $i => $t): ?>
-                    <div class="insc-edit-tarif">
-                        <div class="insc-edit-tarif-label"><?= h($t['label']) ?></div>
-                        <div class="insc-edit-row">
-                            <label>Prix</label>
-                            <input type="text" id="ie_prix_s_<?= $i ?>" class="insc-edit-input"
-                                   value="<?= h($t['prix']) ?>" placeholder="Ex : 200 € + 47 €">
-                        </div>
-                        <div class="insc-edit-row">
-                            <label>Info chèques</label>
-                            <input type="text" id="ie_cheques_s_<?= $i ?>" class="insc-edit-input"
-                                   value="<?= h($t['cheques']) ?>" placeholder="Ex : 2 chèques">
-                        </div>
+                    <div class="insc-edit-section-head">
+                        <div class="insc-edit-group-title">Tarifs Seniors</div>
+                        <button type="button" class="ie-add-btn" onclick="addInscCard('seniors')">+ Ajouter</button>
                     </div>
-                    <?php endforeach; ?>
+                    <div id="ie-seniors-rows"></div>
                 </div>
             </div>
             <div class="insc-edit-footer">
@@ -483,33 +461,76 @@ function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8')
 
     <script>
     function inscOpenEdit() {
+        ['jeunes', 'seniors'].forEach(group => {
+            const container = document.getElementById('ie-' + group + '-rows');
+            container.innerHTML = '';
+            document.querySelectorAll('#form-' + group + ' .tarif-card').forEach(card => {
+                addInscCard(group,
+                    card.querySelector('label')?.textContent.trim() || '',
+                    card.querySelector('.prix')?.textContent.trim()    || '',
+                    card.querySelector('.cheques')?.textContent.trim() || ''
+                );
+            });
+        });
         document.getElementById('insc-edit-overlay').classList.add('open');
     }
     function inscCloseEdit(e, force) {
         if (!force && e && e.target !== document.getElementById('insc-edit-overlay')) return;
         document.getElementById('insc-edit-overlay').classList.remove('open');
     }
+    function addInscCard(group, label, prix, cheques) {
+        const container = document.getElementById('ie-' + group + '-rows');
+        const div = document.createElement('div');
+        div.className = 'insc-edit-card';
+        div.innerHTML =
+            '<div class="insc-edit-card-head">' +
+                '<input type="text" class="ie-label-input insc-edit-input" placeholder="Libellé (ex : M9 à M15)">' +
+                '<button type="button" class="ie-delete-btn" title="Supprimer">✕</button>' +
+            '</div>' +
+            '<div class="insc-edit-row">' +
+                '<label>Prix</label>' +
+                '<input type="text" class="ie-prix-input insc-edit-input" placeholder="Ex : 160 € + 47 €">' +
+            '</div>' +
+            '<div class="insc-edit-row">' +
+                '<label>Infos paiement</label>' +
+                '<input type="text" class="ie-cheques-input insc-edit-input" placeholder="Ex : 2 chèques">' +
+            '</div>';
+        div.querySelector('.ie-label-input').value   = label   || '';
+        div.querySelector('.ie-prix-input').value    = prix    || '';
+        div.querySelector('.ie-cheques-input').value = cheques || '';
+        div.querySelector('.ie-delete-btn').addEventListener('click', () => div.remove());
+        container.appendChild(div);
+    }
     async function inscSaveConfig() {
-        const msg = document.getElementById('insc-edit-msg');
-        const fd  = new FormData();
-        fd.append('saison', document.getElementById('ie_saison').value.trim());
-        <?php foreach ($tarifs['jeunes'] as $i => $t): ?>
-        fd.append('prix_j_<?= $i ?>',    document.getElementById('ie_prix_j_<?= $i ?>').value.trim());
-        fd.append('cheques_j_<?= $i ?>', document.getElementById('ie_cheques_j_<?= $i ?>').value.trim());
-        <?php endforeach; ?>
-        <?php foreach ($tarifs['seniors'] as $i => $t): ?>
-        fd.append('prix_s_<?= $i ?>',    document.getElementById('ie_prix_s_<?= $i ?>').value.trim());
-        fd.append('cheques_s_<?= $i ?>', document.getElementById('ie_cheques_s_<?= $i ?>').value.trim());
-        <?php endforeach; ?>
-        const res  = await fetch('/php/inscription/save_config.php', { method: 'POST', body: fd });
-        const data = await res.json();
-        if (data.success) {
-            msg.textContent = 'Enregistré. Rechargement…';
-            msg.className = 'insc-msg insc-msg--ok';
-            msg.style.display = 'block';
-            setTimeout(() => location.reload(), 900);
-        } else {
-            msg.textContent = data.error || 'Erreur.';
+        const msg    = document.getElementById('insc-edit-msg');
+        msg.style.display = 'none';
+        const tarifs = { jeunes: [], seniors: [] };
+        ['jeunes', 'seniors'].forEach(group => {
+            document.querySelectorAll('#ie-' + group + '-rows .insc-edit-card').forEach(card => {
+                const label   = card.querySelector('.ie-label-input')?.value.trim()   || '';
+                const prix    = card.querySelector('.ie-prix-input')?.value.trim()    || '';
+                const cheques = card.querySelector('.ie-cheques-input')?.value.trim() || '';
+                if (label) tarifs[group].push({ value: label, label, prix, cheques });
+            });
+        });
+        const fd = new FormData();
+        fd.append('saison',      document.getElementById('ie_saison').value.trim());
+        fd.append('tarifs_json', JSON.stringify(tarifs));
+        try {
+            const res  = await fetch('/php/inscription/save_config.php', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (data.success) {
+                msg.textContent = 'Enregistré. Rechargement…';
+                msg.className = 'insc-msg insc-msg--ok';
+                msg.style.display = 'block';
+                setTimeout(() => location.reload(), 900);
+            } else {
+                msg.textContent = data.error || 'Erreur.';
+                msg.className = 'insc-msg insc-msg--err';
+                msg.style.display = 'block';
+            }
+        } catch {
+            msg.textContent = 'Erreur réseau.';
             msg.className = 'insc-msg insc-msg--err';
             msg.style.display = 'block';
         }

@@ -7,6 +7,22 @@ $docs   = [];
 $liens  = [];
 $saison = '2026-2027';
 
+$tarifsNote = '';
+
+$defaultTarifs = [
+    ['label' => 'Baby / M7',            'prix' => 140,  'supplement' => false],
+    ['label' => 'M9',                   'prix' => 160, 'supplement' => false],
+    ['label' => 'M11',                  'prix' => 160, 'supplement' => false],
+    ['label' => 'M13',                  'prix' => 160, 'supplement' => false],
+    ['label' => 'M15',                  'prix' => 160, 'supplement' => false],
+    ['label' => 'M18',                  'prix' => 190, 'supplement' => false],
+    ['label' => 'M21',                  'prix' => 190, 'supplement' => false],
+    ['label' => 'Séniors — Compétition','prix' => 200, 'supplement' => false],
+    ['label' => 'Séniors — Loisirs',   'prix' => 100, 'supplement' => false],
+    ['label' => 'Séniors — Compet Lib',   'prix' => 130, 'supplement' => false],
+];
+$tarifs = $defaultTarifs;
+
 $defaultTutos = [
     1 => ['titre' => '01 – Création de compte et connexion',      'url' => 'https://youtu.be/QqA1F569QJU'],
     2 => ['titre' => '02 – Création d\'un profil adulte',          'url' => 'https://youtu.be/Bh_K_WiDpsc'],
@@ -27,6 +43,12 @@ try {
         if (isset($cfg["tuto_{$i}_titre"])) $tutos[$i]['titre'] = $cfg["tuto_{$i}_titre"];
         if (isset($cfg["tuto_{$i}_url"]))   $tutos[$i]['url']   = $cfg["tuto_{$i}_url"];
     }
+    $cfgTarifs = $cfg['tarifs_json'] ?? '';
+    if ($cfgTarifs !== '') {
+        $decoded = json_decode($cfgTarifs, true);
+        if (is_array($decoded) && count($decoded) > 0) $tarifs = $decoded;
+    }
+    $tarifsNote = $cfg['tarifs_note'] ?? '';
 } catch (Exception $e) {}
 
 // Grouper les documents par section
@@ -154,6 +176,67 @@ function youtube_id(string $url): string {
 
         </div><!-- /licence-layout -->
 
+        <!-- ── Section tarifs ── -->
+        <div class="tarifs-section">
+            <div class="tarifs-section-header">
+                <h2 id="tarifs-saison-title">Tarifs saison <?= htmlspecialchars($saison) ?></h2>
+                <?php if ($canEdit): ?>
+                <button class="btn-edit-saison" onclick="openTarifsModal()" title="Modifier les tarifs">✏️ Tarifs</button>
+                <?php endif; ?>
+            </div>
+            <div class="tarifs-body">
+
+                <div class="tarifs-left">
+                    <div class="tarifs-grid">
+                        <?php foreach ($tarifs as $t): ?>
+                        <div class="tarif-row<?= $t['supplement'] ? ' tarif-row--supplement' : '' ?>">
+                            <span class="tarif-price"><?= $t['supplement'] ? '+' : '' ?><?= (int)$t['prix'] ?>€</span>
+                            <div class="tarif-info">
+                                <span class="tarif-label"><?= htmlspecialchars($t['label']) ?></span>
+                                <?php if (!empty($t['comment'])): ?>
+                                <span class="tarif-comment"><?= htmlspecialchars($t['comment']) ?></span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <p class="tarifs-global-note" id="tarifs-global-note"><?= htmlspecialchars($tarifsNote) ?></p>
+                </div>
+
+                <div class="tarifs-right">
+                    <h3 class="tarifs-cout-title">Le coût d'une licence</h3>
+                    <div class="tarifs-pie-wrap">
+                        <svg viewBox="0 0 100 100" class="tarifs-pie-svg" aria-hidden="true">
+                            <!-- FFVB 60% : css 0°→216° -->
+                            <path d="M 50 50 L 50 8 A 42 42 0 1 1 25.3 84 Z" fill="#1a2e1a"/>
+                            <text x="74" y="58" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="7.5" font-weight="700" font-family="Poppins,sans-serif">60%</text>
+                            <!-- Club 30% : css 216°→324° -->
+                            <path d="M 50 50 L 25.3 84 A 42 42 0 0 1 25.3 16 Z" fill="#4ecdc4"/>
+                            <text x="25" y="50" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="7.5" font-weight="700" font-family="Poppins,sans-serif">30%</text>
+                            <!-- Équipement 10% : css 324°→360° -->
+                            <path d="M 50 50 L 25.3 16 A 42 42 0 0 1 50 8 Z" fill="#c8d8c4"/>
+                            <text x="44" y="31" text-anchor="middle" dominant-baseline="central" fill="#444" font-size="5.5" font-weight="700" font-family="Poppins,sans-serif">10%</text>
+                        </svg>
+                    </div>
+                    <ul class="tarifs-legend">
+                        <li class="tarifs-legend-item">
+                            <span class="tarifs-legend-dot tarifs-legend-dot--ffvb"></span>
+                            <span><strong>60%</strong> reversés à la FF Volley, Ligue et Comité</span>
+                        </li>
+                        <li class="tarifs-legend-item">
+                            <span class="tarifs-legend-dot tarifs-legend-dot--club"></span>
+                            <span><strong>30%</strong> entraîneur, matériel, arbitrage, déplacements</span>
+                        </li>
+                        <li class="tarifs-legend-item">
+                            <span class="tarifs-legend-dot tarifs-legend-dot--equip"></span>
+                            <span><strong>10%</strong> équipement</span>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+
         <!-- ── Section tutoriels myFFvolley ── -->
         <div class="tuto-section">
             <div class="tuto-section-header">
@@ -275,6 +358,32 @@ function youtube_id(string $url): string {
                         <button type="button" class="btn-cancel-modal" onclick="closeTutoModal()">Annuler</button>
                     </div>
                     <p class="modal-status" id="tuto-status"></p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Modale tarifs ── -->
+    <div id="tarifsModal" class="licence-modal">
+        <div class="licence-modal-content licence-modal-content--wide">
+            <div class="licence-modal-header">
+                <h3>Modifier les tarifs</h3>
+                <span class="close" onclick="closeTarifsModal()" role="button" tabindex="0" aria-label="Fermer">&times;</span>
+            </div>
+            <div class="licence-modal-body">
+                <form id="tarifs-form">
+                    <div id="tarifs-modal-rows" class="tarifs-modal-rows"></div>
+                    <button type="button" class="btn-add-tarif" onclick="addTarifModalRow()">+ Ajouter une ligne</button>
+                    <div class="modal-form-group" style="margin-top:.75rem">
+                        <label for="tarifs-modal-note">Note générale <span class="optional">(optionnel)</span></label>
+                        <textarea id="tarifs-modal-note" class="tarifs-modal-note-input"
+                                  placeholder="Ex : Paiement échelonnable sur 2 ou 3 chèques…" rows="2"></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-save">Enregistrer</button>
+                        <button type="button" class="btn-cancel-modal" onclick="closeTarifsModal()">Annuler</button>
+                    </div>
+                    <p class="modal-status" id="tarifs-status"></p>
                 </form>
             </div>
         </div>
