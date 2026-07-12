@@ -103,7 +103,9 @@ $messageType = $flash['type'] ?? '';
 
 $users = $pdo->query(
     "SELECT u.id, u.username, u.prenom, u.nom, u.created_at, u.actif,
-            GROUP_CONCAT(r.name ORDER BY r.name SEPARATOR ',') AS roles
+            GROUP_CONCAT(r.name ORDER BY r.name SEPARATOR ',') AS roles,
+            (SELECT MAX(jc.created_at) FROM journal_connexions jc
+             WHERE jc.user_id = u.id AND jc.succes = 1) AS last_login
     FROM users u
     LEFT JOIN user_roles ur ON ur.user_id = u.id
     LEFT JOIN roles r ON r.id = ur.role_id
@@ -219,11 +221,10 @@ $currentId = (int)(current_user()['id']);
             <table class="admin-table">
                 <thead>
                     <tr>
-                        <th>Nom complet</th>
-                        <th>Identifiant</th>
+                        <th>Utilisateur</th>
                         <th>Rôle(s)</th>
                         <th>Créé le</th>
-                        <th>Action</th>
+                        <th>Dernière connexion</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -231,8 +232,10 @@ $currentId = (int)(current_user()['id']);
                         $userRoles = $u['roles'] ? explode(',', $u['roles']) : [];
                     ?>
                     <tr data-name="<?= htmlspecialchars($u['prenom'] . ' ' . $u['nom'] . ' ' . $u['username']) ?>" data-roles="<?= htmlspecialchars($u['roles'] ?? '') ?>" data-actif="<?= (int)($u['actif'] ?? 1) ?>">
-                        <td data-label="Nom"><?= htmlspecialchars($u['prenom'] . ' ' . $u['nom']) ?></td>
-                        <td data-label="Identifiant"><?= htmlspecialchars($u['username']) ?></td>
+                        <td data-label="Utilisateur">
+                            <span class="user-fullname"><?= htmlspecialchars($u['prenom'] . ' ' . $u['nom']) ?></span>
+                            <span class="user-username"><?= htmlspecialchars($u['username']) ?></span>
+                        </td>
                         <td data-label="Rôle(s)">
                             <?php if (!(int)$u['actif']): ?>
                             <span class="badge badge--pending">En attente</span>
@@ -242,23 +245,36 @@ $currentId = (int)(current_user()['id']);
                             <?php endforeach; ?>
                         </td>
                         <td data-label="Créé le"><?= date('d/m/Y', strtotime($u['created_at'])) ?></td>
-                        <td class="actions-cell">
-                            <button class="btn-edit"
-                                onclick="openPasswordModal(<?= $u['id'] ?>, '<?= htmlspecialchars($u['username'], ENT_QUOTES) ?>')">
-                                Modifier MDP
-                            </button>
-                            <?php if ((int)$u['id'] !== $currentId): ?>
-                            <button class="btn-edit"
-                                onclick="openRoleModal(<?= $u['id'] ?>, '<?= htmlspecialchars($u['username'], ENT_QUOTES) ?>', <?= htmlspecialchars(json_encode($userRoles), ENT_QUOTES) ?>)">
-                                Modifier rôles
-                            </button>
-                            <form method="POST" onsubmit="return confirm('Supprimer «<?= htmlspecialchars($u['username']) ?>» ?')" style="display:inline">
-                                <input type="hidden" name="action" value="delete">
-                                <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
-                                <input type="hidden" name="_csrf" value="<?= csrf_token() ?>">
-                                <button type="submit" class="btn-delete">Supprimer</button>
-                            </form>
+                        <td data-label="Dernière connexion">
+                            <?php if ($u['last_login']): ?>
+                            <?php $d = new DateTime($u['last_login']); ?>
+                            <span class="last-login-date"><?= $d->format('d/m/Y') ?></span>
+                            <span class="last-login-time"><?= $d->format('H\hi') ?></span>
+                            <?php else: ?>
+                            <span class="last-login-never">Jamais</span>
                             <?php endif; ?>
+                        </td>
+                    </tr>
+                    <tr class="user-actions-row" data-name="<?= htmlspecialchars($u['prenom'] . ' ' . $u['nom'] . ' ' . $u['username']) ?>" data-roles="<?= htmlspecialchars($u['roles'] ?? '') ?>" data-actif="<?= (int)($u['actif'] ?? 1) ?>">
+                        <td colspan="4" class="user-actions-cell">
+                            <div class="user-actions-inner">
+                                <button class="btn-edit"
+                                    onclick="openPasswordModal(<?= $u['id'] ?>, '<?= htmlspecialchars($u['username'], ENT_QUOTES) ?>')">
+                                    Modifier MDP
+                                </button>
+                                <?php if ((int)$u['id'] !== $currentId): ?>
+                                <button class="btn-edit"
+                                    onclick="openRoleModal(<?= $u['id'] ?>, '<?= htmlspecialchars($u['username'], ENT_QUOTES) ?>', <?= htmlspecialchars(json_encode($userRoles), ENT_QUOTES) ?>)">
+                                    Modifier rôles
+                                </button>
+                                <form method="POST" onsubmit="return confirm('Supprimer «<?= htmlspecialchars($u['username']) ?>» ?')" style="display:contents">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
+                                    <input type="hidden" name="_csrf" value="<?= csrf_token() ?>">
+                                    <button type="submit" class="btn-delete">Supprimer</button>
+                                </form>
+                                <?php endif; ?>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -430,7 +446,7 @@ $currentId = (int)(current_user()['id']);
 
             function applyFilters() {
                 var term = search.value.toLowerCase().trim();
-                var rows = tableBody.querySelectorAll('tr');
+                var rows = tableBody.querySelectorAll('tr:not(.user-actions-row)');
                 var visible = 0;
                 rows.forEach(function (row) {
                     var name  = (row.dataset.name  || '');
@@ -447,6 +463,10 @@ $currentId = (int)(current_user()['id']);
                     }
                     var show = matchSearch && matchRole;
                     row.style.display = show ? '' : 'none';
+                    var actionsRow = row.nextElementSibling;
+                    if (actionsRow && actionsRow.classList.contains('user-actions-row')) {
+                        actionsRow.style.display = show ? '' : 'none';
+                    }
                     if (show) visible++;
                 });
                 countEl.textContent = visible;

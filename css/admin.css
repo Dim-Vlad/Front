@@ -148,7 +148,7 @@
 }
 
 .admin-table th {
-    text-align: left;
+    text-align: center;
     padding: 0.6rem 0.8rem;
     background: #f4f4f4;
     color: #555;
@@ -381,6 +381,64 @@
     gap: 0.5rem;
     align-items: center;
     flex-wrap: wrap;
+}
+
+.user-fullname {
+    display: block;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+.user-username {
+    display: block;
+    font-size: .82rem;
+    color: #888;
+}
+
+.user-actions-row td {
+    border-bottom: 1px solid #f0f0f0;
+    border-top: none;
+    padding-top: 0;
+    padding-bottom: .55rem;
+    background: #fff;
+}
+.user-actions-cell {
+    padding: 0.4rem 0.8rem 0.6rem !important;
+}
+.user-actions-inner {
+    display: flex;
+    gap: 0.4rem;
+}
+.user-actions-inner > button,
+.user-actions-inner > form > button {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Supprimer la bordure basse de la ligne info quand suivie d'une ligne actions */
+.admin-table tbody tr:has(+ .user-actions-row) td {
+    border-bottom: none;
+    padding-bottom: .3rem;
+}
+
+.last-login-date {
+    display: block;
+    font-size: .85rem;
+    color: #333;
+}
+.last-login-time {
+    display: block;
+    font-size: .78rem;
+    color: #888;
+}
+.last-login-never {
+    font-size: .82rem;
+    color: #bbb;
+    font-style: italic;
 }
 
 .btn-edit {
