@@ -4,7 +4,6 @@ require_once __DIR__ . '/../../php/auth.php';
 $canEdit = is_logged_in() && has_any_role(['moderateur','admin']);
 
 $bureau = $membres = $commissions = $entraineurs = [];
-$pvag   = $statuts = [];
 $descMap = [];
 
 try {
@@ -24,9 +23,6 @@ try {
                 break;
         }
     }
-
-    $pvag    = $pdo->query("SELECT * FROM staff_documents WHERE type='pvag'   ORDER BY ordre")->fetchAll();
-    $statuts = $pdo->query("SELECT * FROM staff_documents WHERE type='statuts' ORDER BY ordre")->fetchAll();
 } catch (Exception $e) {}
 
 // Séparer président (ordre 1) et bureau exécutif (le reste)
@@ -50,9 +46,9 @@ function cardAttrs(array $m): string {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Le staff - VBO</title>
+    <title>Staff & Organisation - VBO</title>
     <link href="/css/styles.css?v=20260705" rel="stylesheet">
-    <link href="/css/leClub/staff.css?v=20260623" rel="stylesheet">
+    <link href="/css/leClub/staff.css?v=20260717" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -65,7 +61,7 @@ function cardAttrs(array $m): string {
             <img class="logo-club" src="/images/logo-club/LogoVBO.png" alt="Logo du club">
             <div class="text-content">
                 <h1>Staff VBO</h1>
-                <p>Toutes les infos du staff, bureau, commissions, entraîneurs, PV assemblées générales</p>
+                <p>Le bureau directeur, les commissions et les entraîneurs du club</p>
             </div>
         </div>
     </div>
@@ -110,7 +106,7 @@ function cardAttrs(array $m): string {
             <?php endforeach; ?>
         </div>
 
-        <hr class="separator">
+        <hr class="separator separator-large">
 
         <div class="staff-section-header">
             <h2>Membres du bureau</h2>
@@ -188,55 +184,15 @@ function cardAttrs(array $m): string {
 
     <hr class="separator">
 
-    <!-- ══ PV ASSEMBLÉES GÉNÉRALES ═══════════════════════════════════ -->
-    <section class="pvag">
-        <div class="staff-section-header">
-            <h2>Procès-verbaux<br>Assemblées Générales</h2>
-            <?php if ($canEdit): ?>
-            <button class="btn-add-staff" onclick="openDocModal('pvag')" title="Ajouter un PV">＋ Ajouter</button>
-            <?php endif; ?>
-        </div>
-        <div class="button-container" id="pvag-container">
-            <?php foreach ($pvag as $doc): ?>
-            <div class="pvag-item" data-id="<?= $doc['id'] ?>">
-                <button class="btn" onclick="openPdfModal('<?= h($doc['path']) ?>', '<?= h($doc['label']) ?>')"><?= h($doc['label']) ?><br><u>Consulter</u></button>
-                <?php if ($canEdit): ?>
-                <div class="doc-admin-btns">
-                    <button class="btn-doc-move" onclick="moveDoc(this,-1)" title="Monter">▲</button>
-                    <button class="btn-doc-move" onclick="moveDoc(this,1)" title="Descendre">▼</button>
-                    <button class="btn-pvag-delete" onclick="deleteDocument(<?= $doc['id'] ?>, 'pvag')" title="Supprimer">🗑</button>
-                </div>
-                <?php endif; ?>
-            </div>
-            <?php endforeach; ?>
-        </div>
-    </section>
-
-    <hr class="separator">
-
-    <!-- ══ STATUTS & RÈGLEMENT INTÉRIEUR ════════════════════════════ -->
-    <section class="pvag">
-        <div class="staff-section-header">
-            <h2>Statuts<br>Règlement Intérieur</h2>
-            <?php if ($canEdit): ?>
-            <button class="btn-add-staff" onclick="openDocModal('statuts')" title="Ajouter un document">＋ Ajouter</button>
-            <?php endif; ?>
-        </div>
-        <div id="statuts-container">
-            <?php foreach ($statuts as $doc): ?>
-            <div class="pvag-item" data-id="<?= $doc['id'] ?>">
-                <button class="btn" onclick="openPdfModal('<?= h($doc['path']) ?>', '<?= h($doc['label']) ?>')"><?= h($doc['label']) ?><br><u>Consulter</u></button>
-                <?php if ($canEdit): ?>
-                <div class="doc-admin-btns">
-                    <button class="btn-doc-move" onclick="moveDoc(this,-1)" title="Monter">▲</button>
-                    <button class="btn-doc-move" onclick="moveDoc(this,1)" title="Descendre">▼</button>
-                    <button class="btn-pvag-delete" onclick="deleteDocument(<?= $doc['id'] ?>, 'statuts')" title="Supprimer">🗑</button>
-                </div>
-                <?php endif; ?>
-            </div>
-            <?php endforeach; ?>
-        </div>
-    </section>
+    <!-- ══ LIEN VERS LES DOCUMENTS OFFICIELS ═════════════════════════ -->
+    <a class="documents-link-card" href="/pages/leClub/documents.php">
+        <span class="documents-link-icon">📄</span>
+        <span class="documents-link-text">
+            <strong>PV d'assemblées générales, statuts &amp; règlement intérieur</strong>
+            <small>Consulter les documents officiels du club</small>
+        </span>
+        <span class="documents-link-arrow">→</span>
+    </a>
 
     </main><!-- /.staff-main -->
 
@@ -323,53 +279,7 @@ function cardAttrs(array $m): string {
         </div>
     </div>
 
-    <!-- ══ MODALE AJOUT DOCUMENT ════════════════════════════════════ -->
-    <div id="docModal" class="staff-modal">
-        <div class="staff-modal-content">
-            <div class="staff-modal-header">
-                <h3 id="doc-modal-title">Ajouter un document</h3>
-                <span class="close" onclick="closeDocModal()">&times;</span>
-            </div>
-            <div class="staff-modal-body">
-                <form id="doc-form" enctype="multipart/form-data">
-                    <input type="hidden" name="type" id="doc-type">
-                    <div class="staff-form-row">
-                        <label for="doc-label">Label</label>
-                        <input type="text" name="label" id="doc-label" required placeholder="PV AG 2025-2026">
-                    </div>
-                    <div class="staff-form-row">
-                        <label for="doc-fichier">Fichier PDF</label>
-                        <input type="file" name="fichier" id="doc-fichier" accept=".pdf" required>
-                    </div>
-                    <div class="staff-modal-actions">
-                        <button type="submit" class="btn-save">Enregistrer</button>
-                        <button type="button" class="btn-cancel-modal" onclick="closeDocModal()">Annuler</button>
-                    </div>
-                    <p class="modal-status" id="doc-status"></p>
-                </form>
-            </div>
-        </div>
-    </div>
     <?php endif; ?>
-
-    <!-- ══ MODALE VISIONNEUSE PDF ═══════════════════════════════════ -->
-    <div id="pdfModal" class="pdf-modal" onclick="if(event.target===this)closePdfModal()">
-        <div class="pdf-modal-content">
-            <div class="pdf-modal-header">
-                <span class="pdf-modal-title" id="pdf-modal-title"></span>
-                <div class="pdf-modal-btns">
-                    <button class="btn-pdf-action" onclick="printPdf()">🖨 Imprimer</button>
-                    <a id="pdf-download-btn" href="#" download class="btn-pdf-action">⬇ Télécharger</a>
-                    <button class="btn-pdf-close" onclick="closePdfModal()" title="Fermer">✕</button>
-                </div>
-            </div>
-            <iframe id="pdf-iframe" src="" title="Visionneuse PDF"></iframe>
-            <div id="pdf-fallback">
-                <p>L'aperçu PDF n'est pas disponible sur cet appareil.</p>
-                <a id="pdf-open-link" href="#" target="_blank">Ouvrir le PDF ↗</a>
-            </div>
-        </div>
-    </div>
 
     <div id="footer"></div>
 

@@ -1,0 +1,23 @@
+/* ── Wrapper principal ─────────────────────────────────────────── */
+
+.documents-main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 1rem 1.5rem 4rem;
+}
+
+.documents-main .pvag {
+    width: 100%;
+}
+
+.documents-empty {
+    color: #777;
+    font-size: .9rem;
+    text-align: center;
+    width: 100%;
+    margin: .5rem 0 0;
+}
+
+@media (max-width: 480px) {
+    .documents-main { padding: 0 1rem 3rem; }
+}
