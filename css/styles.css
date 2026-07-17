@@ -432,6 +432,17 @@ body {
   display: block;
 }
 
+.social-icon--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-color);
+  color: var(--bg-dark);
+  font-weight: 700;
+  font-size: 0.8rem;
+  border-radius: 50%;
+}
+
 .footer-legal-links {
   display: flex;
   justify-content: center;

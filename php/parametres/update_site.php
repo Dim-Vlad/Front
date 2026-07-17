@@ -15,7 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $allowedKeys = [
     'club_adresse_ligne1', 'club_adresse_ligne2',
     'club_email',
-    'social_facebook', 'social_instagram', 'social_youtube',
     'arbitres_sheet_url', 'minibus_sheet_url',
 ];
 

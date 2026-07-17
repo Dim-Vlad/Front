@@ -11,21 +11,6 @@
     padding-top: 0.4rem;
 }
 
-.gs-social-logo {
-    width: 20px;
-    height: 20px;
-    object-fit: contain;
-    vertical-align: middle;
-    margin-right: 0.4rem;
-}
-
-.gs-social-row .form-group {
-    flex: 0 0 auto;
-    width: 100%;
-    max-width: 500px;
-    margin: 0 auto;
-}
-
 .gs-email-group {
     flex: 0 0 auto;
     width: 100%;
@@ -33,21 +18,239 @@
     margin: 0 auto;
 }
 
-/* Logo preview */
-.gs-logo-preview {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-    background: #f7f9f7;
-    border-radius: 0.75rem;
-    padding: 1.4rem;
+#reseau-form .form-group {
+    margin-bottom: 1.2rem;
 }
 
-.gs-logo-preview .hint {
-    color: #888;
+.btn-admin--sm {
+    padding: 0.4rem 1.1rem;
     font-size: 0.82rem;
-    line-height: 1.6;
 }
+
+.btn-icon {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.3rem;
+    border-radius: 0.35rem;
+    transition: background 0.15s;
+    line-height: 1;
+}
+
+.btn-icon:hover {
+    background: #eee;
+}
+
+/* ── Logos du site ── */
+.gs-logo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.2rem;
+}
+
+.gs-logo-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.7rem;
+    background: #f7f9f7;
+    border-radius: 0.75rem;
+    padding: 1.2rem;
+}
+
+.gs-logo-preview {
+    width: 100%;
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e9e5;
+    overflow: hidden;
+}
+
+.gs-logo-preview--dark {
+    background: var(--bg-dark);
+}
+
+.gs-logo-preview img {
+    max-width: 85%;
+    max-height: 75px;
+    object-fit: contain;
+}
+
+.gs-logo-item-title {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--bg-dark);
+    text-align: center;
+}
+
+/* ── Réseaux sociaux ── */
+.gs-reseaux-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+}
+
+.gs-reseau-row {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    background: #f7f9f7;
+    border-radius: 0.6rem;
+    padding: 0.6rem 0.9rem;
+}
+
+.gs-reseau-logo {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.gs-reseau-logo--fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-color);
+    color: var(--bg-dark);
+    font-weight: 700;
+    font-size: 0.95rem;
+    border-radius: 50%;
+}
+
+.gs-reseau-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.gs-reseau-nom {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--bg-dark);
+}
+
+.gs-reseau-url {
+    font-size: 0.78rem;
+    color: #888;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.gs-reseau-actions {
+    display: flex;
+    gap: 0.2rem;
+    flex-shrink: 0;
+}
+
+/* ── Modales : sélecteur de logo / réseau ── */
+.gs-logo-modal {
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+@media (max-width: 480px) {
+    .modal-overlay {
+        align-items: flex-start;
+        padding: 4rem 0 1rem;
+        box-sizing: border-box;
+    }
+    .modal-card {
+        max-height: calc(100vh - 5rem);
+        overflow-y: auto;
+    }
+    .gs-logo-modal {
+        max-height: calc(100vh - 5rem);
+    }
+}
+
+.lm-section-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--secondary-color);
+    margin: 0 0 0.75rem;
+}
+
+.lm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.7rem;
+    margin-bottom: 1.4rem;
+}
+
+.lm-empty {
+    grid-column: 1 / -1;
+    color: #888;
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.lm-logo-item {
+    border: 2px solid #e0e8e0;
+    border-radius: 0.6rem;
+    padding: 0.5rem 0.4rem 0.35rem;
+    cursor: pointer;
+    background: #f8faf8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.lm-logo-item:hover  { border-color: var(--primary-color); background: #f0f7f0; }
+.lm-logo-item.active { border-color: var(--secondary-color); background: #e8f2e8; }
+.lm-logo-item img    { width: 100%; height: 50px; object-fit: contain; }
+.lm-logo-item span {
+    font-size: 0.62rem;
+    color: #666;
+    text-align: center;
+    word-break: break-all;
+    line-height: 1.25;
+}
+.lm-logo-item.active span { color: var(--secondary-color); font-weight: 600; }
+
+.lm-upload-zone {
+    border: 2px dashed #c8d8c8;
+    border-radius: 0.6rem;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+.lm-upload-zone:hover { border-color: var(--primary-color); background: #f5faf5; }
+.lm-upload-label { font-size: 0.85rem; color: var(--bg-dark); font-weight: 500; }
+.lm-upload-zone p { margin: 0.3rem 0 0; font-size: 0.76rem; color: #888; }
+.lm-upload-zone input { display: none; }
+
+#lp-upload-preview,
+#reseau-logo-preview {
+    width: 100%;
+    max-height: 70px;
+    object-fit: contain;
+    margin-top: 0.6rem;
+    display: none;
+    border-radius: 0.4rem;
+}
+
+.lm-status {
+    flex: 1;
+    font-size: 0.83rem;
+    min-height: 1.1rem;
+}
+.lm-status.error   { color: #c62828; }
+.lm-status.success { color: #2e7d32; }
 
 /* Technical card */
 .gs-tech-card h2 {
@@ -120,8 +323,15 @@
     .gs-tech-label {
         min-width: unset;
     }
-    .gs-logo-preview {
-        flex-direction: column;
-        text-align: center;
+    .gs-logo-grid {
+        grid-template-columns: 1fr;
+    }
+    .gs-reseau-row {
+        flex-wrap: wrap;
+    }
+    .gs-reseau-info {
+        min-width: 0;
+        flex-basis: 100%;
+        order: 3;
     }
 }

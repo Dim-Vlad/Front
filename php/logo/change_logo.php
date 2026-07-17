@@ -5,7 +5,7 @@ require_once __DIR__ . '/../journal_log.php';
 
 header('Content-Type: application/json');
 
-if (!is_logged_in() || !has_any_role(['moderateur', 'admin'])) {
+if (!is_logged_in() || !has_role('admin')) {
     ob_end_clean();
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'Accès refusé']);
@@ -16,6 +16,14 @@ check_csrf();
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     ob_end_clean();
     echo json_encode(['success' => false, 'error' => 'Méthode invalide']);
+    exit;
+}
+
+$validTargets = ['logo_club', 'logo_menu', 'logo_favicon'];
+$target       = $_POST['target'] ?? 'logo_club';
+if (!in_array($target, $validTargets, true)) {
+    ob_end_clean();
+    echo json_encode(['success' => false, 'error' => 'Cible invalide']);
     exit;
 }
 
@@ -92,12 +100,13 @@ if (!empty($_FILES['logo_upload']['name'])) {
 
 // ── Sauvegarde en base ────────────────────────────────────────────
 $stmt = $pdo->prepare(
-    "INSERT INTO parametres (cle, valeur) VALUES ('logo_club', ?)
+    "INSERT INTO parametres (cle, valeur) VALUES (?, ?)
      ON DUPLICATE KEY UPDATE valeur = ?"
 );
-$stmt->execute([$logoPath, $logoPath]);
+$stmt->execute([$target, $logoPath, $logoPath]);
 
-log_activite($pdo, 'modifier', 'logo_club', $logoPath);
+$labels = ['logo_club' => 'logo des pages', 'logo_menu' => 'logo du menu', 'logo_favicon' => 'favicon'];
+log_activite($pdo, 'modifier', $target, ($labels[$target] ?? $target) . ' : ' . $logoPath);
 
 ob_end_clean();
-echo json_encode(['success' => true, 'logo' => $logoPath]);
+echo json_encode(['success' => true, 'target' => $target, 'logo' => $logoPath]);

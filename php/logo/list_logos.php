@@ -5,7 +5,7 @@ require_once __DIR__ . '/../auth.php';
 header('Content-Type: application/json');
 header('Cache-Control: no-cache, no-store');
 
-if (!is_logged_in() || !has_any_role(['moderateur', 'admin'])) {
+if (!is_logged_in() || !has_role('admin')) {
     ob_end_clean();
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'Accès refusé']);

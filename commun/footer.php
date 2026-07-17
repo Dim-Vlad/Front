@@ -20,15 +20,11 @@ try {
     $pdo      = get_pdo();
     $adresse1 = _footer_param($pdo, 'club_adresse_ligne1', '34 Allée des Bleuets');
     $adresse2 = _footer_param($pdo, 'club_adresse_ligne2', '83 190 Ollioules');
-    $facebook = _footer_param($pdo, 'social_facebook',     'https://www.facebook.com/volley.vbollioulais');
-    $instagram= _footer_param($pdo, 'social_instagram',    'https://www.instagram.com/volley.ball.ollioulais/');
-    $youtube  = _footer_param($pdo, 'social_youtube',      'https://www.youtube.com/@VolleyBallOllioulais');
+    $reseaux  = $pdo->query('SELECT nom, url, logo FROM reseaux_sociaux ORDER BY ordre ASC, id ASC')->fetchAll();
 } catch (Exception $e) {
     $adresse1 = '34 Allée des Bleuets';
     $adresse2 = '83 190 Ollioules';
-    $facebook = 'https://www.facebook.com/volley.vbollioulais';
-    $instagram= 'https://www.instagram.com/volley.ball.ollioulais/';
-    $youtube  = 'https://www.youtube.com/@VolleyBallOllioulais';
+    $reseaux  = [];
 }
 
 function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); }
@@ -46,15 +42,15 @@ function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8')
         <div class="footer-col réseaux">
             <p class="footer-title">Réseaux</p>
             <div class="social-icons">
-                <a href="<?= h($facebook) ?>" target="_blank" rel="noopener" aria-label="Facebook">
-                    <img src="/images/social/facebook.png" alt="Facebook" class="social-icon">
+                <?php foreach ($reseaux as $r): ?>
+                <a href="<?= h($r['url']) ?>" target="_blank" rel="noopener" aria-label="<?= h($r['nom']) ?>">
+                    <?php if ($r['logo']): ?>
+                    <img src="<?= h($r['logo']) ?>" alt="<?= h($r['nom']) ?>" class="social-icon">
+                    <?php else: ?>
+                    <span class="social-icon social-icon--fallback"><?= h(mb_strtoupper(mb_substr($r['nom'], 0, 1))) ?></span>
+                    <?php endif; ?>
                 </a>
-                <a href="<?= h($instagram) ?>" target="_blank" rel="noopener" aria-label="Instagram">
-                    <img src="/images/social/instagram.png" alt="Instagram" class="social-icon">
-                </a>
-                <a href="<?= h($youtube) ?>" target="_blank" rel="noopener" aria-label="YouTube">
-                    <img src="/images/social/Youtube.png" alt="YouTube" class="social-icon">
-                </a>
+                <?php endforeach; ?>
             </div>
         </div>
     </div>
