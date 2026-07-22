@@ -1,0 +1,152 @@
+/* ══ Formations (Espace Entraîneur) ═════════════════════════════════════ */
+
+.ps-formations-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1.25rem;
+}
+
+.ps-formations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+}
+
+.ps-formation-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 14px rgba(0,0,0,.08);
+    padding: 1.1rem 1.3rem;
+    border-left: 4px solid var(--primary-color);
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    min-width: 0;
+}
+
+.ps-formation-type {
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--secondary-color);
+    background: #e8f2e8;
+    display: inline-block;
+    padding: .2rem .6rem;
+    border-radius: 20px;
+    align-self: flex-start;
+}
+
+.ps-formation-card h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--bg-dark);
+    overflow-wrap: break-word;
+}
+
+.ps-formation-card p {
+    margin: 0;
+    font-size: .85rem;
+    color: #666;
+    line-height: 1.5;
+    flex: 1;
+    white-space: pre-line;
+    overflow-wrap: break-word;
+}
+
+.ps-formation-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: .3rem;
+}
+
+.ps-formation-link {
+    color: var(--secondary-color);
+    font-weight: 600;
+    font-size: .85rem;
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0;
+}
+.ps-formation-link:hover { text-decoration: underline; }
+
+.ps-formation-mod-btns { display: flex; gap: .3rem; }
+
+.ps-cat-entraineur { background: #e8f2e8; color: var(--secondary-color); }
+.ps-cat-arbitre    { background: #fdecea; color: #c0392b; }
+.ps-cat-marqueur   { background: #eaf2fb; color: #2c5f9e; }
+.ps-cat-joueurs    { background: #fff3e0; color: #b8720a; }
+.ps-cat-detection  { background: #f3e8fb; color: #7d3c98; }
+
+.ps-radio-group {
+    display: flex;
+    gap: 1.2rem;
+    font-size: .9rem;
+}
+.ps-radio-group label {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.ps-equipe-edit-btn {
+    background: transparent;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: .35rem .6rem;
+    font-size: .82rem;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.ps-equipe-edit-btn:hover { background: #eaf3ea; border-color: var(--secondary-color); }
+
+.ps-docs-empty {
+    text-align: center;
+    color: #aaa;
+    font-style: italic;
+    padding: 2rem;
+}
+
+.ps-upload-zone {
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    padding: 1.2rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+}
+.ps-upload-zone:hover {
+    border-color: var(--secondary-color);
+    background: #f6fbf6;
+}
+.ps-upload-zone input[type="file"] {
+    display: none;
+}
+.ps-upload-label {
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--bg-dark);
+}
+.ps-upload-hint {
+    margin: .25rem 0 0;
+    font-size: .78rem;
+    color: #999;
+}
+
+#formationModal #fDocGroup {
+    margin-bottom: .4rem;
+}
+#formationModal .form-status {
+    min-height: 0;
+    margin: 0 0 .25rem;
+}
+#formationModal .form-actions {
+    margin-top: .5rem;
+    padding-top: .75rem;
+}

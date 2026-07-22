@@ -47,7 +47,7 @@ function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8')
                     <?php if ($r['logo']): ?>
                     <img src="<?= h($r['logo']) ?>" alt="<?= h($r['nom']) ?>" class="social-icon">
                     <?php else: ?>
-                    <span class="social-icon social-icon--fallback"><?= h(mb_strtoupper(mb_substr($r['nom'], 0, 1))) ?></span>
+                    <span class="social-icon social-icon--fallback"><?= h(strtoupper(substr($r['nom'], 0, 1))) ?></span>
                     <?php endif; ?>
                 </a>
                 <?php endforeach; ?>

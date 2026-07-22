@@ -5,48 +5,7 @@ function escHtml(s) {
 }
 
 // ── Modale PDF (visionneuse) ─────────────────────────────────────
-
-const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-function openPdfModal(path, label) {
-    document.getElementById('pdf-modal-title').textContent = label;
-    document.getElementById('pdf-download-btn').href       = path;
-    document.getElementById('pdf-download-btn').setAttribute('download', label + '.pdf');
-
-    const iframe    = document.getElementById('pdf-iframe');
-    const fallback  = document.getElementById('pdf-fallback');
-    const openLink  = document.getElementById('pdf-open-link');
-
-    if (IS_IOS) {
-        iframe.src             = '';
-        iframe.style.display   = 'none';
-        fallback.style.display = 'flex';
-        openLink.href          = path;
-    } else {
-        iframe.src             = path;
-        iframe.style.display   = 'block';
-        fallback.style.display = 'none';
-    }
-
-    document.getElementById('pdfModal').classList.add('open');
-    document.body.classList.add('modal-open');
-}
-
-function closePdfModal() {
-    document.getElementById('pdfModal').classList.remove('open');
-    document.body.classList.remove('modal-open');
-    document.getElementById('pdf-iframe').src = '';
-}
-
-function printPdf() {
-    if (IS_IOS) {
-        window.open(document.getElementById('pdf-download-btn').href, '_blank');
-        return;
-    }
-    const iframe = document.getElementById('pdf-iframe');
-    try { iframe.contentWindow.print(); } catch { window.open(iframe.src, '_blank'); }
-}
+// openPdfModal/closePdfModal/printPdf fournis par js/pdf-modal.js
 
 // ── Modale Document (ajout PV AG / statuts) ──────────────────────
 

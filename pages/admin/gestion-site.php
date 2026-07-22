@@ -144,7 +144,7 @@ try {
                     <?php if ($r['logo']): ?>
                     <img src="<?= h($r['logo']) ?>" alt="<?= h($r['nom']) ?>" class="gs-reseau-logo">
                     <?php else: ?>
-                    <span class="gs-reseau-logo gs-reseau-logo--fallback"><?= h(mb_strtoupper(mb_substr($r['nom'], 0, 1))) ?></span>
+                    <span class="gs-reseau-logo gs-reseau-logo--fallback"><?= h(strtoupper(substr($r['nom'], 0, 1))) ?></span>
                     <?php endif; ?>
                     <div class="gs-reseau-info">
                         <span class="gs-reseau-nom"><?= h($r['nom']) ?></span>

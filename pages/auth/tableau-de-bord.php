@@ -3,10 +3,10 @@ require_once __DIR__ . '/../../php/auth.php';
 require_login();
 
 $user = current_user();
+$pdo  = get_pdo();
 
 $nbAttente = 0;
 if (has_role('admin')) {
-    $pdo = get_pdo();
     $nbAttente = (int)$pdo->query('SELECT COUNT(*) FROM users WHERE actif = 0')->fetchColumn();
 }
 
@@ -31,7 +31,7 @@ foreach ($rolePriority as $r) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de bord - <?= $titleRole ?></title>
     <link href="/css/styles.css?v=20260705" rel="stylesheet">
-    <link href="/css/tableau-de-bord.css?v=20260703" rel="stylesheet">
+    <link href="/css/tableau-de-bord.css?v=20260726" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -141,23 +141,29 @@ foreach ($rolePriority as $r) {
             <div class="dashboard-cards">
 
                 <?php if (!has_any_role(['arbitre', 'adherent'])): ?>
-                <a href="/pages/leClub/minibus.php" class="dashboard-card">
+                <a href="/pages/leClub/espace-entraineur/minibus.php" class="dashboard-card">
                     <div class="card-icon">🚌</div>
                     <h2>Réservations Minibus</h2>
                     <p>Consultez les réservations des minibus de la mairie et celui du club.</p>
                 </a>
 
-                <a href="/pages/leClub/presences.php" class="dashboard-card">
+                <a href="/pages/leClub/espace-entraineur/presences.php" class="dashboard-card">
                     <div class="card-icon">✅</div>
                     <h2>Pointage Présences</h2>
                     <p>Suivez le pointage des présences aux entraînements et aux matchs.</p>
                 </a>
                 <?php endif; ?>
 
-                <a href="/pages/leClub/espace-entraineur.php" class="dashboard-card">
+                <a href="/pages/leClub/espace-entraineur/espace-entraineur.php" class="dashboard-card">
                     <div class="card-icon">📥</div>
                     <h2>Ressources</h2>
                     <p>Documents téléchargeables et ressources FFVB.</p>
+                </a>
+
+                <a href="/pages/leClub/espace-entraineur/formations.php" class="dashboard-card">
+                    <div class="card-icon">🎓</div>
+                    <h2>Formations</h2>
+                    <p>Ressources de formation par public : entraîneurs, arbitres, marqueurs, joueurs et détection.</p>
                 </a>
 
             </div>

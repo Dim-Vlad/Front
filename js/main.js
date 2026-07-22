@@ -504,3 +504,6 @@ function _pwaHideInstallBtn() {
 fetchLogoActif();
 loadHTML('/commun/menu.html', 'menu');
 loadHTML('/commun/footer.php', 'footer');
+if (document.getElementById('pdf-modal-slot')) {
+    loadHTML('/commun/pdf-modal.html', 'pdf-modal-slot');
+}

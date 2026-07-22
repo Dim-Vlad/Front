@@ -129,30 +129,14 @@ function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES); }
     </div>
     <?php endif; ?>
 
-    <!-- ══ MODALE VISIONNEUSE PDF ═══════════════════════════════════ -->
-    <div id="pdfModal" class="pdf-modal" onclick="if(event.target===this)closePdfModal()">
-        <div class="pdf-modal-content">
-            <div class="pdf-modal-header">
-                <span class="pdf-modal-title" id="pdf-modal-title"></span>
-                <div class="pdf-modal-btns">
-                    <button class="btn-pdf-action" onclick="printPdf()">🖨 Imprimer</button>
-                    <a id="pdf-download-btn" href="#" download class="btn-pdf-action">⬇ Télécharger</a>
-                    <button class="btn-pdf-close" onclick="closePdfModal()" title="Fermer">✕</button>
-                </div>
-            </div>
-            <iframe id="pdf-iframe" src="" title="Visionneuse PDF"></iframe>
-            <div id="pdf-fallback">
-                <p>L'aperçu PDF n'est pas disponible sur cet appareil.</p>
-                <a id="pdf-open-link" href="#" target="_blank">Ouvrir le PDF ↗</a>
-            </div>
-        </div>
-    </div>
+    <div id="pdf-modal-slot"></div>
 
     <div id="footer"></div>
 
     <script>
         const CAN_EDIT = <?= $canEdit ? 'true' : 'false' ?>;
     </script>
+    <script src="/js/pdf-modal.js?v=20260721"></script>
     <script src="/js/main.js?v=20260705"></script>
     <script src="/js/documents.js"></script>
 </body>

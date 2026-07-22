@@ -126,7 +126,7 @@ $isInscription = $defaultTab === 'inscription';
                             <label for="username">Identifiant <?= LOCAL_DEV ? '' : '<span class="form-hint">adresse email</span>' ?></label>
                             <input type="<?= LOCAL_DEV ? 'text' : 'email' ?>" id="username" name="username"
                                     value="<?= htmlspecialchars($_POST['username'] ?? '') ?>"
-                                    placeholder="<?= LOCAL_DEV ? 'exemple@email.com' : 'exemple@email.com' ?>"
+                                    placeholder="<?= LOCAL_DEV ? 'ex: admin' : 'exemple@email.com' ?>"
                                     autocomplete="username" required>
                         </div>
                         <div class="form-group">

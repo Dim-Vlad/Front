@@ -7,7 +7,7 @@ check_csrf();
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     ob_end_clean();
     http_response_code(405);
-    echo "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><title>Méthode non autorisée</title></head><body style='text-align:center;padding:2rem;font-family:sans-serif'><h1>⚠️ Méthode non autorisée</h1><p>Seule la méthode POST est acceptée.</p><a href='/pages/leClub/espace-entraineur.php'>← Retour</a></body></html>";
+    echo "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><title>Méthode non autorisée</title></head><body style='text-align:center;padding:2rem;font-family:sans-serif'><h1>⚠️ Méthode non autorisée</h1><p>Seule la méthode POST est acceptée.</p><a href='/pages/leClub/espace-entraineur/espace-entraineur.php'>← Retour</a></body></html>";
     exit;
 }
 
@@ -104,7 +104,7 @@ $body .= "--$boundary--";
 
 ob_end_clean();
 if (mail($destinataire, $sujet, $body, $headers)) {
-    echo "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><title>Message envoyé</title></head><body style='text-align:center;padding:2rem;font-family:sans-serif'><h1>✅ Message envoyé !</h1><p>Merci $nom, votre message a été envoyé avec " . count($pdfFiles) . " fichier(s) joint(s).</p><a href='/pages/leClub/espace-entraineur.php'>← Retour à l'espace ressources</a></body></html>";
+    echo "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><title>Message envoyé</title></head><body style='text-align:center;padding:2rem;font-family:sans-serif'><h1>✅ Message envoyé !</h1><p>Merci $nom, votre message a été envoyé avec " . count($pdfFiles) . " fichier(s) joint(s).</p><a href='/pages/leClub/espace-entraineur/espace-entraineur.php'>← Retour à l'espace ressources</a></body></html>";
 } else {
     http_response_code(500);
     echo "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><title>Erreur envoi</title></head><body style='text-align:center;padding:2rem;font-family:sans-serif'><h1>❌ Erreur lors de l'envoi</h1><p>Une erreur est survenue lors de l'envoi du mail.</p><a href='javascript:history.back()'>← Réessayer</a></body></html>";

@@ -36,9 +36,9 @@ if (!$equipe) {
     exit;
 }
 
-$poule = trim($_POST['poule'] ?? '');
-$coach  = trim($_POST['coach'] ?? '');
-$lien   = trim($_POST['lien']  ?? '');
+$poule      = trim($_POST['poule'] ?? '');
+$coach      = trim($_POST['coach'] ?? '');
+$lien       = trim($_POST['lien']  ?? '');
 
 $photoPath  = null;
 $genericUrl = trim($_POST['photo_url_generic'] ?? '');
@@ -74,18 +74,18 @@ if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
     $photoPath = $genericUrl;
 }
 
-if ($photoPath !== null) {
-    $pdo->prepare('UPDATE equipes SET niveau = ?, coach = ?, lien = ?, photo = ? WHERE id = ?')
-        ->execute([$poule, $coach, $lien, $photoPath, $id]);
-} else {
-    $pdo->prepare('UPDATE equipes SET niveau = ?, coach = ?, lien = ? WHERE id = ?')
-        ->execute([$poule, $coach, $lien, $id]);
-}
+$setClauses = ['niveau = ?', 'coach = ?', 'lien = ?'];
+$params     = [$poule, $coach, $lien];
+
+if ($photoPath !== null) { $setClauses[] = 'photo = ?'; $params[] = $photoPath; }
+
+$params[] = $id;
+$pdo->prepare('UPDATE equipes SET ' . implode(', ', $setClauses) . ' WHERE id = ?')->execute($params);
 
 $parts = ["poule : {$poule}", "coach : {$coach}"];
 if ($photoPath !== null) $parts[] = 'photo mise à jour';
 log_activite($pdo, 'modification', 'equipe', "Modification de « {$equipe['nom']} » — " . implode(', ', $parts));
 
-$row = $pdo->prepare('SELECT niveau AS poule, coach, lien, photo FROM equipes WHERE id = ?');
+$row = $pdo->prepare('SELECT nom, niveau AS poule, coach, lien, photo FROM equipes WHERE id = ?');
 $row->execute([$id]);
 ob_end_clean(); echo json_encode(['success' => true, 'data' => $row->fetch()]);

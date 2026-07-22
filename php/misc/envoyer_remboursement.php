@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $body .= "--$boundary--";
 
     if (mail($destinataire, $sujet, $body, $headers)) {
-        echo "<div style='text-align:center;padding:2rem;font-family:sans-serif;'><h1>✅ Message envoyé !</h1><p>Merci $nom, votre demande a été envoyée avec " . count($pdfFiles) . " fichier(s).</p><a href='/pages/leClub/espace-entraineur.php'>← Retour</a></div>";
+        echo "<div style='text-align:center;padding:2rem;font-family:sans-serif;'><h1>✅ Message envoyé !</h1><p>Merci $nom, votre demande a été envoyée avec " . count($pdfFiles) . " fichier(s).</p><a href='/pages/leClub/espace-entraineur/espace-entraineur.php'>← Retour</a></div>";
     } else {
         echo "<div style='text-align:center;padding:2rem;font-family:sans-serif;'><h1>❌ Erreur d'envoi</h1><p>Une erreur est survenue. Veuillez réessayer.</p><a href='javascript:history.back()'>← Réessayer</a></div>";
     }

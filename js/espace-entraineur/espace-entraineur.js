@@ -1,8 +1,5 @@
 'use strict';
-/* global IS_MOD */
-
-const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+/* global IS_MOD, openPdfModal, closePdfModal, printPdf */
 
 let _sections     = [];
 let _editingDocId = null;
@@ -16,7 +13,7 @@ async function loadData() {
     const container = document.getElementById('sections-container');
     container.innerHTML = '<p class="ent-loading">Chargement…</p>';
     try {
-        const res  = await fetch('/php/entraineur/get_documents.php');
+        const res  = await fetch('/php/espace-entraineur/get_documents.php');
         const json = await res.json();
         if (!json.success) throw new Error(json.error);
         _sections = json.data;
@@ -136,37 +133,6 @@ function buildDocEl(doc) {
     return item;
 }
 
-// ── PDF Modal ─────────────────────────────────────────────────────────────────
-function openPdfModal(path, label) {
-    document.getElementById('pdf-modal-title').textContent   = label;
-    document.getElementById('pdf-download-btn').href         = path;
-    document.getElementById('pdf-download-btn').download     = label + '.pdf';
-    if (IS_IOS) {
-        document.getElementById('pdf-iframe').src             = '';
-        document.getElementById('pdf-iframe').style.display   = 'none';
-        document.getElementById('pdf-fallback').style.display = 'flex';
-        document.getElementById('pdf-open-link').href         = path;
-    } else {
-        document.getElementById('pdf-iframe').style.display   = 'block';
-        document.getElementById('pdf-fallback').style.display = 'none';
-        document.getElementById('pdf-iframe').src             = path;
-    }
-    document.getElementById('pdfModal').classList.add('open');
-    document.body.style.overflow = 'hidden';
-}
-
-function closePdfModal() {
-    document.getElementById('pdfModal').classList.remove('open');
-    document.body.style.overflow = '';
-    document.getElementById('pdf-iframe').src = '';
-}
-
-function printPdf() {
-    if (IS_IOS) { window.open(document.getElementById('pdf-download-btn').href, '_blank'); return; }
-    try { document.getElementById('pdf-iframe').contentWindow.print(); }
-    catch { window.open(document.getElementById('pdf-iframe').src, '_blank'); }
-}
-
 // ── Document Modal ────────────────────────────────────────────────────────────
 function openAddDoc(sectionId) {
     _editingDocId = null;
@@ -240,7 +206,7 @@ async function submitDoc(e) {
     if (_editingDocId) fd.set('id', _editingDocId);
 
     try {
-        const res  = await fetch('/php/entraineur/save_document.php', { method: 'POST', body: fd });
+        const res  = await fetch('/php/espace-entraineur/save_document.php', { method: 'POST', body: fd });
         const json = await res.json();
         if (!json.success) throw new Error(json.error || 'Erreur inconnue');
         closeDocModal();
@@ -259,7 +225,7 @@ async function deleteDoc(docId, label) {
     try {
         const fd = new FormData();
         fd.set('id', docId);
-        const res  = await fetch('/php/entraineur/delete_document.php', { method: 'POST', body: fd });
+        const res  = await fetch('/php/espace-entraineur/delete_document.php', { method: 'POST', body: fd });
         const json = await res.json();
         if (!json.success) throw new Error(json.error);
         await loadData();
@@ -308,7 +274,7 @@ async function submitSection(e) {
     if (_editSecId) fd.set('id', _editSecId);
 
     try {
-        const res  = await fetch('/php/entraineur/save_section.php', { method: 'POST', body: fd });
+        const res  = await fetch('/php/espace-entraineur/save_section.php', { method: 'POST', body: fd });
         const json = await res.json();
         if (!json.success) throw new Error(json.error || 'Erreur inconnue');
         closeSectionModal();
@@ -331,7 +297,7 @@ async function deleteSection(sectionId) {
     try {
         const fd = new FormData();
         fd.set('id', sectionId);
-        const res  = await fetch('/php/entraineur/delete_section.php', { method: 'POST', body: fd });
+        const res  = await fetch('/php/espace-entraineur/delete_section.php', { method: 'POST', body: fd });
         const json = await res.json();
         if (!json.success) throw new Error(json.error);
         await loadData();
