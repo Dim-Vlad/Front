@@ -35,7 +35,7 @@ $roleLabels = [
     <title>Journal des connexions - VBO</title>
     <link href="/css/styles.css?v=20260705" rel="stylesheet">
     <link href="/css/tableau-de-bord.css?v=20260623" rel="stylesheet">
-    <link href="/css/journal.css?v=20260707" rel="stylesheet">
+    <link href="/css/journal.css?v=20260802" rel="stylesheet">
     <link href="/css/admin.css?v=20260623" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -69,14 +69,26 @@ $roleLabels = [
                 $dt      = new DateTime($e['created_at']);
                 $dateStr = $dt->format('d/m/Y à H\hi');
                 $succes  = (int)($e['succes'] ?? 1);
-                $badgeClass = $succes ? 'badge-connexion' : 'badge-echec';
-                $icon       = $succes ? '🔑' : '⚠️';
+
+                $isResetRequest    = $e['roles'] === 'Demande de réinitialisation mot de passe';
+                $isResetCompleted  = $e['roles'] === 'Mot de passe réinitialisé';
+
+                if ($isResetRequest) {
+                    $badgeClass = 'badge-reset'; $icon = '🔐';
+                } elseif ($isResetCompleted) {
+                    $badgeClass = 'badge-reset'; $icon = '🔓';
+                } else {
+                    $badgeClass = $succes ? 'badge-connexion' : 'badge-echec';
+                    $icon       = $succes ? '🔑' : '⚠️';
+                }
 
                 $roleList = $e['roles'] ? array_filter(array_map('trim', explode(',', $e['roles']))) : [];
-                $showRoles = $succes && !empty($roleList) && ($e['roles'] !== 'Compte en attente');
+                $showRoles = $succes && !empty($roleList) && !in_array($e['roles'], ['Compte en attente', 'Demande de réinitialisation mot de passe', 'Mot de passe réinitialisé'], true);
 
                 $details = [];
-                if (!$succes && $e['roles'] === 'Compte en attente') $details[] = 'Compte en attente de validation';
+                if ($isResetRequest) $details[] = 'Demande de réinitialisation de mot de passe';
+                elseif ($isResetCompleted) $details[] = 'Mot de passe réinitialisé avec succès';
+                elseif (!$succes && $e['roles'] === 'Compte en attente') $details[] = 'Compte en attente de validation';
                 elseif (!$succes) $details[] = 'Identifiant ou mot de passe incorrect';
                 if (!empty($e['appareil'])) $details[] = htmlspecialchars($e['appareil']);
                 $details[] = 'IP : ' . htmlspecialchars($e['ip'] ?: '—');
@@ -91,7 +103,7 @@ $roleLabels = [
                             foreach ($roleList as $r): ?>
                         <span class="badge badge--<?= htmlspecialchars($r) ?>"><?= htmlspecialchars($roleLabels[$r] ?? ucfirst($r)) ?></span>
                         <?php endforeach; endif; ?>
-                        <?php if (!$succes): ?>
+                        <?php if (!$succes && !$isResetRequest): ?>
                         <span class="journal-echec-label">Échec</span>
                         <?php endif; ?>
                     </div>

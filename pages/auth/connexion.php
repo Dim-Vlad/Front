@@ -6,27 +6,6 @@ if (is_logged_in()) {
     exit;
 }
 
-function parseUserAgent(string $ua): string {
-    if ($ua === '') return 'Inconnu';
-    if (str_contains($ua, 'Edg/'))                                          $browser = 'Edge';
-    elseif (str_contains($ua, 'OPR/') || str_contains($ua, 'Opera/'))      $browser = 'Opera';
-    elseif (str_contains($ua, 'YaBrowser'))                                 $browser = 'Yandex';
-    elseif (str_contains($ua, 'Chrome/') && !str_contains($ua, 'Chromium'))$browser = 'Chrome';
-    elseif (str_contains($ua, 'Chromium/'))                                 $browser = 'Chromium';
-    elseif (str_contains($ua, 'Firefox/'))                                  $browser = 'Firefox';
-    elseif (str_contains($ua, 'Safari/') && !str_contains($ua, 'Chrome/')) $browser = 'Safari';
-    else                                                                     $browser = 'Navigateur';
-
-    if (str_contains($ua, 'Android'))                                       $os = 'Android';
-    elseif (str_contains($ua, 'iPhone') || str_contains($ua, 'iPad'))      $os = 'iOS';
-    elseif (str_contains($ua, 'Windows'))                                   $os = 'Windows';
-    elseif (str_contains($ua, 'Macintosh') || str_contains($ua, 'Mac OS')) $os = 'macOS';
-    elseif (str_contains($ua, 'Linux'))                                     $os = 'Linux';
-    else                                                                     $os = '';
-
-    return $os ? "$browser · $os" : $browser;
-}
-
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['_action']) && $_POST['_action'] === 'login') {
@@ -37,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['_action']) && $_POST[
         $error = 'Veuillez remplir tous les champs.';
     } else {
         $ip       = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '';
-        $appareil = parseUserAgent($_SERVER['HTTP_USER_AGENT'] ?? '');
+        $appareil = parse_user_agent($_SERVER['HTTP_USER_AGENT'] ?? '');
         try {
             $pdo  = get_pdo();
             $stmt = $pdo->prepare('SELECT id, username, password, prenom, nom, actif FROM users WHERE username = ?');
@@ -101,7 +80,7 @@ $isInscription = $defaultTab === 'inscription';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Espace membres - VBO</title>
     <link href="/css/styles.css?v=20260705" rel="stylesheet">
-    <link href="/css/connexion.css?v=20260717" rel="stylesheet">
+    <link href="/css/connexion.css?v=20260801" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -140,6 +119,7 @@ $isInscription = $defaultTab === 'inscription';
                                 </button>
                             </div>
                         </div>
+                        <p class="forgot-password-link"><a href="/pages/auth/mot-de-passe-oublie.php">Mot de passe oublié ?</a></p>
                         <button type="submit" class="btn-login">Se connecter</button>
                     </form>
 

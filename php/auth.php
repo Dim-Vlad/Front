@@ -65,6 +65,27 @@ function csrf_token(): string {
     return $_SESSION['csrf_token'];
 }
 
+function parse_user_agent(string $ua): string {
+    if ($ua === '') return 'Inconnu';
+    if (str_contains($ua, 'Edg/'))                                          $browser = 'Edge';
+    elseif (str_contains($ua, 'OPR/') || str_contains($ua, 'Opera/'))      $browser = 'Opera';
+    elseif (str_contains($ua, 'YaBrowser'))                                 $browser = 'Yandex';
+    elseif (str_contains($ua, 'Chrome/') && !str_contains($ua, 'Chromium'))$browser = 'Chrome';
+    elseif (str_contains($ua, 'Chromium/'))                                 $browser = 'Chromium';
+    elseif (str_contains($ua, 'Firefox/'))                                  $browser = 'Firefox';
+    elseif (str_contains($ua, 'Safari/') && !str_contains($ua, 'Chrome/')) $browser = 'Safari';
+    else                                                                     $browser = 'Navigateur';
+
+    if (str_contains($ua, 'Android'))                                       $os = 'Android';
+    elseif (str_contains($ua, 'iPhone') || str_contains($ua, 'iPad'))      $os = 'iOS';
+    elseif (str_contains($ua, 'Windows'))                                   $os = 'Windows';
+    elseif (str_contains($ua, 'Macintosh') || str_contains($ua, 'Mac OS')) $os = 'macOS';
+    elseif (str_contains($ua, 'Linux'))                                     $os = 'Linux';
+    else                                                                     $os = '';
+
+    return $os ? "$browser · $os" : $browser;
+}
+
 function check_csrf(): void {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
     // 1. FormData → $_POST['_csrf']
