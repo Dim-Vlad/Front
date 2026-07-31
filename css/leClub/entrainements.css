@@ -887,7 +887,7 @@
 .btn-cancel-delete:hover { background: #e0e0e0; }
 
 /* Highlight depuis le calculateur */
-.row-highlighted td:not(.day-cell):not(.actions-cell) {
+.cell-highlighted {
     background: #fff8dc !important;
     outline: 2px solid #f0c040;
     outline-offset: -2px;

@@ -105,8 +105,8 @@ const CAT_MAP = [
     { age: 7,  label: 'M7(2)',        base: 'M7',  gendered: false },
     { age: 8,  label: 'M9(1)',        base: 'M9',  gendered: false },
     { age: 9,  label: 'M9(2)',        base: 'M9',  gendered: false },
-    { age: 10, label: 'M11(1)',       base: 'M11', gendered: false },
-    { age: 11, label: 'M11(2)',       base: 'M11', gendered: false },
+    { age: 10, label: 'M11(1)',       base: 'M11', gendered: true },
+    { age: 11, label: 'M11(2)',       base: 'M11', gendered: true },
     { age: 12, label: 'M13(1)',       base: 'M13', gendered: true  },
     { age: 13, label: 'M13(2)',       base: 'M13', gendered: true  },
     { age: 14, label: 'M15(1)',       base: 'M15', gendered: true  },
@@ -164,7 +164,7 @@ function showCategory(birthYear, gender) {
 }
 
 function highlightRows(base, genderLabel) {
-    document.querySelectorAll('.entr-table tbody tr').forEach(tr => tr.classList.remove('row-highlighted'));
+    document.querySelectorAll('.entr-table tbody td.cell-highlighted').forEach(td => td.classList.remove('cell-highlighted'));
 
     const searchBase   = base.toLowerCase();
     const searchGender = genderLabel ? genderLabel.toLowerCase() : null;
@@ -173,10 +173,7 @@ function highlightRows(base, genderLabel) {
         const text = td.textContent.toLowerCase();
         let matches = text.includes(searchBase);
         if (matches && searchGender) matches = text.includes(searchGender);
-        if (matches) {
-            const tr = td.closest('tr');
-            if (tr) tr.classList.add('row-highlighted');
-        }
+        if (matches) td.classList.add('cell-highlighted');
     });
 }
 
