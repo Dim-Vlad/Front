@@ -72,7 +72,7 @@ function youtube_id(string $url): string {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Licences - VBO</title>
     <link href="/css/styles.css?v=20260705" rel="stylesheet">
-    <link href="/css/leClub/licence.css?v=20260702" rel="stylesheet">
+    <link href="/css/leClub/licence.css?v=20260803" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -163,9 +163,14 @@ function youtube_id(string $url): string {
                         <span class="action-card-desc"><?= htmlspecialchars($l['description']) ?></span>
                         <?php endif; ?>
                     </div>
-                    <?php if ($l['url']): ?>
-                    <a class="action-card-btn" href="<?= htmlspecialchars($l['url']) ?>" target="<?= str_starts_with($l['url'], 'http') ? '_blank' : '_self' ?>" rel="noopener">Accéder →</a>
-                    <?php endif; ?>
+                    <div class="action-card-btns">
+                        <?php if ($l['url']): ?>
+                        <a class="action-card-btn" href="<?= htmlspecialchars($l['url']) ?>" target="<?= str_starts_with($l['url'], 'http') ? '_blank' : '_self' ?>" rel="noopener">Accéder →</a>
+                        <?php endif; ?>
+                        <?php if ($slug === 'myffvolley'): ?>
+                        <a class="action-card-btn action-card-btn--ghost" href="#tuto-section">📹 Voir les tutos</a>
+                        <?php endif; ?>
+                    </div>
                     <?php if ($canEdit): ?>
                     <button class="action-edit-btn" onclick="openLienModal(this.closest('.action-card'))" title="Modifier">✏️</button>
                     <?php endif; ?>
@@ -238,7 +243,7 @@ function youtube_id(string $url): string {
         </div>
 
         <!-- ── Section tutoriels myFFvolley ── -->
-        <div class="tuto-section">
+        <div class="tuto-section" id="tuto-section">
             <div class="tuto-section-header">
                 <h2>Tutoriels myFFvolley App</h2>
                 <?php if ($canEdit): ?>

@@ -357,6 +357,13 @@
     color: #777;
 }
 
+.action-card-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-self: flex-start;
+}
+
 .action-card-btn {
     display: inline-block;
     background: var(--secondary-color, #063E0B);
@@ -367,11 +374,30 @@
     border-radius: 20px;
     text-decoration: none;
     transition: background 0.2s;
-    align-self: flex-start;
 }
 
 .action-card-btn:hover {
     background: #0a5c10;
+}
+
+.action-card-btn--ghost {
+    background: transparent;
+    color: var(--secondary-color, #063E0B);
+    border: 1.5px solid var(--secondary-color, #063E0B);
+    padding: 0.4rem 1rem;
+}
+
+.action-card-btn--ghost:hover {
+    background: rgba(6,62,11,0.08);
+}
+
+html { scroll-behavior: smooth; }
+
+#tuto-section {
+    scroll-margin-top: 90px;
+}
+@media (max-width: 600px) {
+    #tuto-section { scroll-margin-top: 110px; }
 }
 
 .action-edit-btn {
