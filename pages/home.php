@@ -1,10 +1,13 @@
 <?php
 require_once __DIR__ . '/../php/auth.php';
 
-$canEdit    = is_logged_in() && has_any_role(['moderateur', 'admin']);
-$user       = is_logged_in() ? current_user() : null;
-$showEvents = false;
-$aVenir     = [];
+$canEdit         = is_logged_in() && has_any_role(['moderateur', 'admin']);
+$user            = is_logged_in() ? current_user() : null;
+$showEvents      = false;
+$aVenir          = [];
+$showPronostics  = false;
+$prochainsMatchs = [];
+$topPronostics   = [];
 
 $roleLabels   = [
     'admin'      => 'Admin',
@@ -47,9 +50,58 @@ try {
         "SELECT nom, logo, url FROM partenaires ORDER BY ordre ASC"
     )->fetchAll();
 
+    $stmtP = $pdo->prepare("SELECT valeur FROM parametres WHERE cle = 'home_show_pronostics'");
+    $stmtP->execute();
+    $rowP           = $stmtP->fetch();
+    $showPronostics = ($rowP && $rowP['valeur'] === '1');
+
+    if ($canEdit || $showPronostics) {
+        // Les prochains matchs à pronostiquer (les plus proches en premier).
+        $prochainsMatchs = $pdo->query(
+            "SELECT * FROM pronostics_matchs
+             WHERE resultat_victoire IS NULL AND date_match > NOW()
+             ORDER BY date_match ASC
+             LIMIT 5"
+        )->fetchAll();
+
+        $topPronostics = $pdo->query(
+            'SELECT * FROM (
+                SELECT u.id, u.prenom, u.nom,
+                       COALESCE(SUM(
+                           CASE
+                               WHEN m.resultat_sets IS NOT NULL AND v.choix_sets = m.resultat_sets THEN 3
+                               WHEN m.resultat_victoire IS NOT NULL AND v.choix_victoire = m.resultat_victoire THEN 1
+                               ELSE 0
+                           END
+                       ), 0) AS pts_prono,
+                       COALESCE((
+                           SELECT SUM(qr.points_obtenus) FROM quiz_reponses qr WHERE qr.user_id = u.id
+                       ), 0) AS pts_quiz,
+                       COUNT(DISTINCT v.id) AS nb_votes,
+                       COALESCE((
+                           SELECT COUNT(*) FROM quiz_reponses qr WHERE qr.user_id = u.id
+                       ), 0) AS nb_quiz
+                FROM users u
+                LEFT JOIN pronostics_votes v ON v.user_id = u.id
+                LEFT JOIN pronostics_matchs m ON m.id = v.match_id
+                WHERE u.actif = 1
+                GROUP BY u.id, u.prenom, u.nom
+            ) AS sub
+            WHERE nb_votes > 0 OR nb_quiz > 0
+            ORDER BY (pts_prono + pts_quiz) DESC, pts_prono DESC
+            LIMIT 3'
+        )->fetchAll();
+    }
+
 } catch (Exception $e) {}
 
 function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES); }
+
+function fmt_prono_date(string $d): string {
+    $ts   = strtotime($d);
+    $mois = ['','jan.','fév.','mar.','avr.','mai','juin','juil.','aoû.','sep.','oct.','nov.','déc.'];
+    return date('d', $ts) . ' ' . $mois[(int)date('n', $ts)] . ' ' . date('Y', $ts) . ' · ' . date('H\hi', $ts);
+}
 
 function formatHomeDate(?string $debut, ?string $fin): string {
     if (!$debut) return 'Date à confirmer';
@@ -89,65 +141,142 @@ function formatHomeDate(?string $debut, ?string $fin): string {
   </div>
 </section>
 
-<!-- ÉVÉNEMENTS À VENIR -->
-<?php if ($canEdit || $showEvents): ?>
-<section class="home-events<?= ($canEdit && !$showEvents) ? ' home-events--preview' : '' ?>">
-  <div class="home-events-header">
-    <h2>Événements à venir</h2>
-    <?php if ($canEdit): ?>
-    <button
-      class="btn-home-events-toggle<?= $showEvents ? ' active' : '' ?>"
-      onclick="toggleHomeEvents(this)"
-      title="<?= $showEvents ? 'Masquer les événements sur l\'accueil' : 'Afficher les événements sur l\'accueil' ?>">
-      <?= $showEvents ? '● Visible' : '○ Masqué' ?>
-    </button>
-    <?php endif; ?>
-  </div>
-  <?php if ($canEdit && !$showEvents): ?>
-  <p class="home-events-hint">Cette section est masquée pour les visiteurs. Cliquez sur le bouton pour la rendre visible.</p>
-  <?php endif; ?>
-  <?php if (empty($aVenir)): ?>
-  <p class="home-events-empty">Aucun événement à venir pour le moment.</p>
-  <?php else: ?>
-  <div class="home-ev-grid">
-    <?php foreach ($aVenir as $ev):
-        $hasLink  = !empty($ev['lien_url']);
-        $isHidden = $canEdit && !$ev['home_visible'];
-        $extraClass = ($isHidden ? ' home-ev-card--hidden' : '') . (!$hasLink ? ' home-ev-card--nohover' : '');
-    ?>
-    <?php if ($hasLink): ?>
-    <a href="<?= h($ev['lien_url']) ?>" class="home-ev-card<?= $extraClass ?>">
-    <?php else: ?>
-    <div class="home-ev-card<?= $extraClass ?>">
-    <?php endif; ?>
-      <?php if (!empty($ev['image_url'])): ?>
-      <img class="home-ev-img" src="<?= h($ev['image_url']) ?>" alt="<?= h($ev['titre']) ?>">
-      <?php endif; ?>
-      <div class="home-ev-body">
-        <span class="home-ev-date"><?= h(formatHomeDate($ev['date_debut'], $ev['date_fin'])) ?></span>
-        <h3 class="home-ev-title"><?= h($ev['titre']) ?></h3>
-        <?php if (!empty($ev['description'])): ?>
-        <p class="home-ev-desc"><?= nl2br(h($ev['description'])) ?></p>
-        <?php endif; ?>
-        <?php if (!empty($ev['lieu'])): ?>
-        <p class="home-ev-lieu">📍 <?= h($ev['lieu']) ?></p>
-        <?php endif; ?>
-        <?php if ($hasLink && !empty($ev['lien_label'])): ?>
-        <span class="home-ev-link"><?= h($ev['lien_label']) ?> →</span>
+<!-- À VENIR : ÉVÉNEMENTS + PRONOSTICS -->
+<?php
+$hasEventsCol = $canEdit || $showEvents;
+$hasPronoCol  = $canEdit || $showPronostics;
+?>
+<?php if ($hasEventsCol || $hasPronoCol): ?>
+<section class="home-avenir">
+  <div class="home-avenir-grid<?= (!$hasEventsCol || !$hasPronoCol) ? ' home-avenir-grid--single' : '' ?>">
+
+    <?php if ($hasEventsCol): ?>
+    <div class="home-avenir-col<?= ($canEdit && !$showEvents) ? ' home-avenir-col--preview' : '' ?>">
+      <div class="home-events-header">
+        <h2>Événements à venir</h2>
+        <?php if ($canEdit): ?>
+        <button
+          class="btn-home-events-toggle<?= $showEvents ? ' active' : '' ?>"
+          onclick="toggleHomeEvents(this)"
+          title="<?= $showEvents ? 'Masquer les événements sur l\'accueil' : 'Afficher les événements sur l\'accueil' ?>">
+          <?= $showEvents ? '● Visible' : '○ Masqué' ?>
+        </button>
         <?php endif; ?>
       </div>
-      <?php if ($canEdit): ?>
-      <button
-        class="btn-home-ev-toggle<?= $ev['home_visible'] ? ' active' : '' ?>"
-        onclick="toggleHomeEventVisible(<?= $ev['id'] ?>, this, event)"
-        title="<?= $ev['home_visible'] ? 'Masquer sur l\'accueil' : 'Afficher sur l\'accueil' ?>">
-        <?= $ev['home_visible'] ? '● Visible' : '○ Masqué' ?>
-      </button>
+      <?php if ($canEdit && !$showEvents): ?>
+      <p class="home-events-hint">Cette section est masquée pour les visiteurs. Cliquez sur le bouton pour la rendre visible.</p>
       <?php endif; ?>
-    <?php if ($hasLink): ?></a><?php else: ?></div><?php endif; ?>
-    <?php endforeach; ?>
+      <?php if (empty($aVenir)): ?>
+      <p class="home-events-empty">Aucun événement à venir pour le moment.</p>
+      <?php else: ?>
+      <ul class="home-ev-compact-list">
+        <?php foreach ($aVenir as $ev):
+            $hasLink  = !empty($ev['lien_url']);
+            $isHidden = $canEdit && !$ev['home_visible'];
+            $extraClass = $isHidden ? ' home-ev-compact-item--hidden' : '';
+        ?>
+        <li class="home-ev-compact-item<?= $extraClass ?>">
+          <?php if ($hasLink): ?>
+          <a href="<?= h($ev['lien_url']) ?>" class="home-ev-compact-link">
+          <?php else: ?>
+          <div class="home-ev-compact-link">
+          <?php endif; ?>
+            <?php if (!empty($ev['image_url'])): ?>
+            <img class="home-ev-compact-img" src="<?= h($ev['image_url']) ?>" alt="" loading="lazy">
+            <?php endif; ?>
+            <span class="home-ev-compact-body">
+              <span class="home-ev-compact-date"><?= h(formatHomeDate($ev['date_debut'], $ev['date_fin'])) ?></span>
+              <span class="home-ev-compact-title"><?= h($ev['titre']) ?></span>
+              <?php if (!empty($ev['lieu'])): ?>
+              <span class="home-ev-compact-lieu">📍 <?= h($ev['lieu']) ?></span>
+              <?php endif; ?>
+            </span>
+            <?php if ($hasLink): ?><span class="home-ev-compact-arrow">→</span><?php endif; ?>
+          <?php if ($hasLink): ?></a><?php else: ?></div><?php endif; ?>
+          <?php if ($canEdit): ?>
+          <button
+            class="btn-home-ev-toggle<?= $ev['home_visible'] ? ' active' : '' ?>"
+            onclick="toggleHomeEventVisible(<?= $ev['id'] ?>, this, event)"
+            title="<?= $ev['home_visible'] ? 'Masquer sur l\'accueil' : 'Afficher sur l\'accueil' ?>">
+            <?= $ev['home_visible'] ? '● Visible' : '○ Masqué' ?>
+          </button>
+          <?php endif; ?>
+        </li>
+        <?php endforeach; ?>
+      </ul>
+      <?php endif; ?>
+    </div>
+    <?php endif; ?>
+
+    <?php if ($hasPronoCol): ?>
+    <div class="home-avenir-col<?= ($canEdit && !$showPronostics) ? ' home-avenir-col--preview' : '' ?>">
+      <div class="home-prono-header">
+        <h2>🔮 Pronostics</h2>
+        <?php if ($canEdit): ?>
+        <button
+          class="btn-home-events-toggle<?= $showPronostics ? ' active' : '' ?>"
+          onclick="toggleHomePronostics(this)"
+          title="<?= $showPronostics ? 'Masquer les pronostics sur l\'accueil' : 'Afficher les pronostics sur l\'accueil' ?>">
+          <?= $showPronostics ? '● Visible' : '○ Masqué' ?>
+        </button>
+        <?php endif; ?>
+      </div>
+      <?php if ($canEdit && !$showPronostics): ?>
+      <p class="home-events-hint">Cette section est masquée pour les visiteurs. Cliquez sur le bouton pour la rendre visible.</p>
+      <?php endif; ?>
+
+      <div class="home-prono-match-card">
+        <?php if (!empty($prochainsMatchs)): ?>
+        <span class="home-prono-eyebrow">Prochains matchs à pronostiquer</span>
+        <ul class="home-prono-match-list">
+          <?php foreach ($prochainsMatchs as $m): ?>
+          <li class="home-prono-match-row">
+            <span class="home-prono-match-row-title">
+              <?= $m['domicile'] ? 'VBO vs ' . h($m['adversaire']) : h($m['adversaire']) . ' vs VBO' ?>
+            </span>
+            <span class="home-prono-match-row-meta">
+              <?= h(fmt_prono_date($m['date_match'])) ?>
+              <?php if ($m['competition']): ?> · <?= h($m['competition']) ?><?php endif; ?>
+            </span>
+          </li>
+          <?php endforeach; ?>
+        </ul>
+        <?php else: ?>
+        <span class="home-prono-eyebrow">Jouez avec nous</span>
+        <h3 class="home-prono-match-title">Pronostiquez les matchs du VBO</h3>
+        <p class="home-prono-match-meta">Prochains matchs bientôt annoncés — restez connectés !</p>
+        <?php endif; ?>
+        <p class="home-prono-pitch">Tentez de prédire les résultats des matchs du club et grimpez au classement général.</p>
+        <a href="<?= $user ? '/pages/pronostics/index.php' : '/pages/auth/connexion.php' ?>" class="btn home-prono-cta">
+          <?= $user ? '🎯 Faire mes pronostics →' : '🎯 Je m\'inscris pour jouer →' ?>
+        </a>
+      </div>
+
+      <div class="home-prono-podium-card">
+        <span class="home-prono-eyebrow">Classement</span>
+        <?php if (empty($topPronostics)): ?>
+        <p class="home-prono-podium-empty">Soyez les premiers à grimper au classement !</p>
+        <?php else: ?>
+        <ol class="home-prono-podium">
+          <?php foreach ($topPronostics as $i => $p):
+              $rank = $i + 1;
+              $nom  = trim(($p['prenom'] ?? '') . ' ' . mb_substr($p['nom'] ?? '', 0, 1) . '.');
+              $pts  = (int)$p['pts_prono'] + (int)$p['pts_quiz'];
+          ?>
+          <li class="home-prono-podium-item home-prono-podium-item--<?= $rank ?>">
+              <span class="home-prono-podium-rank"><?= $rank === 1 ? '🥇' : ($rank === 2 ? '🥈' : '🥉') ?></span>
+              <span class="home-prono-podium-name"><?= h($nom) ?></span>
+              <span class="home-prono-podium-pts"><?= $pts ?> pts</span>
+          </li>
+          <?php endforeach; ?>
+        </ol>
+        <?php endif; ?>
+        <a href="/pages/pronostics/classement.php" class="home-prono-link">Voir le classement complet →</a>
+      </div>
+    </div>
+    <?php endif; ?>
+
   </div>
-  <?php endif; ?>
 </section>
 <?php endif; ?>
 

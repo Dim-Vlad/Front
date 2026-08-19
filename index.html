@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Volley Ball Ollioulais</title>
   <link href="/css/styles.css?v=20260705" rel="stylesheet">
-  <link rel="stylesheet" href="/css/home.css?v=20260705">
+  <link rel="stylesheet" href="/css/home.css?v=20260808">
   <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -67,6 +67,19 @@
         fd.set('valeur', newVal);
         try {
             const res  = await fetch('/php/parametres/toggle_home_events.php', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (data.success) location.reload();
+            else alert(data.error || 'Erreur');
+        } catch { alert('Erreur réseau'); }
+    }
+
+    async function toggleHomePronostics(btn) {
+        const isActive = btn.classList.contains('active');
+        const newVal   = isActive ? '0' : '1';
+        const fd       = new FormData();
+        fd.set('valeur', newVal);
+        try {
+            const res  = await fetch('/php/parametres/toggle_home_pronostics.php', { method: 'POST', body: fd });
             const data = await res.json();
             if (data.success) location.reload();
             else alert(data.error || 'Erreur');
