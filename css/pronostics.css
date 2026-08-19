@@ -146,11 +146,6 @@
     cursor: pointer;
 }
 
-.prono-pts-hint {
-    font-size: 0.75rem;
-    color: #aaa;
-}
-
 .prono-vote-submit {
     align-self: flex-start;
     padding: 8px 20px;
@@ -226,19 +221,54 @@
     font-style: italic;
 }
 
-/* ── Matchs à venir (ligne unique + panneau vote) ── */
+/* ── Matchs à venir : disposition empilée ──
+   domicile/extérieur + titre + infos du match sur une ligne,
+   puis mon pronostic, puis le compteur (centré), puis le bouton
+   (pleine largeur) — chacun sur sa propre ligne. */
 .prono-card--avenir {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
     padding: 14px 18px;
+}
+
+.prono-card--avenir .prono-done-info {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-self: stretch;
+}
+.prono-card--avenir .prono-match-meta {
+    margin-bottom: 0;
+}
+
+.prono-card--avenir .prono-done-col {
+    margin-left: auto;
+    align-self: center;
+}
+
+.prono-card--avenir .prono-nb-votes {
+    align-self: center;
+}
+
+.prono-card--avenir .prono-vote-toggle {
+    align-self: stretch;
+    width: 100%;
+    margin-top: 2px;
+}
+
+.prono-card--avenir .prono-vote-panel {
+    order: 6;
 }
 
 .prono-vote-panel {
     display: none;
-    flex-direction: column;
-    gap: 12px;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 18px;
     width: 100%;
     padding-top: 14px;
     border-top: 1px solid #eee;
@@ -247,6 +277,13 @@
 
 .prono-vote-panel.open { display: flex; }
 
+.prono-vote-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
 /* ── Matchs terminés (ligne unique) ── */
 .prono-card--done {
     display: flex;
@@ -254,6 +291,13 @@
     gap: 16px;
     flex-wrap: wrap;
     padding: 14px 18px;
+}
+
+/* Même disposition que pour les matchs ouverts aux votes : le compteur
+   occupe sa propre ligne centrée. */
+.prono-card--done .prono-nb-votes {
+    flex-basis: 100%;
+    text-align: center;
 }
 
 .prono-done-info {
@@ -672,5 +716,81 @@
     .prono-choice {
         padding: 7px 14px;
         font-size: 0.82rem;
+    }
+
+    /* Tuiles "Matchs à venir" : titre centré, puis date, puis
+       domicile/extérieur + mon pronostic sur une ligne, puis le bouton. */
+    .prono-card--avenir {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .prono-card--avenir .prono-done-info {
+        display: contents;
+    }
+    .prono-card--avenir .prono-match-title {
+        order: 1;
+        flex-basis: 100%;
+        text-align: center;
+    }
+    .prono-card--avenir .prono-match-meta {
+        order: 2;
+        flex-basis: 100%;
+        justify-content: center;
+    }
+
+    .prono-card--avenir .prono-badge-dom {
+        order: 3;
+    }
+    .prono-card--avenir .prono-done-col {
+        order: 3;
+        margin-left: auto;
+    }
+
+    .prono-card--avenir .prono-nb-votes {
+        order: 4;
+        align-self: auto;
+        flex-basis: 100%;
+        text-align: center;
+    }
+
+    .prono-card--avenir .prono-vote-toggle {
+        order: 5;
+        align-self: auto;
+        flex-basis: 100%;
+    }
+
+    .prono-card--avenir .prono-vote-panel {
+        order: 6;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    /* Tuiles "Résultats en attente" et "Matchs terminés" : même logique,
+       titre centré puis date, puis les deux colonnes d'info sur une ligne. */
+    .prono-card--done {
+        flex-direction: row;
+    }
+
+    .prono-card--done .prono-done-info {
+        order: 1;
+        flex-basis: 100%;
+        text-align: center;
+    }
+    .prono-card--done .prono-match-meta {
+        justify-content: center;
+    }
+
+    .prono-card--done .prono-done-col {
+        order: 2;
+    }
+    .prono-card--done .prono-done-col + .prono-done-col {
+        margin-left: auto;
+    }
+
+    .prono-card--done .prono-nb-votes {
+        order: 3;
     }
 }

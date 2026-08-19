@@ -41,7 +41,7 @@ function match_titre(string $adversaire, int $domicile): string {
     <title>Gérer les pronostics - VBO</title>
     <link href="/css/styles.css?v=20260705" rel="stylesheet">
     <link href="/css/tableau-de-bord.css?v=20260623" rel="stylesheet">
-    <link href="/css/pronostics.css?v=20260702" rel="stylesheet">
+    <link href="/css/pronostics.css?v=20260822" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

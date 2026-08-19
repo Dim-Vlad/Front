@@ -55,7 +55,7 @@ function compute_pts(array $m): ?int {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pronostics - VBO</title>
     <link href="/css/styles.css?v=20260705" rel="stylesheet">
-    <link href="/css/pronostics.css?v=20260702" rel="stylesheet">
+    <link href="/css/pronostics.css?v=20260822" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -102,27 +102,27 @@ function compute_pts(array $m): ?int {
 
             <!-- Ligne principale -->
             <div class="prono-done-info">
+                <span class="prono-badge-dom <?= $m['domicile'] ? 'prono-badge-dom--home' : 'prono-badge-dom--away' ?>">
+                    <?= $m['domicile'] ? 'Domicile' : 'Extérieur' ?>
+                </span>
                 <div class="prono-match-title"><?= match_titre($m['adversaire'], (int)$m['domicile']) ?></div>
                 <div class="prono-match-meta">
                     <?= fmt_date_court($m['date_match']) ?>
                     <?php if ($m['competition']): ?> · <?= htmlspecialchars($m['competition']) ?><?php endif; ?>
                 </div>
-            </div>
-            <span class="prono-badge-dom <?= $m['domicile'] ? 'prono-badge-dom--home' : 'prono-badge-dom--away' ?>">
-                <?= $m['domicile'] ? 'Domicile' : 'Extérieur' ?>
-            </span>
-            <div class="prono-done-col" id="vote-status-<?= $m['id'] ?>">
-                <span class="prono-done-label">Mon pronostic</span>
-                <?php if ($voted): ?>
-                <div class="prono-done-badges">
-                    <span class="prono-result-badge <?= (int)$m['choix_victoire'] === 1 ? 'prono-result-badge--win' : 'prono-result-badge--lose' ?>">
-                        <?= (int)$m['choix_victoire'] === 1 ? 'Victoire' : 'Défaite' ?>
-                    </span>
-                    <?php if ($m['choix_sets']): ?><span class="prono-sets-val"><?= htmlspecialchars($m['choix_sets']) ?></span><?php endif; ?>
+                <div class="prono-done-col" id="vote-status-<?= $m['id'] ?>">
+                    <span class="prono-done-label">Mon pronostic</span>
+                    <?php if ($voted): ?>
+                    <div class="prono-done-badges">
+                        <span class="prono-result-badge <?= (int)$m['choix_victoire'] === 1 ? 'prono-result-badge--win' : 'prono-result-badge--lose' ?>">
+                            <?= (int)$m['choix_victoire'] === 1 ? 'Victoire' : 'Défaite' ?>
+                        </span>
+                        <?php if ($m['choix_sets']): ?><span class="prono-sets-val"><?= htmlspecialchars($m['choix_sets']) ?></span><?php endif; ?>
+                    </div>
+                    <?php else: ?>
+                    <span class="prono-no-vote">Non voté</span>
+                    <?php endif; ?>
                 </div>
-                <?php else: ?>
-                <span class="prono-no-vote">Non voté</span>
-                <?php endif; ?>
             </div>
             <span class="prono-nb-votes"><?= $m['nb_votes'] ?> pronostic<?= $m['nb_votes'] > 1 ? 's' : '' ?></span>
             <button class="prono-vote-submit prono-vote-toggle" style="padding:7px 16px;font-size:.82rem" onclick="toggleVoteForm(<?= $m['id'] ?>)">
@@ -141,31 +141,31 @@ function compute_pts(array $m): ?int {
                         ❌ Défaite
                     </label>
                 </div>
-                <div class="prono-sets-row" id="sets-row-<?= $m['id'] ?>" style="<?= $voted ? '' : 'display:none' ?>">
-                    <span class="prono-sets-label">Score en sets (optionnel) :</span>
-                    <select class="prono-sets-select" id="sets-<?= $m['id'] ?>">
-                        <option value="">-- Je ne pronostique pas --</option>
+                <div class="prono-sets-row" id="sets-row-<?= $m['id'] ?>">
+                    <span class="prono-sets-label">Score en sets :</span>
+                    <select class="prono-sets-select" id="sets-<?= $m['id'] ?>" onchange="onSetsChange(<?= $m['id'] ?>)">
+                        <option value="">-- Optionnel --</option>
+                        <optgroup label="Victoire">
+                            <option value="3-0" <?= ($voted && $m['choix_sets'] === '3-0') ? 'selected' : '' ?>>3-0</option>
+                            <option value="3-1" <?= ($voted && $m['choix_sets'] === '3-1') ? 'selected' : '' ?>>3-1</option>
+                            <option value="3-2" <?= ($voted && $m['choix_sets'] === '3-2') ? 'selected' : '' ?>>3-2</option>
+                        </optgroup>
+                        <optgroup label="Défaite">
+                            <option value="0-3" <?= ($voted && $m['choix_sets'] === '0-3') ? 'selected' : '' ?>>0-3</option>
+                            <option value="1-3" <?= ($voted && $m['choix_sets'] === '1-3') ? 'selected' : '' ?>>1-3</option>
+                            <option value="2-3" <?= ($voted && $m['choix_sets'] === '2-3') ? 'selected' : '' ?>>2-3</option>
+                        </optgroup>
                     </select>
-                    <span class="prono-pts-hint">→ 3 pts si exact</span>
                 </div>
-                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <div class="prono-vote-actions">
                     <button class="prono-vote-submit" onclick="submitVote(<?= $m['id'] ?>)">
-                        <?= $voted ? 'Enregistrer la modification' : 'Valider mon pronostic' ?>
+                        <?= $voted ? 'Enregistrer' : 'Valider' ?>
                     </button>
                     <button class="btn-sm" style="background:#f0f0f0;color:#666" onclick="toggleVoteForm(<?= $m['id'] ?>)">Annuler</button>
                     <span class="prono-vote-saved" id="saved-<?= $m['id'] ?>">✅ Enregistré</span>
                 </div>
             </div>
         </div>
-
-        <script>
-        (function() {
-            const mid = <?= $m['id'] ?>;
-            const savedChoice = <?= $voted ? (int)$m['choix_victoire'] : 'null' ?>;
-            const savedSets   = <?= $m['choix_sets'] ? '"' . $m['choix_sets'] . '"' : 'null' ?>;
-            initSetsSelect(mid, savedChoice, savedSets);
-        })();
-        </script>
         <?php endforeach; endif; ?>
 
         <!-- En attente de résultat -->
@@ -197,6 +197,7 @@ function compute_pts(array $m): ?int {
                 <span class="prono-done-label">&nbsp;</span>
                 <span class="prono-waiting" style="margin:0">⏳ En attente</span>
             </div>
+            <span class="prono-nb-votes"><?= $m['nb_votes'] ?> pronostic<?= $m['nb_votes'] > 1 ? 's' : '' ?></span>
         </div>
         <?php endforeach; endif; ?>
 
@@ -238,6 +239,7 @@ function compute_pts(array $m): ?int {
                 <span class="prono-no-vote">—</span>
                 <?php endif; ?>
             </div>
+            <span class="prono-nb-votes"><?= $m['nb_votes'] ?> pronostic<?= $m['nb_votes'] > 1 ? 's' : '' ?></span>
         </div>
         <?php endforeach; endif; ?>
 
@@ -246,35 +248,24 @@ function compute_pts(array $m): ?int {
     <div id="footer"></div>
     <script src="/js/main.js?v=20260705"></script>
     <script>
+        const SETS_WIN = ['3-0', '3-1', '3-2'];
 
-        const SETS_WIN  = ['3-0', '3-1', '3-2'];
-        const SETS_LOSE = ['0-3', '1-3', '2-3'];
-
-        function initSetsSelect(mid, savedChoice, savedSets) {
-            if (savedChoice === null) return;
-            buildSetsOpts(mid, savedChoice, savedSets);
-        }
-
-        function buildSetsOpts(mid, choix, selectedSets) {
-            const sel = document.getElementById('sets-' + mid);
-            if (!sel) return;
-            const opts = choix === 1 ? SETS_WIN : SETS_LOSE;
-            sel.innerHTML = '<option value="">-- Je ne pronostique pas --</option>';
-            opts.forEach(s => {
-                const o = document.createElement('option');
-                o.value = s;
-                o.textContent = s;
-                if (s === selectedSets) o.selected = true;
-                sel.appendChild(o);
-            });
-        }
-
+        // Cliquer Victoire/Défaite efface un score en sets devenu incohérent.
         function onChoix(mid) {
             const checked = document.querySelector('input[name="choix-' + mid + '"]:checked');
-            const row = document.getElementById('sets-row-' + mid);
-            if (!checked) { row.style.display = 'none'; return; }
-            row.style.display = '';
-            buildSetsOpts(mid, parseInt(checked.value), null);
+            const sel = document.getElementById('sets-' + mid);
+            if (!checked || !sel || !sel.value) return;
+            const isWinSets = SETS_WIN.includes(sel.value);
+            if (isWinSets !== (checked.value === '1')) sel.value = '';
+        }
+
+        // Choisir un score en sets sélectionne automatiquement Victoire/Défaite.
+        function onSetsChange(mid) {
+            const sel = document.getElementById('sets-' + mid);
+            if (!sel || !sel.value) return;
+            const isWinSets = SETS_WIN.includes(sel.value);
+            const radio = document.querySelector('input[name="choix-' + mid + '"][value="' + (isWinSets ? '1' : '0') + '"]');
+            if (radio) radio.checked = true;
         }
 
         function toggleVoteForm(mid) {
@@ -318,12 +309,12 @@ function compute_pts(array $m): ?int {
 
                 saved.style.display = 'inline';
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Enregistrer la modification';
+                submitBtn.textContent = 'Enregistrer';
                 setTimeout(() => saved.style.display = 'none', 3000);
             } else {
                 alert(data.error || 'Erreur');
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Valider mon pronostic';
+                submitBtn.textContent = 'Valider';
             }
         }
     </script>
