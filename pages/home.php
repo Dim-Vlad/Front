@@ -8,6 +8,7 @@ $aVenir          = [];
 $showPronostics  = false;
 $prochainsMatchs = [];
 $topPronostics   = [];
+$nbQuizPending   = 0;
 
 $roleLabels   = [
     'admin'      => 'Admin',
@@ -91,6 +92,16 @@ try {
             ORDER BY (pts_prono + pts_quiz) DESC, pts_prono DESC
             LIMIT 3'
         )->fetchAll();
+
+        if ($user) {
+            $stmtQ = $pdo->prepare(
+                "SELECT COUNT(*) FROM quiz_questions q
+                 WHERE q.actif = 1
+                   AND NOT EXISTS (SELECT 1 FROM quiz_reponses r WHERE r.question_id = q.id AND r.user_id = ?)"
+            );
+            $stmtQ->execute([$user['id']]);
+            $nbQuizPending = (int)$stmtQ->fetchColumn();
+        }
     }
 
 } catch (Exception $e) {}
@@ -249,6 +260,20 @@ $hasPronoCol  = $canEdit || $showPronostics;
         <p class="home-prono-pitch">Tentez de prédire les résultats des matchs du club et grimpez au classement général.</p>
         <a href="<?= $user ? '/pages/pronostics/index.php' : '/pages/auth/connexion.php' ?>" class="btn home-prono-cta">
           <?= $user ? '🎯 Faire mes pronostics →' : '🎯 Je m\'inscris pour jouer →' ?>
+        </a>
+
+        <a href="<?= $user ? '/pages/quiz/index.php' : '/pages/auth/connexion.php' ?>" class="home-prono-quiz-hint">
+          <span class="home-prono-quiz-hint-icon">🧠</span>
+          <span class="home-prono-quiz-hint-text">
+            <?php if ($user && $nbQuizPending > 0): ?>
+            <strong><?= $nbQuizPending ?></strong> question<?= $nbQuizPending > 1 ? 's' : '' ?> du quizz en attente — marquez des points en plus de vos pronostics !
+            <?php elseif ($user): ?>
+            Vous êtes à jour sur le quizz du club, revenez bientôt pour de nouvelles questions !
+            <?php else: ?>
+            Le quizz du club rapporte aussi des points au classement, testez vos connaissances !
+            <?php endif; ?>
+          </span>
+          <span class="home-prono-quiz-hint-arrow">→</span>
         </a>
       </div>
 

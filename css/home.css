@@ -67,10 +67,10 @@
 
 /* --- Bannières accès rapide --- */
 .home-banners {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 16px;
-  max-width: 860px;
+  max-width: 1100px;
   margin: 0 auto 56px;
   padding: 0 24px;
 }
@@ -392,6 +392,45 @@
   align-self: flex-start;
 }
 
+.home-prono-quiz-hint {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin-top: .9rem;
+  padding: .6rem .8rem;
+  border-radius: 10px;
+  background: #f7faf7;
+  border-left: 3px solid var(--secondary-color);
+  text-decoration: none;
+  transition: background .18s ease;
+}
+.home-prono-quiz-hint:hover {
+  background: #eef4ee;
+}
+
+.home-prono-quiz-hint-icon {
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.home-prono-quiz-hint-text {
+  font-size: .82rem;
+  color: #555;
+  line-height: 1.4;
+  flex: 1;
+}
+.home-prono-quiz-hint-text strong {
+  color: var(--secondary-color);
+}
+
+.home-prono-quiz-hint-arrow {
+  font-size: .95rem;
+  color: var(--secondary-color);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
 .home-prono-podium-empty {
   font-size: .88rem;
   color: #888;
@@ -680,6 +719,10 @@
 
   .hero h1 {
     font-size: 1.6rem;
+  }
+
+  .home-banners {
+    grid-template-columns: 1fr;
   }
 
   .home-banner-card {
