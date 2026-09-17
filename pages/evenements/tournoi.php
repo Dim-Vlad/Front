@@ -37,7 +37,7 @@ function formatTel(string $tel): string {
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link href="/css/styles.css?v=20260705" rel="stylesheet">
     <link href="/css/leClub/minibus.css?v=20260623" rel="stylesheet">
-    <link href="/css/evenements/tournoi.css?v=20260705" rel="stylesheet">
+    <link href="/css/evenements/tournoi.css?v=20260917" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -82,7 +82,7 @@ function formatTel(string $tel): string {
                 <?php if ($inscUrl): ?>
                 <div class="sheet-card tournoi-inscription-card">
                     <iframe
-                        id="haWidgetInscription"
+                        class="tournoi-ha-frame"
                         src="<?= h(extractSrc($inscUrl)) ?>"
                         title="Inscription"
                         scrolling="auto"
@@ -103,6 +103,14 @@ function formatTel(string $tel): string {
                 <?php endif; ?>
             <?php endif; ?>
         </section>
+
+        <!-- ── Paiement ─────────────────────────────────────────── -->
+        <?php if (!empty($t['paiement_url'])): ?>
+        <section class="tournoi-section">
+            <h2 class="tournoi-section-title">Paiement</h2>
+            <a href="<?= h(extractSrc($t['paiement_url'])) ?>" target="_blank" rel="noopener" class="tournoi-cta-btn">💳 Payer en ligne →</a>
+        </section>
+        <?php endif; ?>
 
         <!-- ── Tableau des scores ──────────────────────────────── -->
         <?php
@@ -134,14 +142,15 @@ function formatTel(string $tel): string {
     <script src="/js/main.js?v=20260705"></script>
     <script>
 
-        // Auto-resize HelloAsso widget via postMessage
+        // Auto-resize des widgets HelloAsso (inscription et/ou paiement) via postMessage
         const HA_ORIGINS = ['https://www.helloasso.com', 'https://helloasso.com'];
         window.addEventListener('message', function(e) {
             if (!HA_ORIGINS.includes(e.origin)) return;
             const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
             if (data?.action === 'resize' && data?.params?.height) {
-                const frame = document.getElementById('haWidgetInscription');
-                if (frame) frame.style.height = data.params.height + 'px';
+                document.querySelectorAll('.tournoi-ha-frame').forEach(frame => {
+                    if (frame.contentWindow === e.source) frame.style.height = data.params.height + 'px';
+                });
             }
         });
     </script>

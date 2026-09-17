@@ -267,6 +267,7 @@ try {
                             <input type="text" id="ev-lien-label" name="lien_label" placeholder="Inscription…">
                         </div>
                     </div>
+                    <p class="t-insc-hint">Ex : billetterie, inscription, paiement en ligne, page externe…</p>
                     <div class="ev-form-row">
                         <label for="ev-image">Image</label>
                         <input type="file" id="ev-image" name="image" accept="image/jpeg,image/png,image/webp,image/gif">
@@ -328,13 +329,14 @@ try {
                     <div class="ev-form-row ev-form-row--half">
                         <div>
                             <label for="edit-ev-lien">Lien URL</label>
-                            <input type="text" id="edit-ev-lien" name="lien_url">
+                            <input type="text" id="edit-ev-lien" name="lien_url" placeholder="https://…">
                         </div>
                         <div>
                             <label for="edit-ev-lien-label">Libellé du lien</label>
-                            <input type="text" id="edit-ev-lien-label" name="lien_label">
+                            <input type="text" id="edit-ev-lien-label" name="lien_label" placeholder="Inscription…">
                         </div>
                     </div>
+                    <p class="t-insc-hint">Ex : billetterie, inscription, paiement en ligne, page externe…</p>
                     <div class="ev-form-row">
                         <label>Image</label>
                         <div>
@@ -388,10 +390,10 @@ try {
                 </div>
                 <div class="ev-form-section-title">Inscription</div>
                 <div class="ev-form-row">
-                    <label>Lien URL</label>
+                    <label>Formulaire</label>
                     <div>
-                        <input type="text" id="t-inscription-url" placeholder="https://www.helloasso.com/…">
-                        <p class="t-insc-hint">URL seule, sans le code iframe (HelloAsso, Eventbrite…)</p>
+                        <input type="text" id="t-inscription-url" placeholder="https://docs.google.com/forms/…">
+                        <p class="t-insc-hint">Lien vers le formulaire d'inscription (Google Form, HelloAsso…). URL seule, sans le code iframe.</p>
                     </div>
                 </div>
                 <div class="ev-form-row">
@@ -401,6 +403,14 @@ try {
                 <div class="ev-form-row">
                     <label>Email</label>
                     <input type="email" id="t-inscription-email" placeholder="contact@monclub.fr">
+                </div>
+                <div class="ev-form-section-title">Paiement</div>
+                <div class="ev-form-row">
+                    <label>Lien de paiement</label>
+                    <div>
+                        <input type="text" id="t-paiement-url" placeholder="https://www.helloasso.com/…">
+                        <p class="t-insc-hint">Affiché comme un bouton « Payer en ligne » qui ouvre la page HelloAsso dans un nouvel onglet.</p>
+                    </div>
                 </div>
                 <div class="ev-form-section-title" id="t-scores-title">Tableau de scores</div>
                 <div class="ev-form-row" id="t-scores-row">
@@ -462,10 +472,11 @@ try {
             document.getElementById('t-inscription-url').value  = t.inscription_url || t.inscription_contact || '';
             document.getElementById('t-inscription-tel').value  = t.inscription_tel  || '';
             document.getElementById('t-inscription-email').value = t.inscription_email || '';
+            document.getElementById('t-paiement-url').value     = t.paiement_url     || '';
             document.getElementById('t-sheet').value            = t.sheet_url       || '';
         } else {
             ['t-id','t-titre','t-saison','t-description',
-             't-inscription-url','t-inscription-tel','t-inscription-email','t-sheet']
+             't-inscription-url','t-inscription-tel','t-inscription-email','t-paiement-url','t-sheet']
                 .forEach(id => document.getElementById(id).value = '');
             document.getElementById('t-type').value = 'tournoi';
         }
@@ -483,9 +494,14 @@ try {
         const saveBtn  = document.getElementById('tSaveBtn');
         const titre    = document.getElementById('t-titre').value.trim();
         const inscUrl  = document.getElementById('t-inscription-url').value.trim();
+        const paiementUrl = document.getElementById('t-paiement-url').value.trim();
         if (!titre) { statusEl.textContent = 'Le titre est requis.'; statusEl.className = 'modal-status error'; return; }
         if (inscUrl && !inscUrl.match(/^https?:\/\//i)) {
-            statusEl.textContent = 'Le lien URL doit commencer par http:// ou https://';
+            statusEl.textContent = 'Le lien du formulaire d\'inscription doit commencer par http:// ou https://';
+            statusEl.className   = 'modal-status error'; return;
+        }
+        if (paiementUrl && !paiementUrl.match(/^https?:\/\//i)) {
+            statusEl.textContent = 'Le lien de paiement doit commencer par http:// ou https://';
             statusEl.className   = 'modal-status error'; return;
         }
         saveBtn.disabled = true; saveBtn.textContent = 'Enregistrement…';
@@ -501,6 +517,7 @@ try {
         fd.set('inscription_url',   inscUrl);
         fd.set('inscription_tel',   document.getElementById('t-inscription-tel').value.trim());
         fd.set('inscription_email', document.getElementById('t-inscription-email').value.trim());
+        fd.set('paiement_url',      paiementUrl);
         fd.set('sheet_url',         TYPES_WITH_SCORES.has(type) ? document.getElementById('t-sheet').value.trim() : '');
         try {
             const res  = await fetch('/php/tournois/save.php', { method: 'POST', body: fd });
