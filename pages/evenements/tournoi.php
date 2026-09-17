@@ -105,7 +105,7 @@ function formatTel(string $tel): string {
         </section>
 
         <!-- ── Paiement ─────────────────────────────────────────── -->
-        <?php if (!empty($t['paiement_url'])): ?>
+        <?php if (!empty($t['paiement_url']) && (int)($t['show_paiement'] ?? 1) === 1): ?>
         <section class="tournoi-section">
             <h2 class="tournoi-section-title">Paiement</h2>
             <a href="<?= h(extractSrc($t['paiement_url'])) ?>" target="_blank" rel="noopener" class="tournoi-cta-btn">💳 Payer en ligne →</a>
@@ -115,7 +115,8 @@ function formatTel(string $tel): string {
         <!-- ── Tableau des scores ──────────────────────────────── -->
         <?php
         $typesAvecScores = ['tournoi', 'match', 'stage', 'autre'];
-        $showScores = !empty($t['sheet_url']) || in_array($t['type'] ?? 'tournoi', $typesAvecScores);
+        $showScores = (int)($t['show_scores'] ?? 1) === 1
+            && (!empty($t['sheet_url']) || in_array($t['type'] ?? 'tournoi', $typesAvecScores));
         ?>
         <?php if ($showScores): ?>
         <section class="tournoi-section">

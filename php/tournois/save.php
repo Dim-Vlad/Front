@@ -20,6 +20,8 @@ $inscriptionTel   = trim($_POST['inscription_tel']   ?? '') ?: null;
 $inscriptionEmail = trim($_POST['inscription_email'] ?? '') ?: null;
 $sheetUrl         = trim($_POST['sheet_url']         ?? '') ?: null;
 $paiementUrl      = trim($_POST['paiement_url']      ?? '') ?: null;
+$showPaiement     = ($_POST['show_paiement'] ?? '1') === '1' ? 1 : 0;
+$showScores       = ($_POST['show_scores']   ?? '1') === '1' ? 1 : 0;
 
 if ($inscriptionUrl !== null && !preg_match('#^https?://#i', $inscriptionUrl)) {
     ob_end_clean(); echo json_encode(['success'=>false,'error'=>'URL d\'inscription invalide']); exit;
@@ -38,14 +40,14 @@ try {
     $pdo = get_pdo();
     if ($id) {
         $pdo->prepare(
-            "UPDATE tournois SET type=?, titre=?, saison=?, description=?, inscription_url=?, inscription_tel=?, inscription_email=?, paiement_url=?, sheet_url=? WHERE id=?"
-        )->execute([$type, $titre, $saison, $description, $inscriptionUrl, $inscriptionTel, $inscriptionEmail, $paiementUrl, $sheetUrl, $id]);
+            "UPDATE tournois SET type=?, titre=?, saison=?, description=?, inscription_url=?, inscription_tel=?, inscription_email=?, paiement_url=?, show_paiement=?, sheet_url=?, show_scores=? WHERE id=?"
+        )->execute([$type, $titre, $saison, $description, $inscriptionUrl, $inscriptionTel, $inscriptionEmail, $paiementUrl, $showPaiement, $sheetUrl, $showScores, $id]);
         log_activite($pdo, 'Modification page tournoi', 'tournois', $titre);
         ob_end_clean(); echo json_encode(['success'=>true, 'id'=>$id]);
     } else {
         $pdo->prepare(
-            "INSERT INTO tournois (type, titre, saison, description, inscription_url, inscription_tel, inscription_email, paiement_url, sheet_url) VALUES (?,?,?,?,?,?,?,?,?)"
-        )->execute([$type, $titre, $saison, $description, $inscriptionUrl, $inscriptionTel, $inscriptionEmail, $paiementUrl, $sheetUrl]);
+            "INSERT INTO tournois (type, titre, saison, description, inscription_url, inscription_tel, inscription_email, paiement_url, show_paiement, sheet_url, show_scores) VALUES (?,?,?,?,?,?,?,?,?,?,?)"
+        )->execute([$type, $titre, $saison, $description, $inscriptionUrl, $inscriptionTel, $inscriptionEmail, $paiementUrl, $showPaiement, $sheetUrl, $showScores]);
         $newId = (int)$pdo->lastInsertId();
         log_activite($pdo, 'Création page tournoi', 'tournois', $titre);
         ob_end_clean(); echo json_encode(['success'=>true, 'id'=>$newId]);

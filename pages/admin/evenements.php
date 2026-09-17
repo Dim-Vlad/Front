@@ -405,6 +405,9 @@ try {
                     <input type="email" id="t-inscription-email" placeholder="contact@monclub.fr">
                 </div>
                 <div class="ev-form-section-title">Paiement</div>
+                <div class="ev-form-row ev-form-check">
+                    <label><input type="checkbox" id="t-show-paiement" checked> Afficher cette section sur la page publique</label>
+                </div>
                 <div class="ev-form-row">
                     <label>Lien de paiement</label>
                     <div>
@@ -413,6 +416,9 @@ try {
                     </div>
                 </div>
                 <div class="ev-form-section-title" id="t-scores-title">Tableau de scores</div>
+                <div class="ev-form-row ev-form-check" id="t-scores-toggle-row">
+                    <label><input type="checkbox" id="t-show-scores" checked> Afficher cette section sur la page publique</label>
+                </div>
                 <div class="ev-form-row" id="t-scores-row">
                     <label>Google Sheet</label>
                     <div>
@@ -454,8 +460,9 @@ try {
 
     function updateTournoiForm() {
         const show = TYPES_WITH_SCORES.has(document.getElementById('t-type').value);
-        document.getElementById('t-scores-title').style.display = show ? '' : 'none';
-        document.getElementById('t-scores-row').style.display   = show ? '' : 'none';
+        document.getElementById('t-scores-title').style.display      = show ? '' : 'none';
+        document.getElementById('t-scores-toggle-row').style.display = show ? '' : 'none';
+        document.getElementById('t-scores-row').style.display        = show ? '' : 'none';
     }
 
     function openTournoiModal(cardEl) {
@@ -474,10 +481,14 @@ try {
             document.getElementById('t-inscription-email').value = t.inscription_email || '';
             document.getElementById('t-paiement-url').value     = t.paiement_url     || '';
             document.getElementById('t-sheet').value            = t.sheet_url       || '';
+            document.getElementById('t-show-paiement').checked  = t.show_paiement !== '0' && t.show_paiement !== 0;
+            document.getElementById('t-show-scores').checked    = t.show_scores   !== '0' && t.show_scores   !== 0;
         } else {
             ['t-id','t-titre','t-saison','t-description',
              't-inscription-url','t-inscription-tel','t-inscription-email','t-paiement-url','t-sheet']
                 .forEach(id => document.getElementById(id).value = '');
+            document.getElementById('t-show-paiement').checked = true;
+            document.getElementById('t-show-scores').checked   = true;
             document.getElementById('t-type').value = 'tournoi';
         }
         updateTournoiForm();
@@ -518,7 +529,9 @@ try {
         fd.set('inscription_tel',   document.getElementById('t-inscription-tel').value.trim());
         fd.set('inscription_email', document.getElementById('t-inscription-email').value.trim());
         fd.set('paiement_url',      paiementUrl);
+        fd.set('show_paiement',     document.getElementById('t-show-paiement').checked ? '1' : '0');
         fd.set('sheet_url',         TYPES_WITH_SCORES.has(type) ? document.getElementById('t-sheet').value.trim() : '');
+        fd.set('show_scores',       document.getElementById('t-show-scores').checked ? '1' : '0');
         try {
             const res  = await fetch('/php/tournois/save.php', { method: 'POST', body: fd });
             const json = await res.json();
