@@ -309,6 +309,80 @@
     border-color: #bbb;
 }
 
+/* Tuile lien placée dans un bloc de documents : même look qu'une ligne de la liste */
+.doc-section-tile {
+    border-top: 1px solid #f0f5f0;
+    background: #f8fbf8;
+}
+
+.doc-section-tile .action-card {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+}
+
+.doc-section-tile .action-card:hover {
+    box-shadow: none;
+}
+
+.doc-section-tile .action-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    background: var(--primary-color, #acc2ab);
+    border-radius: 50%;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.doc-section-tile .action-card-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.doc-section-tile .action-card-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #2a2a2a;
+}
+
+.doc-section-tile .action-card-btns {
+    align-self: center;
+    flex-shrink: 0;
+}
+
+.doc-section-tile .action-card-btn {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+.doc-section-tile .action-edit-btn {
+    position: static;
+    opacity: 1;
+    padding: 4px 7px;
+    font-size: 0.78rem;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 520px) {
+    .doc-section-tile .action-card {
+        flex-wrap: wrap;
+    }
+    .doc-section-tile .action-card-body {
+        flex: 1 1 calc(100% - 50px);
+    }
+}
+
 /* ── Colonne liens ── */
 .actions-column {
     display: flex;
@@ -842,6 +916,7 @@ html { scroll-behavior: smooth; }
 }
 
 .modal-form-group input[type="text"],
+.modal-form-group input[type="number"],
 .modal-form-group input[type="url"] {
     padding: 0.55rem 0.8rem;
     border: 1.5px solid #ddd;

@@ -63,6 +63,31 @@ function youtube_id(string $url): string {
     if (preg_match('/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/', $url, $m)) return $m[1];
     return '';
 }
+
+function render_action_card(array $l, string $slug, string $icon, bool $canEdit): void {
+    ?>
+                <div class="action-card" data-id="<?= $l['id'] ?>" data-slug="<?= $slug ?>" data-label="<?= htmlspecialchars($l['label'], ENT_QUOTES) ?>" data-url="<?= htmlspecialchars($l['url'], ENT_QUOTES) ?>">
+                    <div class="action-card-icon"><?= $icon ?></div>
+                    <div class="action-card-body">
+                        <span class="action-card-title"><?= htmlspecialchars($l['label']) ?></span>
+                        <?php if ($l['description']): ?>
+                        <span class="action-card-desc"><?= htmlspecialchars($l['description']) ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="action-card-btns">
+                        <?php if ($l['url']): ?>
+                        <a class="action-card-btn" href="<?= htmlspecialchars($l['url']) ?>" target="<?= str_starts_with($l['url'], 'http') ? '_blank' : '_self' ?>" rel="noopener">Accéder →</a>
+                        <?php endif; ?>
+                        <?php if ($slug === 'myffvolley'): ?>
+                        <a class="action-card-btn action-card-btn--ghost" href="#tuto-section">📹 Voir les tutos</a>
+                        <?php endif; ?>
+                    </div>
+                    <?php if ($canEdit): ?>
+                    <button class="action-edit-btn" onclick="openLienModal(this.closest('.action-card'))" title="Modifier">✏️</button>
+                    <?php endif; ?>
+                </div>
+    <?php
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -72,7 +97,7 @@ function youtube_id(string $url): string {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Licences - VBO</title>
     <link href="/css/styles.css?v=20260705" rel="stylesheet">
-    <link href="/css/leClub/licence.css?v=20260922" rel="stylesheet">
+    <link href="/css/leClub/licence.css?v=20260925" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -107,7 +132,7 @@ function youtube_id(string $url): string {
                     </div>
                     <ul class="doc-list">
                         <?php foreach ($docsBySection['licence'] as $d): ?>
-                        <li class="doc-item" data-id="<?= $d['id'] ?>" data-label="<?= htmlspecialchars($d['label'], ENT_QUOTES) ?>" data-path="<?= htmlspecialchars($d['path'], ENT_QUOTES) ?>">
+                        <li class="doc-item" data-id="<?= $d['id'] ?>" data-numero="<?= (int)$d['numero'] ?>" data-label="<?= htmlspecialchars($d['label'], ENT_QUOTES) ?>" data-path="<?= htmlspecialchars($d['path'], ENT_QUOTES) ?>">
                             <span class="doc-num"><?= $d['numero'] ?></span>
                             <span class="doc-label"><?= htmlspecialchars($d['label']) ?></span>
                             <div class="doc-actions">
@@ -121,6 +146,11 @@ function youtube_id(string $url): string {
                         </li>
                         <?php endforeach; ?>
                     </ul>
+                    <?php if (isset($liensBySlug['inscription'])): ?>
+                    <div class="doc-section-tile">
+                        <?php render_action_card($liensBySlug['inscription'], 'inscription', '📝', $canEdit); ?>
+                    </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Fiches médicales -->
@@ -130,7 +160,7 @@ function youtube_id(string $url): string {
                     </div>
                     <ul class="doc-list">
                         <?php foreach ($docsBySection['medical'] as $d): ?>
-                        <li class="doc-item" data-id="<?= $d['id'] ?>" data-label="<?= htmlspecialchars($d['label'], ENT_QUOTES) ?>" data-path="<?= htmlspecialchars($d['path'], ENT_QUOTES) ?>">
+                        <li class="doc-item" data-id="<?= $d['id'] ?>" data-numero="<?= (int)$d['numero'] ?>" data-label="<?= htmlspecialchars($d['label'], ENT_QUOTES) ?>" data-path="<?= htmlspecialchars($d['path'], ENT_QUOTES) ?>">
                             <span class="doc-num"><?= $d['numero'] ?></span>
                             <span class="doc-label"><?= htmlspecialchars($d['label']) ?></span>
                             <div class="doc-actions">
@@ -151,31 +181,9 @@ function youtube_id(string $url): string {
             <!-- ── Colonne liens ── -->
             <div class="actions-column">
 
-                <?php foreach (['helloasso' => '💳', 'myffvolley' => '📱', 'inscription' => '📝'] as $slug => $icon):
-                    if (!isset($liensBySlug[$slug])) continue;
-                    $l = $liensBySlug[$slug];
-                ?>
-                <div class="action-card" data-id="<?= $l['id'] ?>" data-slug="<?= $slug ?>" data-label="<?= htmlspecialchars($l['label'], ENT_QUOTES) ?>" data-url="<?= htmlspecialchars($l['url'], ENT_QUOTES) ?>">
-                    <div class="action-card-icon"><?= $icon ?></div>
-                    <div class="action-card-body">
-                        <span class="action-card-title"><?= htmlspecialchars($l['label']) ?></span>
-                        <?php if ($l['description']): ?>
-                        <span class="action-card-desc"><?= htmlspecialchars($l['description']) ?></span>
-                        <?php endif; ?>
-                    </div>
-                    <div class="action-card-btns">
-                        <?php if ($l['url']): ?>
-                        <a class="action-card-btn" href="<?= htmlspecialchars($l['url']) ?>" target="<?= str_starts_with($l['url'], 'http') ? '_blank' : '_self' ?>" rel="noopener">Accéder →</a>
-                        <?php endif; ?>
-                        <?php if ($slug === 'myffvolley'): ?>
-                        <a class="action-card-btn action-card-btn--ghost" href="#tuto-section">📹 Voir les tutos</a>
-                        <?php endif; ?>
-                    </div>
-                    <?php if ($canEdit): ?>
-                    <button class="action-edit-btn" onclick="openLienModal(this.closest('.action-card'))" title="Modifier">✏️</button>
-                    <?php endif; ?>
-                </div>
-                <?php endforeach; ?>
+                <?php foreach (['helloasso' => '💳', 'myffvolley' => '📱'] as $slug => $icon):
+                    if (isset($liensBySlug[$slug])) render_action_card($liensBySlug[$slug], $slug, $icon, $canEdit);
+                endforeach; ?>
 
             </div><!-- /actions-column -->
 
@@ -295,6 +303,10 @@ function youtube_id(string $url): string {
                     <div class="modal-form-group">
                         <label for="doc-label">Libellé</label>
                         <input type="text" name="label" id="doc-label" required>
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="doc-numero">Numéro</label>
+                        <input type="number" name="numero" id="doc-numero" min="0" max="255" required>
                     </div>
                     <div class="modal-form-group">
                         <label for="doc-file">Nouveau fichier PDF <span class="optional">(optionnel)</span></label>

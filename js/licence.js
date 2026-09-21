@@ -136,6 +136,7 @@
 function openDocModal(item) {
     document.getElementById('doc-id').value          = item.dataset.id;
     document.getElementById('doc-label').value       = item.dataset.label;
+    document.getElementById('doc-numero').value      = item.dataset.numero;
     document.getElementById('doc-current-path').textContent = item.dataset.path || '(aucun fichier)';
     document.getElementById('doc-file').value        = '';
     document.getElementById('doc-delete-file-btn').style.display = item.dataset.path ? '' : 'none';
@@ -345,9 +346,11 @@ function closeSaisonModal() {
 function updateDocInDOM(data) {
     const item = document.querySelector(`.doc-item[data-id="${data.id}"]`);
     if (!item) return;
-    item.dataset.label = data.label;
-    item.dataset.path  = data.path;
+    item.dataset.label  = data.label;
+    item.dataset.path   = data.path;
+    item.dataset.numero = data.numero;
     item.querySelector('.doc-label').textContent = data.label;
+    item.querySelector('.doc-num').textContent   = data.numero;
     const actions = item.querySelector('.doc-actions');
     let dl = item.querySelector('.doc-dl');
     if (data.path) {

@@ -19,6 +19,10 @@ $label = trim($_POST['label'] ?? '');
 if ($id <= 0 || $label === '') {
     http_response_code(400); ob_end_clean(); echo json_encode(['error' => 'ID et libellé requis.']); exit;
 }
+$numero = filter_var($_POST['numero'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 255]]);
+if ($numero === false || $numero === null) {
+    http_response_code(400); ob_end_clean(); echo json_encode(['error' => 'Le numéro doit être un entier entre 0 et 255.']); exit;
+}
 
 $pdo  = get_pdo();
 $stmt = $pdo->prepare('SELECT * FROM licence_documents WHERE id = ?');
@@ -43,10 +47,10 @@ if (isset($_FILES['fichier']) && $_FILES['fichier']['error'] === UPLOAD_ERR_OK) 
     $newPath = '/documents/doc-lience/' . $filename;
 }
 
-$pdo->prepare('UPDATE licence_documents SET label = ?, path = ? WHERE id = ?')
-    ->execute([$label, $newPath, $id]);
+$pdo->prepare('UPDATE licence_documents SET label = ?, numero = ?, path = ? WHERE id = ?')
+    ->execute([$label, $numero, $newPath, $id]);
 
-log_activite($pdo, 'modification', 'licence_document', "Modification du document « {$doc['slug']} » → « {$label} »");
+log_activite($pdo, 'modification', 'licence_document', "Modification du document « {$doc['slug']} » → « {$label} » (n° {$numero})");
 
 $row = $pdo->prepare('SELECT * FROM licence_documents WHERE id = ?');
 $row->execute([$id]);
