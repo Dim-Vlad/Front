@@ -138,6 +138,7 @@ function openDocModal(item) {
     document.getElementById('doc-label').value       = item.dataset.label;
     document.getElementById('doc-current-path').textContent = item.dataset.path || '(aucun fichier)';
     document.getElementById('doc-file').value        = '';
+    document.getElementById('doc-delete-file-btn').style.display = item.dataset.path ? '' : 'none';
     document.getElementById('doc-status').textContent = '';
     document.getElementById('doc-status').className  = 'modal-status';
     document.getElementById('docModal').classList.add('open');
@@ -145,6 +146,47 @@ function openDocModal(item) {
 
 function closeDocModal() {
     document.getElementById('docModal')?.classList.remove('open');
+}
+
+async function removeDocRow() {
+    const label = document.getElementById('doc-label').value;
+    if (!confirm('Supprimer complètement le document « ' + label + ' » ? Cette action est définitive.')) return;
+    const status = document.getElementById('doc-status');
+    status.textContent = 'Suppression…'; status.className = 'modal-status';
+    const id = document.getElementById('doc-id').value;
+    const fd = new FormData();
+    fd.set('id', id);
+    fd.set('ligne', '1');
+    try {
+        const res  = await fetch('/php/licence/delete_licence_document.php', { method: 'POST', body: fd });
+        const json = await res.json();
+        if (json.success) {
+            document.querySelector(`.doc-item[data-id="${id}"]`)?.remove();
+            closeDocModal();
+        } else {
+            status.textContent = json.error || 'Erreur.'; status.className = 'modal-status error';
+        }
+    } catch { status.textContent = 'Erreur réseau.'; status.className = 'modal-status error'; }
+}
+
+async function removeDocFile() {
+    if (!confirm('Supprimer le fichier actuel de ce document ?')) return;
+    const status = document.getElementById('doc-status');
+    status.textContent = 'Suppression…'; status.className = 'modal-status';
+    const fd = new FormData();
+    fd.set('id', document.getElementById('doc-id').value);
+    try {
+        const res  = await fetch('/php/licence/delete_licence_document.php', { method: 'POST', body: fd });
+        const json = await res.json();
+        if (json.success) {
+            updateDocInDOM(json.data);
+            document.getElementById('doc-current-path').textContent = '(aucun fichier)';
+            document.getElementById('doc-delete-file-btn').style.display = 'none';
+            status.textContent = 'Fichier supprimé ✓'; status.className = 'modal-status success';
+        } else {
+            status.textContent = json.error || 'Erreur.'; status.className = 'modal-status error';
+        }
+    } catch { status.textContent = 'Erreur réseau.'; status.className = 'modal-status error'; }
 }
 
 // ── Modales liens ──────────────────────────────────
@@ -306,8 +348,21 @@ function updateDocInDOM(data) {
     item.dataset.label = data.label;
     item.dataset.path  = data.path;
     item.querySelector('.doc-label').textContent = data.label;
-    const dl = item.querySelector('.doc-dl');
-    if (dl && data.path) dl.href = data.path;
+    const actions = item.querySelector('.doc-actions');
+    let dl = item.querySelector('.doc-dl');
+    if (data.path) {
+        if (!dl) {
+            dl = document.createElement('a');
+            dl.className   = 'doc-dl';
+            dl.target      = '_blank';
+            dl.title       = 'Télécharger';
+            dl.textContent = '⬇ PDF';
+            actions.insertBefore(dl, actions.firstChild);
+        }
+        dl.href = data.path;
+    } else if (dl) {
+        dl.remove();
+    }
 }
 
 function updateLienInDOM(data) {

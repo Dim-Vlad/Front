@@ -72,7 +72,7 @@ function youtube_id(string $url): string {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Licences - VBO</title>
     <link href="/css/styles.css?v=20260705" rel="stylesheet">
-    <link href="/css/leClub/licence.css?v=20260803" rel="stylesheet">
+    <link href="/css/leClub/licence.css?v=20260922" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -300,11 +300,13 @@ function youtube_id(string $url): string {
                         <label for="doc-file">Nouveau fichier PDF <span class="optional">(optionnel)</span></label>
                         <div class="current-path" id="doc-current-path"></div>
                         <input type="file" name="fichier" id="doc-file" accept="application/pdf">
+                        <button type="button" class="btn-delete-file" id="doc-delete-file-btn" onclick="removeDocFile()" style="display:none">🗑 Supprimer le fichier actuel</button>
                     </div>
                     <div class="modal-actions">
                         <button type="submit" class="btn-save">Enregistrer</button>
                         <button type="button" class="btn-cancel-modal" onclick="closeDocModal()">Annuler</button>
                     </div>
+                    <button type="button" class="btn-delete-file btn-delete-row" onclick="removeDocRow()">🗑 Supprimer ce document</button>
                     <p class="modal-status" id="doc-status"></p>
                 </form>
             </div>
