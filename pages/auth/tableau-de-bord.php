@@ -14,6 +14,37 @@ $hasSections        = has_any_role(['admin', 'bureau', 'moderateur', 'entraineur
 $hasEntraineur      = $hasSections;
 $hasCommissions     = has_any_role(['bureau', 'admin', 'moderateur', 'arbitre']);
 
+$canEdit = has_any_role(['admin', 'moderateur']);
+
+$tiles = ['jeux' => [], 'entraineur' => [], 'commissions' => []];
+foreach ($pdo->query('SELECT * FROM dashboard_tiles ORDER BY section, ordre, id')->fetchAll() as $t) {
+    $tiles[$t['section']][] = $t;
+}
+
+$sectionLabels = ['jeux' => '🎮 Jeux', 'entraineur' => '🏋️ Espace Entraîneur', 'commissions' => '📁 Commissions'];
+
+function render_dashboard_tile(array $t, bool $canEdit): void {
+    $isExternal = str_starts_with($t['url'], 'http');
+    ?>
+                <div class="dashboard-card dashboard-card--tile"
+                    data-id="<?= $t['id'] ?>"
+                    data-section="<?= htmlspecialchars($t['section'], ENT_QUOTES) ?>"
+                    data-icone="<?= htmlspecialchars($t['icone'], ENT_QUOTES) ?>"
+                    data-titre="<?= htmlspecialchars($t['titre'], ENT_QUOTES) ?>"
+                    data-description="<?= htmlspecialchars($t['description'], ENT_QUOTES) ?>"
+                    data-url="<?= htmlspecialchars($t['url'], ENT_QUOTES) ?>">
+                    <a class="tile-link" href="<?= htmlspecialchars($t['url']) ?>" target="<?= $isExternal ? '_blank' : '_self' ?>" rel="noopener">
+                        <div class="card-icon"><?= htmlspecialchars($t['icone']) ?></div>
+                        <h2><?= htmlspecialchars($t['titre']) ?></h2>
+                        <p><?= htmlspecialchars($t['description']) ?></p>
+                    </a>
+                    <?php if ($canEdit): ?>
+                    <button type="button" class="tile-edit-btn" onclick="openTileModal(this.closest('.dashboard-card'))" title="Modifier">✏️</button>
+                    <?php endif; ?>
+                </div>
+    <?php
+}
+
 $roleLabels = ['admin'=>'Admin','bureau'=>'Bureau','moderateur'=>'Modérateur','entraineur'=>'Entraîneur','arbitre'=>'Arbitre','adherent'=>'Adhérent'];
 $rolePriority = ['admin','moderateur','bureau','entraineur','arbitre','adherent'];
 $titleRole = 'Membre';
@@ -31,7 +62,7 @@ foreach ($rolePriority as $r) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de bord - <?= $titleRole ?></title>
     <link href="/css/styles.css?v=20260705" rel="stylesheet">
-    <link href="/css/tableau-de-bord.css?v=20260726" rel="stylesheet">
+    <link href="/css/tableau-de-bord.css?v=20260925" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -103,7 +134,12 @@ foreach ($rolePriority as $r) {
         <!-- Section Jeux -->
         <?php if ($hasSections): ?>
         <div class="dashboard-section">
-            <h2 class="dashboard-section-title">🎮 Jeux</h2>
+            <div class="dashboard-section-header">
+                <h2 class="dashboard-section-title">🎮 Jeux</h2>
+                <?php if ($canEdit): ?>
+                <button type="button" class="btn-add-tile" onclick="openTileModal(null, 'jeux')">+ Ajouter une tuile</button>
+                <?php endif; ?>
+            </div>
             <div class="dashboard-cards">
         <?php else: ?>
         <div class="dashboard-cards">
@@ -127,6 +163,8 @@ foreach ($rolePriority as $r) {
                     <p>Testez vos connaissances sur le volley-ball et le club.</p>
                 </a>
 
+                <?php foreach ($tiles['jeux'] as $t) render_dashboard_tile($t, $canEdit); ?>
+
         <?php if ($hasSections): ?>
             </div>
         </div>
@@ -137,7 +175,12 @@ foreach ($rolePriority as $r) {
         <!-- Section Espace Entraîneur -->
         <?php if ($hasEntraineur): ?>
         <div class="dashboard-section">
-            <h2 class="dashboard-section-title">🏋️ Espace Entraîneur</h2>
+            <div class="dashboard-section-header">
+                <h2 class="dashboard-section-title">🏋️ Espace Entraîneur</h2>
+                <?php if ($canEdit): ?>
+                <button type="button" class="btn-add-tile" onclick="openTileModal(null, 'entraineur')">+ Ajouter une tuile</button>
+                <?php endif; ?>
+            </div>
             <div class="dashboard-cards">
 
                 <?php if (!has_any_role(['arbitre', 'adherent'])): ?>
@@ -166,6 +209,8 @@ foreach ($rolePriority as $r) {
                     <p>Ressources de formation par public : entraîneurs, arbitres, marqueurs, joueurs et détection.</p>
                 </a>
 
+                <?php foreach ($tiles['entraineur'] as $t) render_dashboard_tile($t, $canEdit); ?>
+
             </div>
         </div>
         <?php endif; ?>
@@ -173,7 +218,12 @@ foreach ($rolePriority as $r) {
         <!-- Section Commissions -->
         <?php if ($hasCommissions): ?>
         <div class="dashboard-section">
-            <h2 class="dashboard-section-title">📁 Commissions</h2>
+            <div class="dashboard-section-header">
+                <h2 class="dashboard-section-title">📁 Commissions</h2>
+                <?php if ($canEdit): ?>
+                <button type="button" class="btn-add-tile" onclick="openTileModal(null, 'commissions')">+ Ajouter une tuile</button>
+                <?php endif; ?>
+            </div>
             <div class="dashboard-cards">
 
                 <?php if (has_any_role(['bureau', 'admin', 'moderateur'])): ?>
@@ -192,6 +242,8 @@ foreach ($rolePriority as $r) {
                 </a>
                 <?php endif; ?>
 
+                <?php foreach ($tiles['commissions'] as $t) render_dashboard_tile($t, $canEdit); ?>
+
             </div>
         </div>
         <?php endif; ?>
@@ -201,8 +253,58 @@ foreach ($rolePriority as $r) {
 
     </div>
 
+    <?php if ($canEdit): ?>
+    <!-- ── Modale tuile ── -->
+    <div id="tileModal" class="tile-modal">
+        <div class="tile-modal-content">
+            <div class="tile-modal-header">
+                <h3 id="tileModalTitle">Ajouter une tuile</h3>
+                <span class="close" onclick="closeTileModal()">&times;</span>
+            </div>
+            <div class="tile-modal-body">
+                <form id="tile-form">
+                    <input type="hidden" name="id" id="tile-id" value="0">
+                    <div class="modal-form-group">
+                        <label for="tile-section">Section</label>
+                        <select name="section" id="tile-section">
+                            <?php foreach ($sectionLabels as $key => $label): ?>
+                            <option value="<?= $key ?>"><?= $label ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="tile-icone">Pictogramme</label>
+                        <input type="text" name="icone" id="tile-icone" maxlength="10" placeholder="📌" required>
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="tile-titre">Titre</label>
+                        <input type="text" name="titre" id="tile-titre" maxlength="100" required>
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="tile-description">Description</label>
+                        <textarea name="description" id="tile-description" rows="2" maxlength="255"></textarea>
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="tile-url">Lien</label>
+                        <input type="text" name="url" id="tile-url" placeholder="/pages/... ou https://..." required>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-save">Enregistrer</button>
+                        <button type="button" class="btn-cancel-modal" onclick="closeTileModal()">Annuler</button>
+                    </div>
+                    <button type="button" class="btn-delete-tile" id="tile-delete-btn" onclick="deleteTile()" style="display:none">🗑 Supprimer cette tuile</button>
+                    <p class="modal-status" id="tile-status"></p>
+                </form>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <div id="footer"></div>
 
     <script src="/js/main.js?v=20260705"></script>
+    <?php if ($canEdit): ?>
+    <script src="/js/dashboard-tiles.js?v=20260925"></script>
+    <?php endif; ?>
 </body>
 </html>
