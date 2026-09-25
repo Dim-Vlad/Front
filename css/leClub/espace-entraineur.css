@@ -147,6 +147,7 @@
     flex-shrink: 0;
 }
 
+.btn-doc-order,
 .btn-doc-edit,
 .btn-doc-del {
     background: transparent;
@@ -158,6 +159,7 @@
     transition: background .15s, border-color .15s;
     line-height: 1.4;
 }
+.btn-doc-order:hover { background: #eaf3ea; border-color: var(--secondary-color); }
 .btn-doc-edit:hover { background: #eaf3ea; border-color: var(--secondary-color); }
 .btn-doc-del:hover  { background: #fde8e8; border-color: #c0392b; }
 

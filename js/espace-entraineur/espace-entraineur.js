@@ -113,6 +113,21 @@ function buildDocEl(doc) {
         const modBtns = document.createElement('div');
         modBtns.className = 'doc-mod-btns';
 
+        const upBtn = document.createElement('button');
+        upBtn.className   = 'btn-doc-order';
+        upBtn.title       = 'Monter';
+        upBtn.textContent = '▲';
+        upBtn.addEventListener('click', () => moveDoc(doc.id, 'up'));
+
+        const downBtn = document.createElement('button');
+        downBtn.className   = 'btn-doc-order';
+        downBtn.title       = 'Descendre';
+        downBtn.textContent = '▼';
+        downBtn.addEventListener('click', () => moveDoc(doc.id, 'down'));
+
+        modBtns.appendChild(upBtn);
+        modBtns.appendChild(downBtn);
+
         const editBtn = document.createElement('button');
         editBtn.className   = 'btn-doc-edit';
         editBtn.title       = 'Modifier';
@@ -217,6 +232,20 @@ async function submitDoc(e) {
     } finally {
         saveBtn.disabled    = false;
         saveBtn.textContent = 'Enregistrer';
+    }
+}
+
+async function moveDoc(docId, direction) {
+    try {
+        const fd = new FormData();
+        fd.set('id', docId);
+        fd.set('direction', direction);
+        const res  = await fetch('/php/espace-entraineur/reorder_document.php', { method: 'POST', body: fd });
+        const json = await res.json();
+        if (!json.success) throw new Error(json.error);
+        await loadData();
+    } catch (err) {
+        alert('Erreur : ' + err.message);
     }
 }
 
