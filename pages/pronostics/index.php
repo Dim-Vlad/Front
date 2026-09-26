@@ -9,7 +9,9 @@ $now    = date('Y-m-d H:i:s');
 $matchs = $pdo->prepare(
     'SELECT m.*,
             v.choix_victoire, v.choix_sets, v.updated_at AS vote_at,
-            (SELECT COUNT(*) FROM pronostics_votes pv WHERE pv.match_id = m.id) AS nb_votes
+            (SELECT COUNT(*) FROM pronostics_votes pv WHERE pv.match_id = m.id) AS nb_votes,
+            (SELECT COUNT(*) FROM pronostics_votes pv WHERE pv.match_id = m.id AND pv.choix_victoire = 1) AS nb_victoire,
+            (SELECT COUNT(*) FROM pronostics_votes pv WHERE pv.match_id = m.id AND pv.choix_victoire = 0) AS nb_defaite
     FROM pronostics_matchs m
     LEFT JOIN pronostics_votes v ON v.match_id = m.id AND v.user_id = :uid
     ORDER BY m.date_match DESC'
@@ -55,7 +57,7 @@ function compute_pts(array $m): ?int {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pronostics - VBO</title>
     <link href="/css/styles.css?v=20260705" rel="stylesheet">
-    <link href="/css/pronostics.css?v=20260822" rel="stylesheet">
+    <link href="/css/pronostics.css?v=20260928" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -125,6 +127,12 @@ function compute_pts(array $m): ?int {
                 </div>
             </div>
             <span class="prono-nb-votes"><?= $m['nb_votes'] ?> pronostic<?= $m['nb_votes'] > 1 ? 's' : '' ?></span>
+            <?php if ((int)$m['nb_votes'] > 0): ?>
+            <div class="prono-vote-counts">
+                <span class="prono-vote-count prono-vote-count--win">✅ Victoire <strong><?= (int)$m['nb_victoire'] ?></strong></span>
+                <span class="prono-vote-count prono-vote-count--lose">❌ Défaite <strong><?= (int)$m['nb_defaite'] ?></strong></span>
+            </div>
+            <?php endif; ?>
             <button class="prono-vote-submit prono-vote-toggle" style="padding:7px 16px;font-size:.82rem" onclick="toggleVoteForm(<?= $m['id'] ?>)">
                 <?= $voted ? '✏️ Modifier' : '🎯 Voter' ?>
             </button>
@@ -198,6 +206,12 @@ function compute_pts(array $m): ?int {
                 <span class="prono-waiting" style="margin:0">⏳ En attente</span>
             </div>
             <span class="prono-nb-votes"><?= $m['nb_votes'] ?> pronostic<?= $m['nb_votes'] > 1 ? 's' : '' ?></span>
+            <?php if ((int)$m['nb_votes'] > 0): ?>
+            <div class="prono-vote-counts">
+                <span class="prono-vote-count prono-vote-count--win">✅ Victoire <strong><?= (int)$m['nb_victoire'] ?></strong></span>
+                <span class="prono-vote-count prono-vote-count--lose">❌ Défaite <strong><?= (int)$m['nb_defaite'] ?></strong></span>
+            </div>
+            <?php endif; ?>
         </div>
         <?php endforeach; endif; ?>
 
