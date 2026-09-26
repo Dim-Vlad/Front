@@ -17,7 +17,7 @@ $dossiers = $pdo->query("SELECT id, nom, url FROM drive_dossiers ORDER BY ordre 
     <title>Gestion des dossiers - Admin VBO</title>
     <link href="/css/styles.css?v=20260705" rel="stylesheet">
     <link href="/css/tableau-de-bord.css?v=20260623" rel="stylesheet">
-    <link href="/css/admin/drive-dossiers.css?v=20260624" rel="stylesheet">
+    <link href="/css/admin/drive-dossiers.css?v=20260928" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

@@ -553,7 +553,7 @@
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.55);
-    z-index: 1000;
+    z-index: 1100;
     align-items: flex-start;
     justify-content: center;
     padding: 2rem 1rem;
@@ -933,6 +933,49 @@
 
     .terrain-cb-group {
         grid-template-columns: 80px 1fr;
+    }
+
+    /* Tableau des entraînements rétréci pour limiter le défilement horizontal ;
+       le pincer-zoomer reste possible (meta viewport) pour lire le détail. */
+    .entr-table {
+        min-width: 480px;
+        font-size: 0.72rem;
+    }
+
+    .entr-table th {
+        font-size: 0.64rem;
+        padding: 0.4rem 0.3rem;
+    }
+
+    .entr-table td {
+        padding: 0.4rem 0.3rem;
+    }
+
+    .day-cell {
+        width: 44px;
+        font-size: 0.72rem;
+    }
+
+    .horaire-cell {
+        min-width: 74px;
+        white-space: normal;
+    }
+
+    .horaire-time {
+        font-size: 0.68rem;
+    }
+
+    .horaire-lieu {
+        font-size: 0.6rem;
+    }
+
+    .cell-coach {
+        font-size: 0.66rem;
+    }
+
+    /* Modale de créneau : passe sous le menu fixe sinon (navbar en 1010). */
+    .entr-modal {
+        padding: 110px 0.5rem 1rem;
     }
 }
 

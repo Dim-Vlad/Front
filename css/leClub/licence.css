@@ -681,7 +681,7 @@ html { scroll-behavior: smooth; }
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.55);
-    z-index: 1000;
+    z-index: 1100;
     align-items: flex-start;
     justify-content: center;
     padding: 110px 1rem 2rem;

@@ -45,7 +45,7 @@ function renderCell(string $text): string {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Planning des entraînements - VBO</title>
     <link href="/css/styles.css?v=20260705" rel="stylesheet">
-    <link href="/css/leClub/entrainements.css?v=20260802" rel="stylesheet">
+    <link href="/css/leClub/entrainements.css?v=20260928" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
