@@ -617,6 +617,46 @@
 }
 .tile-modal-body textarea { resize: vertical; }
 
+.tile-roles-hint {
+    font-size: .76rem;
+    color: #999;
+    margin: 0 0 .5rem;
+}
+
+.tile-roles-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem .9rem;
+}
+
+.tile-role-cb {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    font-size: .85rem;
+    font-weight: 500;
+    color: #333;
+    text-transform: none;
+    letter-spacing: 0;
+    cursor: pointer;
+}
+
+.tile-role-cb input[type="checkbox"] {
+    width: auto;
+    cursor: pointer;
+}
+
+.tile-roles-badge {
+    display: inline-block;
+    margin-top: .4rem;
+    font-size: .68rem;
+    font-weight: 600;
+    color: #b07000;
+    background: #fff6e0;
+    border-radius: 10px;
+    padding: 2px 8px;
+}
+
 .tile-modal-body .modal-actions {
     display: flex;
     gap: .75rem;

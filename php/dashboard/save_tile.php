@@ -20,11 +20,17 @@ $icone       = trim($_POST['icone'] ?? '');
 $titre       = trim($_POST['titre'] ?? '');
 $description = trim($_POST['description'] ?? '');
 $url         = trim($_POST['url'] ?? '');
+$rolesInput  = $_POST['roles'] ?? [];
 
-$validSections = ['jeux', 'entraineur', 'commissions'];
+$validSections = ['jeux', 'entraineur', 'commissions', 'general'];
 if (!in_array($section, $validSections, true)) {
     http_response_code(400); ob_end_clean(); echo json_encode(['error' => 'Section invalide.']); exit;
 }
+
+$validRoles = ['admin', 'moderateur', 'bureau', 'entraineur', 'arbitre', 'adherent'];
+if (!is_array($rolesInput)) { $rolesInput = []; }
+$roles = array_values(array_intersect($validRoles, $rolesInput));
+$rolesJson = json_encode($roles);
 if ($icone === '') {
     http_response_code(400); ob_end_clean(); echo json_encode(['error' => 'Le pictogramme est requis.']); exit;
 }
@@ -43,16 +49,16 @@ try {
         $stmt->execute([$id]);
         if (!$stmt->fetch()) { http_response_code(404); ob_end_clean(); echo json_encode(['error' => 'Tuile introuvable.']); exit; }
 
-        $pdo->prepare('UPDATE dashboard_tiles SET section=?, icone=?, titre=?, description=?, url=? WHERE id=?')
-            ->execute([$section, $icone, $titre, $description, $url, $id]);
+        $pdo->prepare('UPDATE dashboard_tiles SET section=?, icone=?, titre=?, description=?, url=?, roles=? WHERE id=?')
+            ->execute([$section, $icone, $titre, $description, $url, $rolesJson, $id]);
         log_activite($pdo, 'modification', 'dashboard_tile', "Modification de la tuile « {$titre} »");
     } else {
         $stmtMax = $pdo->prepare('SELECT COALESCE(MAX(ordre),0)+1 FROM dashboard_tiles WHERE section=?');
         $stmtMax->execute([$section]);
         $ordre = (int)$stmtMax->fetchColumn();
 
-        $pdo->prepare('INSERT INTO dashboard_tiles (section, icone, titre, description, url, ordre) VALUES (?,?,?,?,?,?)')
-            ->execute([$section, $icone, $titre, $description, $url, $ordre]);
+        $pdo->prepare('INSERT INTO dashboard_tiles (section, icone, titre, description, url, ordre, roles) VALUES (?,?,?,?,?,?,?)')
+            ->execute([$section, $icone, $titre, $description, $url, $ordre, $rolesJson]);
         $id = (int)$pdo->lastInsertId();
         log_activite($pdo, 'ajout', 'dashboard_tile', "Ajout de la tuile « {$titre} »");
     }

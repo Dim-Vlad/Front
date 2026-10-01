@@ -34,6 +34,10 @@ function openTileModal(item, presetSection) {
     document.getElementById('tile-titre').value       = isEdit ? item.dataset.titre : '';
     document.getElementById('tile-description').value = isEdit ? item.dataset.description : '';
     document.getElementById('tile-url').value         = isEdit ? item.dataset.url : '';
+    const checkedRoles = isEdit ? (JSON.parse(item.dataset.roles || '[]')) : [];
+    document.querySelectorAll('#tile-roles-group input[type="checkbox"]').forEach(cb => {
+        cb.checked = checkedRoles.includes(cb.value);
+    });
     document.getElementById('tile-delete-btn').style.display = isEdit ? '' : 'none';
     document.getElementById('tile-status').textContent = '';
     document.getElementById('tile-status').className  = 'modal-status';
