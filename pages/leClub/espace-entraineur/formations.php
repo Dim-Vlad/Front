@@ -1,10 +1,6 @@
 <?php
 require_once __DIR__ . '/../../../php/auth.php';
 require_login();
-if (!has_any_role(['entraineur', 'arbitre', 'bureau', 'moderateur', 'admin'])) {
-    header('Location: /pages/auth/tableau-de-bord.php');
-    exit;
-}
 $isMod = has_any_role(['admin', 'moderateur']);
 $pdo   = get_pdo();
 

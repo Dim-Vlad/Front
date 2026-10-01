@@ -172,6 +172,20 @@ foreach ($rolePriority as $r) {
         </div>
         <?php endif; ?>
 
+        <!-- Section Formations (visible à tous les comptes) -->
+        <div class="dashboard-section">
+            <h2 class="dashboard-section-title">🎓 Formation</h2>
+            <div class="dashboard-cards">
+
+                <a href="/pages/leClub/espace-entraineur/formations.php" class="dashboard-card">
+                    <div class="card-icon">🎓</div>
+                    <h2>Formations</h2>
+                    <p>Ressources de formation par public : entraîneurs, arbitres, marqueurs, joueurs et détection.</p>
+                </a>
+
+            </div>
+        </div>
+
         <!-- Section Espace Entraîneur -->
         <?php if ($hasEntraineur): ?>
         <div class="dashboard-section">
@@ -201,12 +215,6 @@ foreach ($rolePriority as $r) {
                     <div class="card-icon">📥</div>
                     <h2>Ressources</h2>
                     <p>Documents téléchargeables et ressources FFVB.</p>
-                </a>
-
-                <a href="/pages/leClub/espace-entraineur/formations.php" class="dashboard-card">
-                    <div class="card-icon">🎓</div>
-                    <h2>Formations</h2>
-                    <p>Ressources de formation par public : entraîneurs, arbitres, marqueurs, joueurs et détection.</p>
                 </a>
 
                 <?php foreach ($tiles['entraineur'] as $t) render_dashboard_tile($t, $canEdit); ?>
