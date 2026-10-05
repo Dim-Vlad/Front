@@ -35,9 +35,11 @@ try {
         ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Cette adresse email est déjà utilisée.']); exit;
     }
 
-    $hash = password_hash($password, PASSWORD_DEFAULT);
-    $pdo->prepare('INSERT INTO users (username, password, prenom, nom, actif) VALUES (?, ?, ?, ?, 0)')
-        ->execute([$username, $hash, $prenom, $nom]);
+    $hash       = password_hash($password, PASSWORD_DEFAULT);
+    $newsletter = isset($_POST['newsletter']) ? 1 : 0;
+    $token      = bin2hex(random_bytes(16));
+    $pdo->prepare('INSERT INTO users (username, password, prenom, nom, actif, newsletter, newsletter_token) VALUES (?, ?, ?, ?, 0, ?, ?)')
+        ->execute([$username, $hash, $prenom, $nom, $newsletter, $token]);
     $newId = (int)$pdo->lastInsertId();
 
     $pdo->prepare('INSERT INTO user_roles (user_id, role_id) SELECT ?, id FROM roles WHERE name = ?')

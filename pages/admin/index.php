@@ -180,6 +180,12 @@ $nbActivites  = (int)$pdo->query('SELECT COUNT(*) FROM journal_activites')->fetc
                     <p>Modifier l'adresse, l'email de contact, les réseaux sociaux et les informations du club.</p>
                 </a>
 
+                <a href="/pages/admin/newsletter.php" class="dashboard-card card-admin">
+                    <div class="card-icon">📰</div>
+                    <h2>News Letter</h2>
+                    <p>Rédiger une édition et l'envoyer aux adhérents abonnés.</p>
+                </a>
+
             </div>
         </div>
 

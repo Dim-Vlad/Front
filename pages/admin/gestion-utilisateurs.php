@@ -55,6 +55,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    if ($action === 'toggle_newsletter') {
+        $id = (int)($_POST['user_id'] ?? 0);
+        if ($id <= 0) {
+            flash('Utilisateur invalide.', 'error');
+        }
+        $abonne = isset($_POST['newsletter']) ? 1 : 0;
+        $pdo->prepare('UPDATE users SET newsletter = ?, newsletter_token = COALESCE(newsletter_token, ?) WHERE id = ?')
+            ->execute([$abonne, bin2hex(random_bytes(16)), $id]);
+        flash($abonne ? 'Newsletter activée pour ce compte.' : 'Newsletter désactivée pour ce compte.', 'success');
+    }
+
     if ($action === 'change_password') {
         $id       = (int)($_POST['user_id'] ?? 0);
         $password = $_POST['new_password'] ?? '';
@@ -102,14 +113,14 @@ $message     = $flash['msg']  ?? '';
 $messageType = $flash['type'] ?? '';
 
 $users = $pdo->query(
-    "SELECT u.id, u.username, u.prenom, u.nom, u.created_at, u.actif,
+    "SELECT u.id, u.username, u.prenom, u.nom, u.created_at, u.actif, u.newsletter,
             GROUP_CONCAT(r.name ORDER BY r.name SEPARATOR ',') AS roles,
             (SELECT MAX(jc.created_at) FROM journal_connexions jc
              WHERE jc.user_id = u.id AND jc.succes = 1) AS last_login
     FROM users u
     LEFT JOIN user_roles ur ON ur.user_id = u.id
     LEFT JOIN roles r ON r.id = ur.role_id
-    GROUP BY u.id, u.username, u.prenom, u.nom, u.created_at, u.actif
+    GROUP BY u.id, u.username, u.prenom, u.nom, u.created_at, u.actif, u.newsletter
     ORDER BY u.created_at DESC"
 )->fetchAll();
 $currentId = (int)(current_user()['id']);
@@ -126,6 +137,77 @@ $currentId = (int)(current_user()['id']);
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .nl-toggle-form { margin: 0; }
+        .nl-toggle-label { display: inline-flex; align-items: center; gap: .4rem; font-size: .82rem; color: #444; cursor: pointer; white-space: nowrap; }
+        .nl-toggle-label input { width: auto; margin: 0; cursor: pointer; }
+        .admin-alert--flottant {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1200;
+            max-width: 90vw;
+            box-shadow: 0 6px 20px rgba(0,0,0,.18);
+            transition: opacity .4s ease;
+        }
+        .admin-alert--flottant.est-masque { opacity: 0; pointer-events: none; }
+        .cc-toggle {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            background: none;
+            border: none;
+            border-bottom: 2px solid var(--primary-color);
+            padding: 0 0 0.8rem;
+            margin: 0;
+            cursor: pointer;
+            font: inherit;
+            text-align: left;
+            color: var(--bg-dark);
+            transition: color .15s, border-color .15s;
+        }
+        .cc-toggle:focus-visible { outline: 2px solid var(--secondary-color); outline-offset: 4px; border-radius: 4px; }
+        .cc-title { font-size: 1.1rem; font-weight: 600; }
+        .cc-hint {
+            font-size: 0.82rem;
+            color: #999;
+            margin-left: 0.2rem;
+            flex: 1;
+        }
+        .cc-toggle[aria-expanded="true"] .cc-hint { display: none; }
+        .cc-arrow {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #eef6ee;
+            color: var(--secondary-color);
+            font-size: 0.75rem;
+            transition: transform .2s, background .15s, color .15s;
+        }
+        .cc-toggle:hover .cc-arrow { background: var(--secondary-color); color: #fff; }
+        .cc-toggle[aria-expanded="true"] .cc-arrow { transform: rotate(180deg); }
+        .cc-body[hidden] { display: none; }
+        .cc-body { margin-top: 1.4rem; }
+        @media screen and (min-width: 641px) {
+            .user-filters .filter-roles {
+                flex-wrap: nowrap;
+                gap: 0.3rem;
+                overflow-x: auto;
+            }
+            .user-filters .filter-role-btn {
+                flex: 0 0 auto;
+                white-space: nowrap;
+                padding: 0.28rem 0.6rem;
+                font-size: 0.74rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <div id="menu"></div>
@@ -145,14 +227,19 @@ $currentId = (int)(current_user()['id']);
     <div class="admin-container">
 
         <?php if ($message): ?>
-            <div class="admin-alert admin-alert--<?= $messageType ?>">
+            <div class="admin-alert admin-alert--<?= $messageType ?> admin-alert--flottant" id="gu-message">
                 <?= htmlspecialchars($message) ?>
             </div>
         <?php endif; ?>
 
         <!-- Formulaire de création -->
-        <div class="admin-card">
-            <h2>Créer un compte</h2>
+        <div class="admin-card cc-card">
+            <button type="button" class="cc-toggle" id="cc-toggle" aria-expanded="false" aria-controls="cc-body">
+                <span class="cc-title">Créer un compte</span>
+                <span class="cc-hint">Ajouter un nouvel utilisateur</span>
+                <span class="cc-arrow" aria-hidden="true">▼</span>
+            </button>
+            <div class="cc-body" id="cc-body" hidden>
             <form method="POST" class="admin-form">
                 <input type="hidden" name="action" value="create">
                 <input type="hidden" name="_csrf" value="<?= csrf_token() ?>">
@@ -199,6 +286,7 @@ $currentId = (int)(current_user()['id']);
                     </div>
                 </div>
             </form>
+            </div>
         </div>
 
         <!-- Liste des utilisateurs -->
@@ -212,6 +300,7 @@ $currentId = (int)(current_user()['id']);
                 <div class="filter-roles">
                     <button type="button" class="filter-role-btn active" data-role="all">Tous</button>
                     <button type="button" class="filter-role-btn filter-role-btn--pending" data-role="pending">En attente</button>
+                    <button type="button" class="filter-role-btn" data-role="newsletter">📰 Newsletter</button>
                     <?php foreach ($validRoles as $r): ?>
                     <button type="button" class="filter-role-btn filter-role-btn--<?= $r ?>" data-role="<?= $r ?>"><?= $roleLabels[$r] ?></button>
                     <?php endforeach; ?>
@@ -225,13 +314,14 @@ $currentId = (int)(current_user()['id']);
                         <th>Rôle(s)</th>
                         <th>Créé le</th>
                         <th>Dernière connexion</th>
+                        <th>Newsletter</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($users as $u):
                         $userRoles = $u['roles'] ? explode(',', $u['roles']) : [];
                     ?>
-                    <tr data-name="<?= htmlspecialchars($u['prenom'] . ' ' . $u['nom'] . ' ' . $u['username']) ?>" data-roles="<?= htmlspecialchars($u['roles'] ?? '') ?>" data-actif="<?= (int)($u['actif'] ?? 1) ?>">
+                    <tr data-name="<?= htmlspecialchars($u['prenom'] . ' ' . $u['nom'] . ' ' . $u['username']) ?>" data-roles="<?= htmlspecialchars($u['roles'] ?? '') ?>" data-actif="<?= (int)($u['actif'] ?? 1) ?>" data-newsletter="<?= (int)($u['newsletter'] ?? 1) ?>">
                         <td data-label="Utilisateur">
                             <span class="user-fullname"><?= htmlspecialchars($u['prenom'] . ' ' . $u['nom']) ?></span>
                             <span class="user-username"><?= htmlspecialchars($u['username']) ?></span>
@@ -254,9 +344,20 @@ $currentId = (int)(current_user()['id']);
                             <span class="last-login-never">Jamais</span>
                             <?php endif; ?>
                         </td>
+                        <td data-label="Newsletter">
+                            <form method="POST" class="nl-toggle-form">
+                                <input type="hidden" name="action" value="toggle_newsletter">
+                                <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
+                                <input type="hidden" name="_csrf" value="<?= csrf_token() ?>">
+                                <label class="nl-toggle-label" title="Recevoir la newsletter du club">
+                                    <input type="checkbox" name="newsletter" value="1" <?= (int)($u['newsletter'] ?? 1) ? 'checked' : '' ?> onchange="guSauvegarderDefilement(); this.form.submit()">
+                                    <span>Abonné</span>
+                                </label>
+                            </form>
+                        </td>
                     </tr>
                     <tr class="user-actions-row" data-name="<?= htmlspecialchars($u['prenom'] . ' ' . $u['nom'] . ' ' . $u['username']) ?>" data-roles="<?= htmlspecialchars($u['roles'] ?? '') ?>" data-actif="<?= (int)($u['actif'] ?? 1) ?>">
-                        <td colspan="4" class="user-actions-cell">
+                        <td colspan="5" class="user-actions-cell">
                             <div class="user-actions-inner">
                                 <button class="btn-edit"
                                     onclick="openPasswordModal(<?= $u['id'] ?>, '<?= htmlspecialchars($u['username'], ENT_QUOTES) ?>')">
@@ -457,7 +558,9 @@ $currentId = (int)(current_user()['id']);
                     if (activeRole === 'all') {
                         matchRole = true;
                     } else if (activeRole === 'pending') {
-                        matchRole = actif === '0';
+                            matchRole = actif === '0';
+                    } else if (activeRole === 'newsletter') {
+                        matchRole = row.dataset.newsletter === '1';
                     } else {
                         matchRole = roles.split(',').indexOf(activeRole) !== -1;
                     }
@@ -473,6 +576,34 @@ $currentId = (int)(current_user()['id']);
                 emptyEl.style.display = visible === 0 ? '' : 'none';
             }
         })();
+    </script>
+    <script>
+    // Garde la position de défilement après chaque action (le rechargement PRG
+    // ramenait tout en haut de la page).
+    function guSauvegarderDefilement() {
+        sessionStorage.setItem('gu-scroll', String(window.scrollY));
+    }
+    document.addEventListener('submit', guSauvegarderDefilement, true);
+
+    (function () {
+        var btn  = document.getElementById('cc-toggle');
+        var body = document.getElementById('cc-body');
+        btn.addEventListener('click', function () {
+            var ouvert = body.hidden;
+            body.hidden = !ouvert;
+            btn.setAttribute('aria-expanded', ouvert ? 'true' : 'false');
+        });
+    })();
+
+    (function () {
+        var y = sessionStorage.getItem('gu-scroll');
+        sessionStorage.removeItem('gu-scroll');
+        var msg = document.getElementById('gu-message');
+        if (y !== null && msg) window.scrollTo(0, parseInt(y, 10) || 0);
+        if (msg) {
+            setTimeout(function () { msg.classList.add('est-masque'); }, 3500);
+        }
+    })();
     </script>
 </body>
 </html>

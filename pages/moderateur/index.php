@@ -77,6 +77,20 @@ $user = current_user();
                 </div>
             </div>
 
+            <!-- Paramètres -->
+            <div class="dashboard-section">
+                <h2 class="dashboard-section-title">⚙️ Paramètres</h2>
+                <div class="dashboard-cards">
+
+                    <a href="/pages/admin/newsletter.php" class="dashboard-card card-admin">
+                        <div class="card-icon">📰</div>
+                        <h2>News Letter</h2>
+                        <p>Rédiger une édition et l'envoyer aux adhérents abonnés.</p>
+                    </a>
+
+                </div>
+            </div>
+
         </div>
 
         <a href="/pages/auth/tableau-de-bord.php" class="back-btn">← Retour au tableau de bord</a>
