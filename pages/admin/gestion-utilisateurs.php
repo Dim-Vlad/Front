@@ -116,7 +116,7 @@ $users = $pdo->query(
     "SELECT u.id, u.username, u.prenom, u.nom, u.created_at, u.actif, u.newsletter,
             GROUP_CONCAT(r.name ORDER BY r.name SEPARATOR ',') AS roles,
             (SELECT MAX(jc.created_at) FROM journal_connexions jc
-             WHERE jc.user_id = u.id AND jc.succes = 1) AS last_login
+            WHERE jc.user_id = u.id AND jc.succes = 1) AS last_login
     FROM users u
     LEFT JOIN user_roles ur ON ur.user_id = u.id
     LEFT JOIN roles r ON r.id = ur.role_id
@@ -131,7 +131,7 @@ $currentId = (int)(current_user()['id']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des utilisateurs - VBO</title>
-    <link href="/css/styles.css?v=20260705" rel="stylesheet">
+    <link href="/css/styles.css?v=20261005" rel="stylesheet">
     <link href="/css/admin.css?v=20260623" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">

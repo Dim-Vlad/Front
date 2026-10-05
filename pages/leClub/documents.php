@@ -19,7 +19,7 @@ function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES); }
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Documents officiels - VBO</title>
-    <link href="/css/styles.css?v=20260705" rel="stylesheet">
+    <link href="/css/styles.css?v=20261005" rel="stylesheet">
     <link href="/css/leClub/staff.css?v=20260717" rel="stylesheet">
     <link href="/css/leClub/documents.css?v=20260716" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">

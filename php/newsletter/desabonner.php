@@ -21,7 +21,7 @@ if ($token !== '' && preg_match('/^[a-f0-9]{16,64}$/i', $token)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Newsletter - VBO</title>
-    <link href="/css/styles.css?v=20260705" rel="stylesheet">
+    <link href="/css/styles.css?v=20261005" rel="stylesheet">
 </head>
 <body style="background:#f4f8f4;">
     <div style="max-width:520px;margin:60px auto;padding:32px;background:#fff;border-radius:14px;box-shadow:0 2px 14px rgba(0,0,0,.08);text-align:center;font-family:Arial,sans-serif;">

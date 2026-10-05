@@ -718,3 +718,154 @@
 }
 .tile-modal-body .modal-status.success { color: #1a7a3c; }
 .tile-modal-body .modal-status.error { color: #c0392b; }
+
+/* ── Carte newsletter ── */
+.nl-card {
+    width: 100%;
+    max-width: 980px;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid var(--secondary-color);
+    padding: 1.2rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: .9rem;
+}
+
+.nl-card-main {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.nl-card-icon { font-size: 1.8rem; line-height: 1; flex-shrink: 0; }
+
+.nl-card-text { flex: 1; min-width: 0; text-align: left; }
+.nl-card-text h2 { margin: 0 0 .2rem; font-size: 1rem; color: var(--bg-dark); }
+.nl-card-text p { margin: 0; font-size: .85rem; color: #666; }
+
+.nl-switch {
+    flex-shrink: 0;
+    width: 52px;
+    height: 30px;
+    border-radius: 30px;
+    border: none;
+    background: #cfd8cf;
+    position: relative;
+    cursor: pointer;
+    transition: background .2s;
+    padding: 0;
+}
+.nl-switch[aria-checked="true"] { background: var(--secondary-color); }
+.nl-switch:disabled { opacity: .6; cursor: wait; }
+.nl-switch-knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,.25);
+    transition: transform .2s;
+}
+.nl-switch[aria-checked="true"] .nl-switch-knob { transform: translateX(22px); }
+.nl-switch:focus-visible { outline: 2px solid var(--secondary-color); outline-offset: 3px; }
+
+.nl-archives-btn {
+    align-self: flex-start;
+    background: #eef6ee;
+    color: var(--secondary-color);
+    border: 1.5px solid var(--secondary-color);
+    border-radius: 20px;
+    padding: .4rem 1rem;
+    font: inherit;
+    font-size: .82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+.nl-archives-btn:hover { background: var(--secondary-color); color: #fff; }
+
+/* ── Fenêtre des archives ── */
+.nl-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.55);
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+.nl-modal[hidden] { display: none; }
+
+.nl-modal-box {
+    background: #fff;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 760px;
+    height: min(85vh, 760px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.nl-modal-head {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .9rem 1.2rem;
+    background: var(--secondary-color);
+    color: #fff;
+}
+.nl-modal-head h3 { margin: 0; font-size: 1rem; color: #fff; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nl-modal-back, .nl-modal-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font: inherit;
+    cursor: pointer;
+}
+.nl-modal-back { font-size: .85rem; font-weight: 600; }
+.nl-modal-close { font-size: 1.6rem; line-height: 1; }
+.nl-modal-back[hidden] { display: none; }
+
+.nl-modal-body {
+    padding: 1rem 1.2rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+.nl-modal-body[hidden] { display: none; }
+
+.nl-edition {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    text-align: left;
+    background: #f7faf7;
+    border: 1px solid #e0e8e0;
+    border-radius: 10px;
+    padding: .75rem 1rem;
+    font: inherit;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+}
+.nl-edition:hover { border-color: var(--secondary-color); background: #eef6ee; }
+.nl-edition-titre { font-weight: 600; color: var(--bg-dark); font-size: .92rem; }
+.nl-edition-date { font-size: .78rem; color: #888; white-space: nowrap; }
+
+.nl-modal-info { color: #888; font-style: italic; text-align: center; padding: 1.5rem 0; margin: 0; }
+.nl-modal-info--err { color: #c0392b; }
+
+.nl-modal-frame {
+    flex: 1;
+    width: 100%;
+    border: none;
+    background: #eef3ee;
+}
+.nl-modal-frame[hidden] { display: none; }

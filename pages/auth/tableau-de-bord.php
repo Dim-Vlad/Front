@@ -12,6 +12,10 @@ if (has_role('admin')) {
 
 $canEdit = has_any_role(['admin', 'moderateur']);
 
+$stmtNl = $pdo->prepare('SELECT newsletter FROM users WHERE id = ?');
+$stmtNl->execute([(int)$user['id']]);
+$nlAbonne = (int)$stmtNl->fetchColumn() === 1;
+
 $tiles = ['jeux' => [], 'entraineur' => [], 'commissions' => [], 'general' => []];
 foreach ($pdo->query('SELECT * FROM dashboard_tiles ORDER BY section, ordre, id')->fetchAll() as $t) {
     $tiles[$t['section']][] = $t;
@@ -109,8 +113,8 @@ foreach ($rolePriority as $r) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de bord - <?= $titleRole ?></title>
-    <link href="/css/styles.css?v=20260705" rel="stylesheet">
-    <link href="/css/tableau-de-bord.css?v=20261001" rel="stylesheet">
+    <link href="/css/styles.css?v=20261005" rel="stylesheet">
+    <link href="/css/tableau-de-bord.css?v=20261008" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -247,6 +251,26 @@ foreach ($rolePriority as $r) {
         </div>
         <?php endif; ?>
 
+        <!-- Carte newsletter : abonnement personnel et anciennes éditions -->
+        <div class="dashboard-section">
+            <h2 class="dashboard-section-title">📰 Newsletter</h2>
+        <div class="nl-card">
+            <div class="nl-card-main">
+                <div class="nl-card-icon" aria-hidden="true">📰</div>
+                <div class="nl-card-text">
+                    <h2>Newsletter du club</h2>
+                    <p id="nl-card-status"><?= $nlAbonne ? 'Vous recevez la newsletter du club.' : 'Vous ne recevez plus la newsletter.' ?></p>
+                </div>
+                <button type="button" class="nl-switch" id="nl-switch" role="switch"
+                        aria-checked="<?= $nlAbonne ? 'true' : 'false' ?>"
+                        aria-label="Recevoir la newsletter du club">
+                    <span class="nl-switch-knob"></span>
+                </button>
+            </div>
+            <button type="button" class="nl-archives-btn" id="nl-archives-btn">📚 Voir les anciennes éditions</button>
+        </div>
+        </div>
+
         <a href="/php/logout.php" class="btn-logout"
             onclick="return confirm('Voulez-vous vraiment vous déconnecter ?')">Se déconnecter</a>
 
@@ -308,9 +332,23 @@ foreach ($rolePriority as $r) {
     </div>
     <?php endif; ?>
 
+    <!-- Anciennes éditions de la newsletter -->
+    <div class="nl-modal" id="nl-modal" hidden>
+        <div class="nl-modal-box">
+            <div class="nl-modal-head">
+                <button type="button" class="nl-modal-back" id="nl-modal-back" hidden>← Retour</button>
+                <h3 id="nl-modal-title">Anciennes éditions</h3>
+                <button type="button" class="nl-modal-close" id="nl-modal-close" aria-label="Fermer">&times;</button>
+            </div>
+            <div class="nl-modal-body" id="nl-modal-list"></div>
+            <iframe class="nl-modal-frame" id="nl-modal-frame" title="Édition de la newsletter" hidden></iframe>
+        </div>
+    </div>
+
     <div id="footer"></div>
 
     <script src="/js/main.js?v=20260705"></script>
+    <script src="/js/newsletter-card.js?v=20261005"></script>
     <?php if ($canEdit): ?>
     <script src="/js/dashboard-tiles.js?v=20261001"></script>
     <?php endif; ?>

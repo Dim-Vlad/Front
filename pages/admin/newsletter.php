@@ -21,7 +21,7 @@ foreach ($pdo->query('SELECT username FROM users WHERE actif = 1 AND newsletter 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>News Letter - VBO</title>
-    <link href="/css/styles.css?v=20260705" rel="stylesheet">
+    <link href="/css/styles.css?v=20261005" rel="stylesheet">
     <link href="/css/tableau-de-bord.css?v=20260623" rel="stylesheet">
     <link href="/css/admin.css?v=20260702" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
@@ -53,9 +53,23 @@ foreach ($pdo->query('SELECT username FROM users WHERE actif = 1 AND newsletter 
         .nl-status.err { color: #c0392b; }
         .nl-count { font-size: .9rem; color: #444; margin: 0 0 .6rem; }
         .nl-count strong { color: var(--secondary-color); }
-        .nl-image-row { display: flex; gap: .5rem; }
-        .nl-image-row input { flex: 1; }
-        .nl-image-thumb { width: 120px; height: auto; border-radius: 8px; border: 1px solid #e0e8e0; }
+        .nl-image-row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+        .nl-image-row input { flex: 1 1 200px; min-width: 0; }
+        .nl-image-row .nl-btn { white-space: nowrap; }
+        .nl-image-thumb {
+            display: block;
+            width: 140px;
+            height: auto;
+            margin-top: .6rem;
+            border-radius: 8px;
+            border: 1px solid #e0e8e0;
+            background: #f4f8f4;
+        }
+        @media (max-width: 600px) {
+            .nl-image-row input { flex: 1 1 100%; }
+            .nl-image-row .nl-btn { flex: 1 1 calc(50% - .25rem); text-align: center; }
+            .nl-image-thumb { width: 100%; max-width: 320px; max-height: 180px; object-fit: contain; }
+        }
         .nl-picker { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 1100; display: none; align-items: center; justify-content: center; padding: 1rem; }
         .nl-picker.open { display: flex; }
         .nl-picker-box { background: #fff; border-radius: 12px; width: 100%; max-width: 760px; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; }
@@ -64,8 +78,8 @@ foreach ($pdo->query('SELECT username FROM users WHERE actif = 1 AND newsletter 
         .nl-picker-head button { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; line-height: 1; }
         .nl-picker-search { padding: .7rem 1.2rem 0; }
         .nl-picker-search input { width: 100%; padding: .5rem .7rem; border: 1.5px solid #d5ddd5; border-radius: 7px; font: inherit; box-sizing: border-box; }
-        .nl-picker-grid { padding: 1rem 1.2rem 1.2rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: .6rem; overflow-y: auto; }
-        .nl-picker-item { border: 2px solid transparent; border-radius: 8px; padding: 0; background: #f4f8f4; cursor: pointer; overflow: hidden; aspect-ratio: 4 / 3; }
+        .nl-picker-grid { flex: 1 1 auto; min-height: 0; padding: 1rem 1.2rem 1.2rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); grid-auto-rows: max-content; align-content: start; gap: .6rem; overflow-y: auto; }
+        .nl-picker-item { border: 2px solid transparent; border-radius: 8px; padding: 0; background: #f4f8f4; cursor: pointer; overflow: hidden; aspect-ratio: 4 / 3; flex-shrink: 0; }
         .nl-picker-item:hover, .nl-picker-item:focus-visible { border-color: var(--secondary-color); outline: none; }
         .nl-picker-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .nl-picker-empty { color: #888; font-style: italic; padding: 1rem; }

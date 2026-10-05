@@ -24,7 +24,7 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Planning et feuilles de match pour les arbitres et marqueurs du VBO.">
-    <link href="/css/styles.css?v=20260705" rel="stylesheet">
+    <link href="/css/styles.css?v=20261005" rel="stylesheet">
     <link href="/css/arbitres/arbitres.css?v=20260928" rel="stylesheet">
     <title>Arbitres &amp; Marqueurs - VBO</title>
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">

@@ -12,7 +12,7 @@ if (is_logged_in()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mot de passe oublié - VBO</title>
-    <link href="/css/styles.css?v=20260705" rel="stylesheet">
+    <link href="/css/styles.css?v=20261005" rel="stylesheet">
     <link href="/css/connexion.css?v=20260801" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">

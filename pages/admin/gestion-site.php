@@ -37,7 +37,7 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion du site - VBO</title>
-    <link href="/css/styles.css?v=20260705" rel="stylesheet">
+    <link href="/css/styles.css?v=20261005" rel="stylesheet">
     <link href="/css/tableau-de-bord.css?v=20260623" rel="stylesheet">
     <link href="/css/admin.css?v=20260702" rel="stylesheet">
     <link href="/css/admin/gestion-site.css?v=20260718" rel="stylesheet">

@@ -680,7 +680,7 @@ body {
     text-align: center;
     padding: 36px 28px;
     gap: 20px;
-    margin: 84px 16px 40px;
+    margin: 124px 16px 40px; /* navbar sur deux lignes ≈ 104px en mobile */
   }
   .text-content { text-align: center; }
   .text-content h1 { font-size: 1.6rem; }

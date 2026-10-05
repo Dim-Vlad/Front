@@ -54,6 +54,14 @@ foreach ($destinataires as $u) {
     else $ignores++;
 }
 
+$pdo->prepare('INSERT INTO newsletters (titre, contenu, nb_envois, created_by) VALUES (?, ?, ?, ?)')
+    ->execute([
+        $content['titre'],
+        json_encode(['content' => $content, 'events' => $events, 'club' => $club], JSON_UNESCAPED_UNICODE),
+        $envoyes,
+        (int)current_user()['id'],
+    ]);
+
 log_activite($pdo, 'ajout', 'newsletter', "Newsletter « {$content['titre']} » envoyée à {$envoyes} destinataire(s)");
 
 ob_end_clean();
