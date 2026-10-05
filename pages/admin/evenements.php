@@ -79,7 +79,7 @@ try {
                 📅 Calendrier <span class="ev-tab-count"><?= count($aVenir) ?></span>
             </button>
             <button class="ev-tab" data-tab="tournois" onclick="switchEvTab('tournois')">
-                🏆 Pages Tournois <span class="ev-tab-count"><?= count($tournois) ?></span>
+                🏆 Pages des évènements <span class="ev-tab-count"><?= count($tournois) ?></span>
             </button>
         </div>
 
@@ -167,12 +167,12 @@ try {
 
         </div><!-- /tab-calendrier -->
 
-        <!-- ══ TAB 2 : PAGES TOURNOIS ════════════════════════════════ -->
+        <!-- ══ TAB 2 : PAGES DES EVENEMENTS ════════════════════════════════ -->
         <div id="tab-tournois" class="ev-tab-panel" style="display:none">
 
             <div class="ev-section">
                 <div class="ev-section-header">
-                    <h2>Pages Tournois</h2>
+                    <h2>Pages des évènements</h2>
                     <button class="btn-add-ev" onclick="openTournoiModal()">＋ Créer une page</button>
                 </div>
                 <p class="ev-section-hint">Créez une page dédiée pour chaque événement : inscription par lien, téléphone ou email — tableau de scores Google Sheets en option.</p>
@@ -415,9 +415,13 @@ try {
                         <p class="t-insc-hint">Affiché comme un bouton « Payer en ligne » qui ouvre la page HelloAsso dans un nouvel onglet.</p>
                     </div>
                 </div>
-                <div class="ev-form-section-title" id="t-scores-title">Tableau de scores</div>
+                <div class="ev-form-section-title" id="t-scores-title">Ajouter une section</div>
                 <div class="ev-form-row ev-form-check" id="t-scores-toggle-row">
                     <label><input type="checkbox" id="t-show-scores" checked> Afficher cette section sur la page publique</label>
+                </div>
+                <div class="ev-form-row" id="t-scores-title-row">
+                    <label>Titre</label>
+                    <input type="text" id="t-scores-title-input" placeholder="Titre de la section" maxlength="100">
                 </div>
                 <div class="ev-form-row" id="t-scores-row">
                     <label>Google Sheet</label>
@@ -462,6 +466,7 @@ try {
         const show = TYPES_WITH_SCORES.has(document.getElementById('t-type').value);
         document.getElementById('t-scores-title').style.display      = show ? '' : 'none';
         document.getElementById('t-scores-toggle-row').style.display = show ? '' : 'none';
+        document.getElementById('t-scores-title-row').style.display  = show ? '' : 'none';
         document.getElementById('t-scores-row').style.display        = show ? '' : 'none';
     }
 
@@ -481,11 +486,12 @@ try {
             document.getElementById('t-inscription-email').value = t.inscription_email || '';
             document.getElementById('t-paiement-url').value     = t.paiement_url     || '';
             document.getElementById('t-sheet').value            = t.sheet_url       || '';
+            document.getElementById('t-scores-title-input').value = t.scores_title   || '';
             document.getElementById('t-show-paiement').checked  = t.show_paiement !== '0' && t.show_paiement !== 0;
             document.getElementById('t-show-scores').checked    = t.show_scores   !== '0' && t.show_scores   !== 0;
         } else {
             ['t-id','t-titre','t-saison','t-description',
-             't-inscription-url','t-inscription-tel','t-inscription-email','t-paiement-url','t-sheet']
+            't-inscription-url','t-inscription-tel','t-inscription-email','t-paiement-url','t-sheet','t-scores-title-input']
                 .forEach(id => document.getElementById(id).value = '');
             document.getElementById('t-show-paiement').checked = true;
             document.getElementById('t-show-scores').checked   = true;
@@ -532,6 +538,7 @@ try {
         fd.set('show_paiement',     document.getElementById('t-show-paiement').checked ? '1' : '0');
         fd.set('sheet_url',         TYPES_WITH_SCORES.has(type) ? document.getElementById('t-sheet').value.trim() : '');
         fd.set('show_scores',       document.getElementById('t-show-scores').checked ? '1' : '0');
+        fd.set('scores_title',      document.getElementById('t-scores-title-input').value.trim());
         try {
             const res  = await fetch('/php/tournois/save.php', { method: 'POST', body: fd });
             const json = await res.json();

@@ -118,14 +118,17 @@ function formatTel(string $tel): string {
         $showScores = (int)($t['show_scores'] ?? 1) === 1
             && (!empty($t['sheet_url']) || in_array($t['type'] ?? 'tournoi', $typesAvecScores));
         ?>
+        <?php
+        $scoresTitle = !empty($t['scores_title']) ? $t['scores_title'] : 'Tableau des scores';
+        ?>
         <?php if ($showScores): ?>
         <section class="tournoi-section">
-            <h2 class="tournoi-section-title">Tableau des scores</h2>
+            <h2 class="tournoi-section-title"><?= h($scoresTitle) ?></h2>
             <?php if (!empty($t['sheet_url'])): ?>
             <div class="sheet-card">
                 <iframe
                     src="<?= h($t['sheet_url']) ?>"
-                    title="Tableau des scores"
+                    title="<?= h($scoresTitle) ?>"
                     loading="lazy"
                     allowfullscreen>
                 </iframe>
