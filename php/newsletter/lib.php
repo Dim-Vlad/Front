@@ -30,9 +30,9 @@ function nl_upcoming_events(PDO $pdo, int $limit = 5): array {
     try {
         $stmt = $pdo->prepare(
             'SELECT titre, date_debut, date_fin, lieu FROM evenements
-             WHERE termine = 0 AND (date_debut IS NULL OR date_debut >= CURDATE())
-             ORDER BY (date_debut IS NULL), date_debut, ordre, id
-             LIMIT ' . (int)$limit
+            WHERE termine = 0 AND (date_debut IS NULL OR date_debut >= CURDATE())
+            ORDER BY (date_debut IS NULL), date_debut, ordre, id
+            LIMIT ' . (int)$limit
         );
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -66,6 +66,7 @@ function nl_content_from_post(): array {
 
 // Un saut de ligne vide sépare deux paragraphes ; deux sauts vides (ou plus)
 // insèrent un séparateur visuel entre deux sections.
+// Un lien s'écrit [texte du lien](https://adresse) ; seuls http(s) sont acceptés.
 function nl_paragraphs(string $texte): string {
     $texte   = str_replace("\r\n", "\n", trim($texte));
     $sections = preg_split('/\n(?:[ \t]*\n){2,}/', $texte);
@@ -76,8 +77,15 @@ function nl_paragraphs(string $texte): string {
         }
         foreach (preg_split('/\n[ \t]*\n/', trim($section)) as $bloc) {
             if (trim($bloc) === '') continue;
+            $texteBloc = nl_h(trim($bloc));
+            // Le texte est déjà échappé : seule l'URL (http/https) devient un lien
+            $texteBloc = preg_replace_callback(
+                '/\[([^\]]+)\]\((https?:\/\/[^\s()<>"]+)\)/',
+                fn($m) => '<a href="' . $m[2] . '" style="color:#063E0B;font-weight:600;text-decoration:underline;">' . $m[1] . '</a>',
+                $texteBloc
+            );
             $html .= '<p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#2a2a2a;">'
-                   . str_replace("\n", '<br>', nl_h(trim($bloc))) . '</p>';
+                . str_replace("\n", '<br>', $texteBloc) . '</p>';
         }
     }
     return $html;
@@ -98,12 +106,12 @@ function nl_build_html(array $c, array $events, array $club, string $unsubUrl, s
             $img = '<img src="' . nl_h($imgUrl) . '" alt="" width="536" style="display:block;width:100%;max-width:536px;height:auto;border-radius:10px;margin:0 0 14px;">';
         }
         $une = '<tr><td style="padding:0 32px 8px;">
-                  <div style="border-left:4px solid #063E0B;background:#f4f8f4;border-radius:10px;padding:18px 20px;">
+                <div style="border-left:4px solid #063E0B;background:#f4f8f4;border-radius:10px;padding:18px 20px;">
                     <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#063E0B;">À la une</p>'
-             . ($img ?: '')
-             . (!empty($c['une_titre']) ? '<h2 style="margin:0 0 8px;font-size:18px;color:#063E0B;">' . nl_h($c['une_titre']) . '</h2>' : '')
-             . (!empty($c['une_texte']) ? nl_paragraphs($c['une_texte']) : '')
-             . '</div></td></tr>';
+            . ($img ?: '')
+            . (!empty($c['une_titre']) ? '<h2 style="margin:0 0 8px;font-size:18px;color:#063E0B;">' . nl_h($c['une_titre']) . '</h2>' : '')
+            . (!empty($c['une_texte']) ? nl_paragraphs($c['une_texte']) : '')
+            . '</div></td></tr>';
     }
 
     $evHtml = '';
@@ -111,45 +119,59 @@ function nl_build_html(array $c, array $events, array $club, string $unsubUrl, s
         $items = '';
         foreach ($events as $ev) {
             $items .= '<tr><td style="padding:10px 0;border-bottom:1px solid #e8efe8;">
-                         <p style="margin:0 0 2px;font-size:15px;font-weight:700;color:#063E0B;">' . nl_h($ev['titre']) . '</p>
-                         <p style="margin:0;font-size:13px;color:#667066;">📅 ' . nl_h(nl_format_date($ev['date_debut'], $ev['date_fin'])) . ($ev['lieu'] ? ' · 📍 ' . nl_h($ev['lieu']) : '') . '</p>
-                       </td></tr>';
+                        <p style="margin:0 0 2px;font-size:15px;font-weight:700;color:#063E0B;">' . nl_h($ev['titre']) . '</p>
+                        <p style="margin:0;font-size:13px;color:#667066;">📅 ' . nl_h(nl_format_date($ev['date_debut'], $ev['date_fin'])) . ($ev['lieu'] ? ' · 📍 ' . nl_h($ev['lieu']) : '') . '</p>
+                    </td></tr>';
         }
         $evHtml = '<tr><td style="padding:18px 32px 6px;">
-                     <h2 style="margin:0 0 6px;font-size:16px;color:#063E0B;">Prochains événements</h2>
-                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">' . $items . '</table>
-                     <p style="margin:12px 0 0;"><a href="' . NL_BASE_URL . '/pages/evenements/evenements.php" style="color:#063E0B;font-weight:600;">Voir tous les événements →</a></p>
-                   </td></tr>';
+                    <h2 style="margin:0 0 6px;font-size:16px;color:#063E0B;">Prochains événements</h2>
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">' . $items . '</table>
+                    <p style="margin:12px 0 0;"><a href="' . NL_BASE_URL . '/pages/evenements/evenements.php" style="color:#063E0B;font-weight:600;">Voir tous les événements →</a></p>
+                </td></tr>';
     }
 
-    $adresse = nl_h($club['adresse1']) . ' · ' . nl_h($club['adresse2']);
+    // Toute l'adresse est un seul lien vers Google Maps
+    $adresseBrute = $club['adresse1'] . ', ' . $club['adresse2'];
+    $adresse = '<a href="https://www.google.com/maps/search/?api=1&amp;query=' . rawurlencode($adresseBrute) . '" style="color:#667066;text-decoration:underline;">' . nl_h($adresseBrute) . '</a>';
     $mail    = nl_h($club['email']);
 
     return '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . $titre . '</title></head>
 <body style="margin:0;padding:0;background:#eef3ee;font-family:Arial,Helvetica,sans-serif;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef3ee;padding:24px 12px;">
-  <tr><td align="center">
+<tr><td align="center">
     <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;">
-      <tr><td style="background:#063E0B;padding:26px 32px;text-align:center;">
+    <tr><td style="background:#063E0B;padding:26px 32px;text-align:center;">
         <img src="' . $logo . '" alt="Volley Ball Ollioulais" width="90" style="display:block;margin:0 auto 12px;height:auto;">
         <p style="margin:0;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#acc2ab;">Newsletter</p>
         <h1 style="margin:6px 0 0;font-size:22px;color:#ffffff;">' . $titre . '</h1>
-      </td></tr>
-      <tr><td style="padding:28px 32px 8px;">
+    </td></tr>
+    <tr><td style="padding:28px 32px 8px;">
         <p style="margin:0 0 14px;font-size:15px;color:#2a2a2a;">' . $salut . '</p>
         ' . (!empty($c['intro']) ? nl_paragraphs($c['intro']) : '') . '
-      </td></tr>
-      ' . $une . '
-      ' . $evHtml . '
-      <tr><td style="padding:22px 32px 26px;background:#f7faf7;border-top:1px solid #e8efe8;">
+    </td></tr>
+    ' . $une . '
+    ' . $evHtml . '
+    <tr><td style="padding:22px 32px 26px;background:#f7faf7;border-top:1px solid #e8efe8;">
         <p style="margin:0 0 6px;font-size:13px;color:#063E0B;font-weight:700;">Volley Ball Ollioulais</p>
         <p style="margin:0 0 4px;font-size:12px;color:#667066;">' . $adresse . '</p>
-        <p style="margin:0 0 14px;font-size:12px;color:#667066;">' . $mail . '</p>
-        <p style="margin:0;font-size:11px;color:#8a938a;line-height:1.5;">Vous recevez ce message car vous êtes adhérent du VBO.
-          <a href="' . nl_h($unsubUrl) . '" style="color:#8a938a;">Se désabonner de la newsletter</a>.</p>
-      </td></tr>
+        <p style="margin:0 0 14px;font-size:12px;color:#667066;">Pour répondre à ce message, écrivez à <a href="mailto:' . $mail . '" style="color:#063E0B;font-weight:600;">' . $mail . '</a>.</p>
+        <p style="margin:0;font-size:11px;color:#8a938a;line-height:1.5;">Vous recevez cette newsletter car vous êtes inscrit sur le site du VBO.
+        <a href="' . nl_h($unsubUrl) . '" style="color:#8a938a;">Se désabonner de la newsletter</a>.</p>
+    </td></tr>
     </table>
-  </td></tr>
+</td></tr>
 </table>
 </body></html>';
+}
+
+// En-têtes d'envoi : expéditeur affiché « Volley Ball Ollioulais », adresse technique du domaine
+function nl_mail_headers(): string {
+    return "From: \"Volley Ball Ollioulais\" <no-reply@volleyballollioulais.fr>\r\n"
+        . "MIME-Version: 1.0\r\n"
+        . "Content-Type: text/html; charset=UTF-8\r\n";
+}
+
+// Sujet avec un ballon de volley ; encodé en MIME pour que l'emoji passe correctement
+function nl_mail_subject(string $titre, bool $test = false): string {
+    return '=?UTF-8?B?' . base64_encode('🏐 VBO 🏐 ' . ($test ? 'TEST : ' : '') . $titre) . '?=';
 }

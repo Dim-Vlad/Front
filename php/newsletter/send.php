@@ -31,9 +31,7 @@ $destinataires = $pdo->query(
     'SELECT id, username, prenom, newsletter_token FROM users WHERE actif = 1 AND newsletter = 1'
 )->fetchAll(PDO::FETCH_ASSOC);
 
-$headers = "From: no-reply@volleyballollioulais.fr\r\n"
-         . "MIME-Version: 1.0\r\n"
-         . "Content-Type: text/html; charset=UTF-8\r\n";
+$headers = nl_mail_headers();
 
 $envoyes = 0;
 $ignores = 0;
@@ -50,7 +48,7 @@ foreach ($destinataires as $u) {
     $unsub = NL_BASE_URL . '/php/newsletter/desabonner.php?t=' . urlencode($u['newsletter_token']);
     $html  = nl_build_html($content, $events, $club, $unsub, (string)($u['prenom'] ?? ''));
 
-    if (@mail($email, '[VBO] ' . $content['titre'], $html, $headers)) $envoyes++;
+    if (@mail($email, nl_mail_subject($content['titre']), $html, $headers)) $envoyes++;
     else $ignores++;
 }
 

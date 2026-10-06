@@ -39,6 +39,8 @@ foreach ($pdo->query('SELECT username FROM users WHERE actif = 1 AND newsletter 
         }
         .nl-field textarea { resize: vertical; min-height: 90px; }
         .nl-hint { font-size: .75rem; color: #999; margin: 0; }
+        .nl-label-row { display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
+        .nl-link-btn { padding: .3rem .7rem; font-size: .75rem; }
         .nl-check { display: flex; gap: .5rem; align-items: center; font-size: .85rem; color: #444; }
         .nl-check input { width: auto; }
         .nl-sub { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--secondary-color); border-top: 1px solid #e8ece8; padding-top: .9rem; margin: .4rem 0 .8rem; }
@@ -48,6 +50,10 @@ foreach ($pdo->query('SELECT username FROM users WHERE actif = 1 AND newsletter 
         .nl-btn--primary { background: var(--secondary-color); color: #fff; }
         .nl-btn:disabled { opacity: .55; cursor: wait; }
         .nl-preview { width: 100%; height: 620px; border: 1px solid #e0e8e0; border-radius: 10px; background: #eef3ee; }
+        @media (min-width: 1100px) {
+            .nl-page { max-width: 1400px; }
+            .nl-grid { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+        }
         .nl-status { font-size: .85rem; font-weight: 500; min-height: 1.2em; margin: .6rem 0 0; }
         .nl-status.ok { color: #1a7a3c; }
         .nl-status.err { color: #c0392b; }
@@ -100,7 +106,7 @@ foreach ($pdo->query('SELECT username FROM users WHERE actif = 1 AND newsletter 
 
     <a href="<?= $backUrl ?>" class="back-btn">← Retour</a>
 
-    <div class="admin-container">
+    <div class="admin-container nl-page">
 
         <div class="admin-card">
             <p class="nl-count"><strong><?= $nbDestinataires ?></strong> adhérent<?= $nbDestinataires > 1 ? 's' : '' ?> abonné<?= $nbDestinataires > 1 ? 's' : '' ?> recevront cette édition.</p>
@@ -116,9 +122,12 @@ foreach ($pdo->query('SELECT username FROM users WHERE actif = 1 AND newsletter 
                         <input type="text" id="nl-titre" name="titre" maxlength="150" placeholder="Ex : Les nouvelles du VBO — octobre 2026" required>
                     </div>
                     <div class="nl-field">
-                        <label for="nl-intro">Mot d'introduction</label>
+                        <div class="nl-label-row">
+                            <label for="nl-intro">Mot d'introduction</label>
+                            <button type="button" class="nl-btn nl-btn--ghost nl-link-btn" data-target="nl-intro">🔗 Lien</button>
+                        </div>
                         <textarea id="nl-intro" name="intro" placeholder="Quelques mots pour introduire cette édition…"></textarea>
-                        <p class="nl-hint">Un saut de ligne vide sépare deux paragraphes.</p>
+                        <p class="nl-hint">Un saut de ligne vide sépare deux paragraphes. Pour un lien : sélectionnez le texte puis cliquez sur « 🔗 Lien ».</p>
                     </div>
 
                     <p class="nl-sub">À la une (optionnel)</p>
@@ -127,7 +136,10 @@ foreach ($pdo->query('SELECT username FROM users WHERE actif = 1 AND newsletter 
                         <input type="text" id="nl-une-titre" name="une_titre" maxlength="150" placeholder="Ex : Tournoi de préparation réussi">
                     </div>
                     <div class="nl-field">
-                        <label for="nl-une-texte">Texte</label>
+                        <div class="nl-label-row">
+                            <label for="nl-une-texte">Texte</label>
+                            <button type="button" class="nl-btn nl-btn--ghost nl-link-btn" data-target="nl-une-texte">🔗 Lien</button>
+                        </div>
                         <textarea id="nl-une-texte" name="une_texte" placeholder="Résumé de l'actualité…"></textarea>
                     </div>
                     <div class="nl-field">
@@ -210,6 +222,27 @@ foreach ($pdo->query('SELECT username FROM users WHERE actif = 1 AND newsletter 
             } finally {
                 btnPrev.disabled = false;
             }
+        });
+
+        // ── Insertion d'un lien dans un texte : [texte](https://…) ──
+        document.querySelectorAll('.nl-link-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const ta = document.getElementById(btn.dataset.target);
+                const saisie = window.prompt('Adresse du lien (elle doit commencer par https://)', 'https://');
+                if (saisie === null) return;
+                const url = saisie.trim();
+                if (!/^https?:\/\/[^\s()<>"]+$/.test(url)) {
+                    window.alert('Adresse invalide : elle doit commencer par https:// et ne pas contenir d\'espace.');
+                    return;
+                }
+                const debut = ta.selectionStart, fin = ta.selectionEnd;
+                const texte = ta.value.slice(debut, fin) || 'texte du lien';
+                const insertion = '[' + texte + '](' + url + ')';
+                ta.value = ta.value.slice(0, debut) + insertion + ta.value.slice(fin);
+                ta.focus();
+                ta.selectionStart = debut;
+                ta.selectionEnd = debut + insertion.length;
+            });
         });
 
         // ── Sélecteur d'image (galerie) ──

@@ -36,11 +36,9 @@ if (empty($me['newsletter_token'])) {
 $unsub = NL_BASE_URL . '/php/newsletter/desabonner.php?t=' . urlencode($me['newsletter_token']);
 $html  = nl_build_html($content, $content['show_events'] ? nl_upcoming_events($pdo) : [], nl_club_info($pdo), $unsub, (string)($me['prenom'] ?? ''));
 
-$headers = "From: no-reply@volleyballollioulais.fr\r\n"
-         . "MIME-Version: 1.0\r\n"
-         . "Content-Type: text/html; charset=UTF-8\r\n";
+$headers = nl_mail_headers();
 
-if (@mail($email, '[TEST] [VBO] ' . $content['titre'], $html, $headers)) {
+if (@mail($email, nl_mail_subject($content['titre'], true), $html, $headers)) {
     ob_end_clean(); echo json_encode(['success' => true, 'email' => $email]);
 } else {
     ob_end_clean(); echo json_encode(['success' => false, 'error' => 'L\'envoi du test a échoué (le serveur mail n\'a pas accepté le message).']);

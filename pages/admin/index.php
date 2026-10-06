@@ -127,6 +127,26 @@ $nbActivites  = (int)$pdo->query('SELECT COUNT(*) FROM journal_activites')->fetc
 
         </div>
 
+        <!-- Section Paramètres — pleine largeur -->
+        <div class="dashboard-section">
+            <h2 class="dashboard-section-title">⚙️ Paramètres</h2>
+            <div class="dashboard-cards">
+
+                <a href="/pages/admin/gestion-site.php" class="dashboard-card card-admin">
+                    <div class="card-icon">🌐</div>
+                    <h2>Gestion du site</h2>
+                    <p>Modifier l'adresse, l'email de contact, les réseaux sociaux et les informations du club.</p>
+                </a>
+
+                <a href="/pages/admin/newsletter.php" class="dashboard-card card-admin">
+                    <div class="card-icon">📰</div>
+                    <h2>News Letter</h2>
+                    <p>Rédiger une édition et l'envoyer aux adhérents abonnés.</p>
+                </a>
+
+            </div>
+        </div>
+
         <!-- Section RGPD — pleine largeur -->
         <div class="dashboard-section">
             <h2 class="dashboard-section-title">🔒 RGPD — Purge des journaux</h2>
@@ -166,26 +186,6 @@ $nbActivites  = (int)$pdo->query('SELECT COUNT(*) FROM journal_activites')->fetc
                     <button id="btn-clear" class="btn-clear-logs" onclick="viderLogs()">✕ Tout vider</button>
                     <p id="purge-status" class="purge-status"></p>
                 </div>
-            </div>
-        </div>
-
-        <!-- Section Paramètres — pleine largeur -->
-        <div class="dashboard-section">
-            <h2 class="dashboard-section-title">⚙️ Paramètres</h2>
-            <div class="dashboard-cards">
-
-                <a href="/pages/admin/gestion-site.php" class="dashboard-card card-admin">
-                    <div class="card-icon">🌐</div>
-                    <h2>Gestion du site</h2>
-                    <p>Modifier l'adresse, l'email de contact, les réseaux sociaux et les informations du club.</p>
-                </a>
-
-                <a href="/pages/admin/newsletter.php" class="dashboard-card card-admin">
-                    <div class="card-icon">📰</div>
-                    <h2>News Letter</h2>
-                    <p>Rédiger une édition et l'envoyer aux adhérents abonnés.</p>
-                </a>
-
             </div>
         </div>
 
