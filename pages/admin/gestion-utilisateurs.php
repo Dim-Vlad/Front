@@ -300,7 +300,7 @@ $currentId = (int)(current_user()['id']);
                 <div class="filter-roles">
                     <button type="button" class="filter-role-btn active" data-role="all">Tous</button>
                     <button type="button" class="filter-role-btn filter-role-btn--pending" data-role="pending">En attente</button>
-                    <button type="button" class="filter-role-btn" data-role="newsletter">📰 Newsletter</button>
+                    <button type="button" class="filter-role-btn" data-role="newsletter">📰 Non abonnés newsletter</button>
                     <?php foreach ($validRoles as $r): ?>
                     <button type="button" class="filter-role-btn filter-role-btn--<?= $r ?>" data-role="<?= $r ?>"><?= $roleLabels[$r] ?></button>
                     <?php endforeach; ?>
@@ -560,7 +560,7 @@ $currentId = (int)(current_user()['id']);
                     } else if (activeRole === 'pending') {
                             matchRole = actif === '0';
                     } else if (activeRole === 'newsletter') {
-                        matchRole = row.dataset.newsletter === '1';
+                        matchRole = row.dataset.newsletter === '0';
                     } else {
                         matchRole = roles.split(',').indexOf(activeRole) !== -1;
                     }
