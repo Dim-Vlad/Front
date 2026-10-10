@@ -12,6 +12,16 @@ if (has_role('admin')) {
 
 $canEdit = has_any_role(['admin', 'moderateur']);
 
+// Partenaires mis en avant à vérifier : déjà expirés, ou qui expirent dans les 14 jours.
+$partenairesAlerte = [];
+if ($canEdit) {
+    $partenairesAlerte = $pdo->query(
+        "SELECT nom, date_fin FROM partenaires
+          WHERE mis_en_avant = 1 AND date_fin IS NOT NULL AND date_fin <= DATE_ADD(CURDATE(), INTERVAL 14 DAY)
+          ORDER BY date_fin ASC"
+    )->fetchAll();
+}
+
 $stmtNl = $pdo->prepare('SELECT newsletter FROM users WHERE id = ?');
 $stmtNl->execute([(int)$user['id']]);
 $nlAbonne = (int)$stmtNl->fetchColumn() === 1;
@@ -181,6 +191,25 @@ foreach ($rolePriority as $r) {
             </div>
             <?php endif; ?>
         </div>
+        <?php endif; ?>
+
+        <?php if ($canEdit && !empty($partenairesAlerte)): ?>
+        <!-- Alerte : mise en avant partenaire à vérifier -->
+        <a href="/pages/partenaires/partenaires.php" class="partner-alert-banner">
+            <div class="partner-alert-icon">⏰</div>
+            <div class="partner-alert-text">
+                <strong>Mise en avant partenaire à vérifier</strong>
+                <ul>
+                    <?php foreach ($partenairesAlerte as $p):
+                        $expire = $p['date_fin'] < date('Y-m-d');
+                        $dateFr = (new DateTime($p['date_fin']))->format('d/m/Y');
+                    ?>
+                    <li><?= htmlspecialchars($p['nom']) ?> — <?= $expire ? 'expiré depuis le ' . $dateFr : 'expire le ' . $dateFr ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+            <span class="partner-alert-link">Gérer →</span>
+        </a>
         <?php endif; ?>
 
         <!-- Section Jeux -->

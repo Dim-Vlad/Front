@@ -869,3 +869,57 @@
     background: #eef3ee;
 }
 .nl-modal-frame[hidden] { display: none; }
+
+/* ── Alerte : mise en avant partenaire à vérifier ── */
+.partner-alert-banner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    max-width: 980px;
+    background: linear-gradient(135deg, #fff8e6 0%, #fff0d1 100%);
+    border: 1.5px solid #e0a429;
+    border-radius: 14px;
+    padding: 1rem 1.4rem;
+    margin-bottom: 1.5rem;
+    text-decoration: none;
+    box-shadow: 0 2px 10px rgba(184, 134, 10, .12);
+    transition: box-shadow .2s, transform .2s;
+}
+.partner-alert-banner:hover {
+    box-shadow: 0 4px 16px rgba(184, 134, 10, .2);
+    transform: translateY(-1px);
+}
+.partner-alert-icon {
+    font-size: 1.6rem;
+    flex-shrink: 0;
+}
+.partner-alert-text {
+    flex: 1;
+    min-width: 0;
+}
+.partner-alert-text strong {
+    display: block;
+    color: #8a6d16;
+    font-size: .92rem;
+    margin-bottom: .3rem;
+}
+.partner-alert-text ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: .85rem;
+    color: #6b5a2a;
+}
+.partner-alert-text li { line-height: 1.5; }
+.partner-alert-link {
+    flex-shrink: 0;
+    font-weight: 700;
+    font-size: .85rem;
+    color: #8a6d16;
+    white-space: nowrap;
+}
+@media (max-width: 560px) {
+    .partner-alert-banner { flex-wrap: wrap; }
+    .partner-alert-link { width: 100%; text-align: right; }
+}

@@ -16,6 +16,70 @@ foreach ($rows as $p) {
     if (isset($groups[$p['categorie']])) $groups[$p['categorie']][] = $p;
 }
 
+// Mise en avant réellement active : si la date de fin est dépassée, le
+// partenaire repasse en affichage standard sans que la valeur enregistrée
+// soit modifiée (l'admin la retrouve telle quelle pour la renouveler).
+function partenaire_mis_en_avant_effectif(array $p): bool {
+    if (!(int)($p['mis_en_avant'] ?? 0)) return false;
+    if (!empty($p['date_fin']) && $p['date_fin'] < date('Y-m-d')) return false;
+    return true;
+}
+
+$featured = array_values(array_filter($rows, 'partenaire_mis_en_avant_effectif'));
+usort($featured, fn($a, $b) => ($a['ordre'] ?? 0) <=> ($b['ordre'] ?? 0));
+
+function render_partner_card(array $p, bool $canEdit, bool $featured = false): void {
+    $safeLogo   = htmlspecialchars($p['logo'], ENT_QUOTES);
+    $safeNom    = htmlspecialchars($p['nom'],  ENT_QUOTES);
+    $safeUrl    = htmlspecialchars($p['url'],  ENT_QUOTES);
+    $safeCat    = htmlspecialchars($p['categorie'], ENT_QUOTES);
+    $misEnAvant = (int)($p['mis_en_avant'] ?? 0) === 1;
+    $dateFin    = $p['date_fin'] ?? '';
+    $description = $p['description'] ?? '';
+    $expire     = $misEnAvant && !partenaire_mis_en_avant_effectif($p);
+    $cardClass  = 'partner-card' . ($featured ? ' partner-card--featured' : '');
+    ?>
+    <div class="<?= $cardClass ?>"
+        data-id="<?= $p['id'] ?>"
+        data-nom="<?= $safeNom ?>"
+        data-url="<?= $safeUrl ?>"
+        data-logo="<?= $safeLogo ?>"
+        data-categorie="<?= $safeCat ?>"
+        data-mis-en-avant="<?= $misEnAvant ? '1' : '0' ?>"
+        data-date-fin="<?= htmlspecialchars($dateFin, ENT_QUOTES) ?>"
+        data-description="<?= htmlspecialchars($description, ENT_QUOTES) ?>">
+        <div class="partner-logo-wrap">
+            <?php if ($p['logo']): ?>
+            <img class="partner-logo" src="<?= $safeLogo ?>" alt="<?= $safeNom ?>">
+            <?php else: ?>
+            <div class="partner-logo-placeholder"><?= htmlspecialchars($p['nom'][0]) ?></div>
+            <?php endif; ?>
+        </div>
+        <div class="partner-footer">
+            <span class="partner-name"><?= htmlspecialchars($p['nom']) ?></span>
+            <?php if ($featured && $description !== ''): ?>
+            <p class="partner-description"><?= nl2br(htmlspecialchars($description)) ?></p>
+            <?php endif; ?>
+            <?php if ($p['url']): ?>
+            <a class="partner-link<?= $featured ? ' partner-link--featured' : '' ?>" href="<?= $safeUrl ?>" target="_blank" rel="noopener" onclick="event.stopPropagation()"><?= $featured ? 'Visiter le site →' : 'Visiter →' ?></a>
+            <?php endif; ?>
+            <?php if ($canEdit && $misEnAvant): ?>
+            <span class="partner-tier-badge<?= $expire ? ' partner-tier-badge--expired' : '' ?>">
+                <?= $expire ? '⚠️ Expiré (mise en avant)' : '⭐ Mise en avant' ?>
+                <?php if ($dateFin && !$expire): ?> · jusqu'au <?= (new DateTime($dateFin))->format('d/m/Y') ?><?php endif; ?>
+            </span>
+            <?php endif; ?>
+        </div>
+        <?php if ($canEdit): ?>
+        <button class="partner-edit-btn"
+            onclick="event.stopPropagation(); openEditModal(this.closest('.partner-card'))"
+            title="Modifier ce partenaire"
+            aria-label="Modifier <?= $safeNom ?>">✏️</button>
+        <?php endif; ?>
+    </div>
+    <?php
+}
+
 $categoryLabels = [
     'partenaire'    => 'Partenaires',
     'institutionnel' => 'Institutions &amp; Collectivités',
@@ -58,14 +122,41 @@ $dossierPath = file_exists($dossierDir . 'dossier-partenaires.pdf')
 
     <main class="partenaires-main">
 
-        <!-- Bannière devenir partenaire -->
+        <!-- Bannière devenir partenaire + dossier de partenariat -->
         <div class="devenir-card">
             <div class="devenir-text">
                 <h2>Vous souhaitez devenir partenaire ?</h2>
                 <p>Contactez-nous pour en savoir plus sur les avantages que nous pouvons vous offrir.</p>
+                <?php if ($isAdmin): ?>
+                <form id="dossier-form" enctype="multipart/form-data" class="dossier-upload-form">
+                    <label class="dossier-upload-label" for="dossier-file">
+                        📄 Changer le dossier (PDF)
+                        <input type="file" name="dossier" id="dossier-file" accept="application/pdf" required>
+                    </label>
+                    <button type="submit" class="btn-dossier btn-dossier--upload">Envoyer</button>
+                    <span id="dossier-status" class="dossier-status"></span>
+                </form>
+                <?php endif; ?>
             </div>
-            <a href="/pages/nousContacter.html" class="btn-contact">Nous contacter</a>
+            <div class="devenir-actions">
+                <?php if ($dossierPath): ?>
+                <a href="<?= htmlspecialchars($dossierPath) ?>" target="_blank" class="btn-contact btn-contact--outline">📄 Voir le dossier</a>
+                <?php endif; ?>
+                <a href="/pages/nousContacter.html" class="btn-contact">Nous contacter</a>
+            </div>
         </div>
+
+        <?php if (!empty($featured)): ?>
+        <!-- ── Partenaires en vedette ── -->
+        <div class="partners-section partners-section--featured">
+            <div class="section-header">
+                <div class="section-title">⭐ Nos partenaires en vedette</div>
+            </div>
+            <div class="partners-grid partners-grid--featured">
+                <?php foreach ($featured as $p) render_partner_card($p, $canEdit, true); ?>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <?php foreach ($groups as $categorie => $partenaires): ?>
         <!-- ── Section <?= $categoryLabels[$categorie] ?> ── -->
@@ -77,64 +168,13 @@ $dossierPath = file_exists($dossierDir . 'dossier-partenaires.pdf')
                 <?php endif; ?>
             </div>
             <div class="partners-grid">
-                <?php foreach ($partenaires as $p):
-                    $safeLogo = htmlspecialchars($p['logo'],  ENT_QUOTES);
-                    $safeNom  = htmlspecialchars($p['nom'],   ENT_QUOTES);
-                    $safeUrl  = htmlspecialchars($p['url'],   ENT_QUOTES);
-                    $safeCat  = htmlspecialchars($p['categorie'], ENT_QUOTES);
-                ?>
-                <div class="partner-card"
-                    data-id="<?= $p['id'] ?>"
-                    data-nom="<?= $safeNom ?>"
-                    data-url="<?= $safeUrl ?>"
-                    data-logo="<?= $safeLogo ?>"
-                    data-categorie="<?= $safeCat ?>">
-                    <div class="partner-logo-wrap">
-                        <?php if ($p['logo']): ?>
-                        <img class="partner-logo" src="<?= $safeLogo ?>" alt="<?= $safeNom ?>">
-                        <?php else: ?>
-                        <div class="partner-logo-placeholder"><?= htmlspecialchars($p['nom'][0]) ?></div>
-                        <?php endif; ?>
-                    </div>
-                    <div class="partner-footer">
-                        <span class="partner-name"><?= htmlspecialchars($p['nom']) ?></span>
-                        <?php if ($p['url']): ?>
-                        <a class="partner-link" href="<?= $safeUrl ?>" target="_blank" rel="noopener" onclick="event.stopPropagation()">Visiter →</a>
-                        <?php endif; ?>
-                    </div>
-                    <?php if ($canEdit): ?>
-                    <button class="partner-edit-btn"
-                        onclick="event.stopPropagation(); openEditModal(this.closest('.partner-card'))"
-                        title="Modifier ce partenaire"
-                        aria-label="Modifier <?= $safeNom ?>">✏️</button>
-                    <?php endif; ?>
-                </div>
-                <?php endforeach; ?>
+                <?php foreach ($partenaires as $p) render_partner_card($p, $canEdit); ?>
                 <?php if (empty($partenaires) && $canEdit): ?>
                 <p class="partners-empty">Aucun partenaire dans cette catégorie.</p>
                 <?php endif; ?>
             </div>
         </div>
         <?php endforeach; ?>
-
-        <!-- Dossier de partenariat -->
-        <div class="dossier-section">
-            <h2>Dossier de partenariat</h2>
-            <p>Consultez nos offres et avantages pour les partenaires.</p>
-            <?php if ($dossierPath): ?>
-            <a href="<?= htmlspecialchars($dossierPath) ?>" target="_blank" class="btn-dossier">Voir le dossier</a>
-            <?php endif; ?>
-            <?php if ($isAdmin): ?>
-            <form id="dossier-form" enctype="multipart/form-data" class="dossier-upload-form">
-                <label class="dossier-upload-label" for="dossier-file">
-                    📄 Changer le dossier (PDF)
-                    <input type="file" name="dossier" id="dossier-file" accept="application/pdf" required>
-                </label>
-                <button type="submit" class="btn-dossier btn-dossier--upload">Envoyer</button>
-                <span id="dossier-status" class="dossier-status"></span>
-            </form>
-            <?php endif; ?>
-        </div>
 
     </main>
 
@@ -164,6 +204,20 @@ $dossierPath = file_exists($dossierDir . 'dossier-partenaires.pdf')
                     <div class="modal-form-group">
                         <label for="edit-url">Lien du site</label>
                         <input type="url" name="url" id="edit-url" placeholder="https://...">
+                    </div>
+                    <div class="modal-form-group modal-form-group--checkbox">
+                        <label for="edit-mis-en-avant">
+                            <input type="checkbox" name="mis_en_avant" value="1" id="edit-mis-en-avant" onchange="toggleFeaturedFields('edit')">
+                            ⭐ Partenaire mis en avant (carte en vedette, visibilité payante)
+                        </label>
+                    </div>
+                    <div class="modal-form-group" id="edit-date-fin-group">
+                        <label for="edit-date-fin">Fin de la mise en avant (optionnel)</label>
+                        <input type="date" name="date_fin" id="edit-date-fin">
+                    </div>
+                    <div class="modal-form-group" id="edit-description-group">
+                        <label for="edit-description">Texte de présentation (optionnel)</label>
+                        <textarea name="description" id="edit-description" rows="3" maxlength="400" placeholder="Quelques mots sur ce partenaire, affichés sur sa carte en vedette et le bandeau d'accueil…"></textarea>
                     </div>
                     <div class="modal-form-group">
                         <label for="edit-logo-file">Logo</label>
@@ -205,6 +259,20 @@ $dossierPath = file_exists($dossierDir . 'dossier-partenaires.pdf')
                     <div class="modal-form-group">
                         <label for="add-url">Lien du site</label>
                         <input type="url" name="url" id="add-url" placeholder="https://...">
+                    </div>
+                    <div class="modal-form-group modal-form-group--checkbox">
+                        <label for="add-mis-en-avant">
+                            <input type="checkbox" name="mis_en_avant" value="1" id="add-mis-en-avant" onchange="toggleFeaturedFields('add')">
+                            ⭐ Partenaire mis en avant (carte en vedette, visibilité payante)
+                        </label>
+                    </div>
+                    <div class="modal-form-group" id="add-date-fin-group">
+                        <label for="add-date-fin">Fin de la mise en avant (optionnel)</label>
+                        <input type="date" name="date_fin" id="add-date-fin">
+                    </div>
+                    <div class="modal-form-group" id="add-description-group">
+                        <label for="add-description">Texte de présentation (optionnel)</label>
+                        <textarea name="description" id="add-description" rows="3" maxlength="400" placeholder="Quelques mots sur ce partenaire, affichés sur sa carte en vedette et le bandeau d'accueil…"></textarea>
                     </div>
                     <div class="modal-form-group">
                         <label for="add-logo-file">Logo</label>

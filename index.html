@@ -85,6 +85,34 @@
             else alert(data.error || 'Erreur');
         } catch { alert('Erreur réseau'); }
     }
+
+    // Bandeau partenaire en vedette : défilement automatique.
+    // home.php est injecté en différé (loadHTML), on attend que le bloc existe.
+    function initHomeSpotlight() {
+        const box = document.getElementById('home-partner-spotlight');
+        if (!box) return;
+        const slides = box.querySelectorAll('.home-spotlight-slide');
+        const dots   = box.querySelectorAll('.home-spotlight-dot');
+        if (slides.length < 2) return; // un seul partenaire : rien à faire tourner
+        let idx = 0;
+        const delay = parseInt(box.dataset.interval, 10) || 5000;
+        function show(i) {
+            slides.forEach((s, n) => s.classList.toggle('active', n === i));
+            dots.forEach((d, n) => d.classList.toggle('active', n === i));
+            idx = i;
+        }
+        let timer = setInterval(() => show((idx + 1) % slides.length), delay);
+        dots.forEach(d => d.addEventListener('click', () => {
+            show(parseInt(d.dataset.index, 10));
+            clearInterval(timer);
+            timer = setInterval(() => show((idx + 1) % slides.length), delay);
+        }));
+    }
+    (function waitForSpotlight(triesLeft) {
+        if (document.getElementById('home-partner-spotlight')) { initHomeSpotlight(); return; }
+        if (triesLeft <= 0) return;
+        setTimeout(() => waitForSpotlight(triesLeft - 1), 100);
+    })(30);
 </script>
 </body>
 </html>

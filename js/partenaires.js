@@ -29,10 +29,10 @@
             const res = await fetch('/php/partenaires/update_partenaire.php', { method: 'POST', body: fd });
             const json = await res.json();
             if (json.success) {
-                updateCardInDOM(json.data);
                 status.textContent = 'Enregistré ✓';
                 status.className = 'modal-status success';
-                setTimeout(closeEditModal, 900);
+                // Rechargement : la mise en avant peut déplacer la carte vers/hors de la section "en vedette".
+                setTimeout(() => location.reload(), 700);
             } else {
                 status.textContent = json.error || 'Erreur.';
                 status.className = 'modal-status error';
@@ -54,10 +54,9 @@
             const res = await fetch('/php/partenaires/add_partenaire.php', { method: 'POST', body: fd });
             const json = await res.json();
             if (json.success) {
-                addCardToDOM(json.data);
                 status.textContent = 'Partenaire ajouté ✓';
                 status.className = 'modal-status success';
-                setTimeout(closeAddModal, 900);
+                setTimeout(() => location.reload(), 700);
             } else {
                 status.textContent = json.error || 'Erreur.';
                 status.className = 'modal-status error';
@@ -124,6 +123,11 @@ function openEditModal(card) {
     const selCat = document.getElementById('edit-categorie');
     if (selCat) selCat.value = card.dataset.categorie;
 
+    document.getElementById('edit-mis-en-avant').checked = card.dataset.misEnAvant === '1';
+    document.getElementById('edit-date-fin').value       = card.dataset.dateFin || '';
+    document.getElementById('edit-description').value    = card.dataset.description || '';
+    toggleFeaturedFields('edit');
+
     const preview = document.getElementById('edit-logo-preview');
     if (card.dataset.logo) {
         preview.src = card.dataset.logo;
@@ -152,7 +156,11 @@ function openAddModal(categorie) {
     document.getElementById('add-categorie-display').textContent = categoryLabels[categorie] || categorie;
     document.getElementById('add-nom').value  = '';
     document.getElementById('add-url').value  = '';
+    document.getElementById('add-mis-en-avant').checked = false;
+    document.getElementById('add-date-fin').value       = '';
+    document.getElementById('add-description').value    = '';
     document.getElementById('add-logo-file').value = '';
+    toggleFeaturedFields('add');
 
     const preview = document.getElementById('add-logo-preview');
     preview.style.display = 'none';
@@ -166,6 +174,14 @@ function openAddModal(categorie) {
 
 function closeAddModal() {
     document.getElementById('addModal')?.classList.remove('open');
+}
+
+// La fin de mise en avant et le texte de présentation n'ont de sens
+// que si la case "mis en avant" est cochée.
+function toggleFeaturedFields(prefix) {
+    const checked = document.getElementById(prefix + '-mis-en-avant').checked;
+    document.getElementById(prefix + '-date-fin-group').style.display     = checked ? '' : 'none';
+    document.getElementById(prefix + '-description-group').style.display = checked ? '' : 'none';
 }
 
 // ── Suppression deux étapes ──────────────────────
@@ -208,74 +224,10 @@ async function deletePartner() {
 
 // ── Manipulation DOM ─────────────────────────────
 
-function buildCard(data) {
-    const logoHtml = data.logo
-        ? `<img class="partner-logo" src="${escHtml(data.logo)}" alt="${escHtml(data.nom)}">`
-        : `<div class="partner-logo-placeholder">${escHtml(data.nom[0] || '?')}</div>`;
-
-    const linkHtml = data.url
-        ? `<a class="partner-link" href="${escHtml(data.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Visiter →</a>`
-        : '';
-
-    const div = document.createElement('div');
-    div.className = 'partner-card';
-    div.dataset.id        = data.id;
-    div.dataset.nom       = data.nom;
-    div.dataset.url       = data.url || '';
-    div.dataset.logo      = data.logo || '';
-    div.dataset.categorie = data.categorie;
-    div.innerHTML = `
-        <div class="partner-logo-wrap">${logoHtml}</div>
-        <div class="partner-footer">
-            <span class="partner-name">${escHtml(data.nom)}</span>
-            ${linkHtml}
-        </div>
-        <button class="partner-edit-btn"
-            onclick="event.stopPropagation(); openEditModal(this.closest('.partner-card'))"
-            title="Modifier ce partenaire">✏️</button>
-    `;
-    return div;
-}
-
-function addCardToDOM(data) {
-    // Trouver la grille de la bonne catégorie
-    const sections = document.querySelectorAll('.partners-section');
-    for (const section of sections) {
-        const btn = section.querySelector('.btn-add-partner');
-        if (btn && btn.getAttribute('onclick').includes(`'${data.categorie}'`)) {
-            const grid = section.querySelector('.partners-grid');
-            // Supprimer le placeholder vide s'il existe
-            const empty = grid.querySelector('.partners-empty');
-            if (empty) empty.remove();
-            grid.appendChild(buildCard(data));
-            return;
-        }
-    }
-}
-
-function updateCardInDOM(data) {
-    const card = document.querySelector(`.partner-card[data-id="${data.id}"]`);
-    if (!card) return;
-
-    card.dataset.nom       = data.nom;
-    card.dataset.url       = data.url || '';
-    card.dataset.logo      = data.logo || '';
-    card.dataset.categorie = data.categorie;
-
-    const logoWrap = card.querySelector('.partner-logo-wrap');
-    logoWrap.innerHTML = data.logo
-        ? `<img class="partner-logo" src="${escHtml(data.logo)}" alt="${escHtml(data.nom)}">`
-        : `<div class="partner-logo-placeholder">${escHtml(data.nom[0] || '?')}</div>`;
-
-    const footer = card.querySelector('.partner-footer');
-    footer.innerHTML = `
-        <span class="partner-name">${escHtml(data.nom)}</span>
-        ${data.url ? `<a class="partner-link" href="${escHtml(data.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Visiter →</a>` : ''}
-    `;
-}
-
 function removeCardFromDOM(id) {
-    document.querySelector(`.partner-card[data-id="${id}"]`)?.remove();
+    // Un partenaire "en vedette" a deux cartes dans la page (la section vedette
+    // et sa catégorie) : on les retire toutes les deux.
+    document.querySelectorAll(`.partner-card[data-id="${id}"]`).forEach(el => el.remove());
 }
 
 // ── Utilitaires ──────────────────────────────────
@@ -290,13 +242,4 @@ function previewImage(input, previewId) {
         };
         reader.readAsDataURL(input.files[0]);
     }
-}
-
-function escHtml(str) {
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
 }

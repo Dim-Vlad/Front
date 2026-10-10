@@ -36,6 +36,11 @@ if ($nom === '' || !in_array($categorie, $validCategories, true)) {
     http_response_code(400); ob_end_clean(); echo json_encode(['error' => 'Nom et catégorie requis.']); exit;
 }
 
+$misEnAvant  = ($_POST['mis_en_avant'] ?? '') === '1' ? 1 : 0;
+$dateFin     = trim($_POST['date_fin'] ?? '');
+if ($dateFin !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFin)) $dateFin = '';
+$description = mb_substr(trim($_POST['description'] ?? ''), 0, 400);
+
 $logoPath = null;
 if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
     $tmp     = $_FILES['logo']['tmp_name'];
@@ -55,12 +60,14 @@ if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
     }
 }
 
+$dateFinValue     = $dateFin !== '' ? $dateFin : null;
+$descriptionValue = $description !== '' ? $description : null;
 if ($logoPath !== null) {
-    $pdo->prepare('UPDATE partenaires SET nom = ?, url = ?, categorie = ?, logo = ? WHERE id = ?')
-        ->execute([$nom, $url, $categorie, $logoPath, $id]);
+    $pdo->prepare('UPDATE partenaires SET nom = ?, url = ?, categorie = ?, mis_en_avant = ?, date_fin = ?, description = ?, logo = ? WHERE id = ?')
+        ->execute([$nom, $url, $categorie, $misEnAvant, $dateFinValue, $descriptionValue, $logoPath, $id]);
 } else {
-    $pdo->prepare('UPDATE partenaires SET nom = ?, url = ?, categorie = ? WHERE id = ?')
-        ->execute([$nom, $url, $categorie, $id]);
+    $pdo->prepare('UPDATE partenaires SET nom = ?, url = ?, categorie = ?, mis_en_avant = ?, date_fin = ?, description = ? WHERE id = ?')
+        ->execute([$nom, $url, $categorie, $misEnAvant, $dateFinValue, $descriptionValue, $id]);
 }
 
 log_activite($pdo, 'modification', 'partenaire', "Modification du partenaire « {$existing['nom']} »");

@@ -30,13 +30,18 @@ if ($nom === '' || !in_array($categorie, $validCategories, true)) {
     exit;
 }
 
+$misEnAvant  = ($_POST['mis_en_avant'] ?? '') === '1' ? 1 : 0;
+$dateFin     = trim($_POST['date_fin'] ?? '');
+if ($dateFin !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFin)) $dateFin = '';
+$description = mb_substr(trim($_POST['description'] ?? ''), 0, 400);
+
 $pdo = get_pdo();
 $maxOrdre = $pdo->prepare('SELECT COALESCE(MAX(ordre), 0) FROM partenaires WHERE categorie = ?');
 $maxOrdre->execute([$categorie]);
 $ordre = (int)$maxOrdre->fetchColumn() + 1;
 
-$pdo->prepare('INSERT INTO partenaires (nom, logo, url, categorie, ordre) VALUES (?, ?, ?, ?, ?)')
-    ->execute([$nom, '', $url, $categorie, $ordre]);
+$pdo->prepare('INSERT INTO partenaires (nom, logo, url, categorie, ordre, mis_en_avant, date_fin, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+    ->execute([$nom, '', $url, $categorie, $ordre, $misEnAvant, $dateFin !== '' ? $dateFin : null, $description !== '' ? $description : null]);
 $newId = (int)$pdo->lastInsertId();
 
 $logoPath = '';

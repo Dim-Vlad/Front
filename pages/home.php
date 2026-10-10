@@ -51,6 +51,14 @@ try {
         "SELECT nom, logo, url FROM partenaires ORDER BY ordre ASC"
     )->fetchAll();
 
+    // Partenaires mis en avant (visibilité payante) : repassent en affichage
+    // standard d'eux-mêmes une fois leur date de fin dépassée.
+    $partenairesVedette = $pdo->query(
+        "SELECT nom, logo, url, description FROM partenaires
+          WHERE mis_en_avant = 1 AND (date_fin IS NULL OR date_fin >= CURDATE())
+          ORDER BY ordre ASC"
+    )->fetchAll();
+
     $stmtP = $pdo->prepare("SELECT valeur FROM parametres WHERE cle = 'home_show_pronostics'");
     $stmtP->execute();
     $rowP           = $stmtP->fetch();
@@ -60,9 +68,9 @@ try {
         // Les prochains matchs à pronostiquer (les plus proches en premier).
         $prochainsMatchs = $pdo->query(
             "SELECT * FROM pronostics_matchs
-             WHERE resultat_victoire IS NULL AND date_match > NOW()
-             ORDER BY date_match ASC
-             LIMIT 5"
+            WHERE resultat_victoire IS NULL AND date_match > NOW()
+            ORDER BY date_match ASC
+            LIMIT 5"
         )->fetchAll();
 
         $topPronostics = $pdo->query(
@@ -151,6 +159,51 @@ function formatHomeDate(?string $debut, ?string $fin): string {
     </div>
   </div>
 </section>
+
+<!-- PARTENAIRE EN VEDETTE -->
+<?php if (!empty($partenairesVedette)): ?>
+<div class="home-partner-spotlight" id="home-partner-spotlight" data-interval="5000">
+  <?php foreach ($partenairesVedette as $i => $p): ?>
+  <a class="home-spotlight-slide<?= $i === 0 ? ' active' : '' ?>"
+      href="<?= h($p['url']) ?>" target="_blank" rel="noopener">
+    <div class="home-spotlight-logo">
+      <?php if (!empty($p['logo'])): ?>
+      <img src="<?= h($p['logo']) ?>" alt="<?= h($p['nom']) ?>">
+      <?php else: ?>
+      <span class="home-spotlight-initial"><?= h(mb_strtoupper(mb_substr($p['nom'], 0, 1))) ?></span>
+      <?php endif; ?>
+    </div>
+    <div class="home-spotlight-info">
+      <span class="home-spotlight-label">⭐ Partenaire mis en avant</span>
+      <span class="home-spotlight-name"><?= h($p['nom']) ?></span>
+      <?php if (!empty($p['description'])): ?>
+      <p class="home-spotlight-description"><?= nl2br(h($p['description'])) ?></p>
+      <?php endif; ?>
+      <span class="home-spotlight-cta">Visiter le site →</span>
+    </div>
+  </a>
+  <?php endforeach; ?>
+  <?php if (count($partenairesVedette) > 1): ?>
+  <div class="home-spotlight-dots">
+    <?php foreach ($partenairesVedette as $i => $p): ?>
+    <button type="button" class="home-spotlight-dot<?= $i === 0 ? ' active' : '' ?>" data-index="<?= $i ?>" aria-label="Voir <?= h($p['nom']) ?>"></button>
+    <?php endforeach; ?>
+  </div>
+  <?php endif; ?>
+</div>
+<?php else: ?>
+<div class="home-partner-spotlight home-partner-spotlight--promo">
+  <div class="home-spotlight-slide home-spotlight-slide--promo active">
+    <div class="home-spotlight-logo home-spotlight-logo--promo">📢</div>
+    <div class="home-spotlight-info">
+      <span class="home-spotlight-label">Emplacement disponible</span>
+      <span class="home-spotlight-name">Votre entreprise, ici ?</span>
+      <p class="home-spotlight-description">C'est l'un des emplacements les plus vus du site : juste sous le logo du club, en haut de la page d'accueil. Votre logo, une présentation et un lien vers votre site, vus par tous les visiteurs.</p>
+      <a href="/pages/partenaires/partenaires.php" class="home-spotlight-cta home-spotlight-cta--btn">Devenir partenaire mis en avant →</a>
+    </div>
+  </div>
+</div>
+<?php endif; ?>
 
 <!-- À VENIR : ÉVÉNEMENTS + PRONOSTICS -->
 <?php

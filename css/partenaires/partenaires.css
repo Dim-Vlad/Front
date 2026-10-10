@@ -52,6 +52,41 @@
     color: #fff;
 }
 
+.devenir-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+
+.btn-contact--outline {
+    background: transparent;
+    color: #fff;
+    border: 1.5px solid rgba(255, 255, 255, 0.7);
+}
+.btn-contact--outline:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    border-color: #fff;
+}
+
+/* Formulaire d'envoi du dossier (admin), intégré à la bannière verte */
+.devenir-card .dossier-upload-form {
+    justify-content: flex-start;
+    margin-top: 1rem;
+}
+.devenir-card .dossier-upload-label {
+    color: rgba(255, 255, 255, 0.85);
+}
+.devenir-card .btn-dossier--upload {
+    padding: 0.4rem 1rem;
+    font-size: 0.82rem;
+    margin: 0;
+}
+.devenir-card .dossier-status {
+    color: #fff;
+}
+
 /* Sections par catégorie */
 .partners-section {
     margin-bottom: 3rem;
@@ -192,6 +227,81 @@
     text-decoration: underline;
 }
 
+/* ── Section partenaires en vedette ── */
+.partners-section--featured .section-title {
+    color: #b8860a;
+}
+.partners-section--featured .section-title::after {
+    background: #e0a429;
+}
+
+.partners-grid--featured {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
+.partner-card--featured {
+    flex: 0 1 280px;
+    max-width: 300px;
+    border: 1.5px solid #f0d78c;
+    box-shadow: 0 4px 16px rgba(184, 134, 10, 0.14);
+}
+.partner-card--featured:hover {
+    box-shadow: 0 8px 26px rgba(184, 134, 10, 0.22);
+}
+.partner-card--featured .partner-logo-wrap {
+    height: 150px;
+    background: linear-gradient(180deg, #fffdf6 0%, #f8faf8 100%);
+}
+.partner-card--featured .partner-logo {
+    max-height: 110px;
+}
+.partner-card--featured .partner-name {
+    font-size: 1rem;
+}
+.partner-description {
+    margin: 0;
+    font-size: .82rem;
+    line-height: 1.5;
+    color: #6b5a2a;
+}
+.partner-link--featured {
+    display: inline-block;
+    background: var(--secondary-color, #063E0B);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.45rem 1.1rem;
+    border-radius: 20px;
+    margin-top: 0.2rem;
+    transition: background 0.2s;
+}
+.partner-link.partner-link--featured:hover {
+    background: #0a5c10;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* Badge palier, visible uniquement par l'admin/modérateur */
+.partner-tier-badge {
+    display: inline-block;
+    margin-top: 0.3rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #8a6d16;
+    background: #fdf3d8;
+    border: 1px solid #f0d78c;
+    border-radius: 12px;
+    padding: 0.15rem 0.6rem;
+}
+.partner-tier-badge--expired {
+    color: #a13a2a;
+    background: #fbe4df;
+    border-color: #f0bcae;
+}
+
 /* Bouton édition flottant */
 .partner-edit-btn {
     position: absolute;
@@ -215,29 +325,6 @@
 .partner-edit-btn:hover {
     background: #fff;
     border-color: #bbb;
-}
-
-/* ── Section dossier ── */
-.dossier-section {
-    background: #f4f7f4;
-    border-radius: 14px;
-    padding: 2rem 2.5rem;
-    text-align: center;
-    margin-top: 2rem;
-    border: 1px solid #d8e8d8;
-}
-
-.dossier-section h2 {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--secondary-color, #063E0B);
-    margin: 0 0 0.5rem;
-}
-
-.dossier-section p {
-    color: #555;
-    font-size: 0.9rem;
-    margin: 0 0 1.2rem;
 }
 
 .btn-dossier {
@@ -375,7 +462,9 @@
 
 .modal-form-group input[type="text"],
 .modal-form-group input[type="url"],
-.modal-form-group select {
+.modal-form-group input[type="date"],
+.modal-form-group select,
+.modal-form-group textarea {
     padding: 0.55rem 0.8rem;
     border: 1.5px solid #ddd;
     border-radius: 8px;
@@ -383,6 +472,7 @@
     font-family: inherit;
     transition: border-color 0.2s;
     background: #fafafa;
+    resize: vertical;
 }
 
 .modal-form-group input:focus,
@@ -390,6 +480,22 @@
     outline: none;
     border-color: var(--secondary-color, #063E0B);
     background: #fff;
+}
+
+.modal-form-group--checkbox label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-transform: none;
+    font-size: 0.88rem;
+    letter-spacing: normal;
+    cursor: pointer;
+}
+.modal-form-group--checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    accent-color: var(--secondary-color, #063E0B);
 }
 
 .modal-file-input {
@@ -530,6 +636,11 @@
         padding: 1.5rem 1.25rem;
     }
 
+    .devenir-actions {
+        width: 100%;
+        justify-content: center;
+    }
+
     .partners-grid {
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
         gap: 1rem;
@@ -543,12 +654,9 @@
         opacity: 1;
     }
 
-    .dossier-section {
-        padding: 1.5rem 1rem;
-    }
-
-    .dossier-upload-form {
+    .devenir-card .dossier-upload-form {
         flex-direction: column;
+        align-items: center;
     }
 
     /* Modale partenaire : passe sous le menu fixe sinon (navbar en 1010). */
