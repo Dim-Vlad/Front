@@ -13,14 +13,11 @@ $pdo   = get_pdo();
 function h(string $s): string { return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
 
 $themes = [
-    'echauffement' => ['🔥', 'Échauffement'],
-    'attaque'      => ['💥', 'Attaque'],
-    'contre'       => ['🧱', 'Contre/Bloc'],
-    'service'      => ['🎯', 'Service'],
-    'reception'    => ['🙌', 'Réception'],
-    'passe'        => ['🤲', 'Passe'],
-    'physique'     => ['💪', 'Physique/Muscu'],
-    'jeu'          => ['🏐', 'Jeu'],
+    'echauffement_physique' => ['🔥', 'Échauffement / Muscu / Physique'],
+    'passe_attaque'         => ['🤲', 'Passe / Attaque'],
+    'service_reception'     => ['🎯', 'Service / Réception'],
+    'contre'                => ['🧱', 'Contre/Bloc'],
+    'jeu'                   => ['🏐', 'Jeu'],
 ];
 
 $videos = [];
@@ -109,7 +106,7 @@ function render_video_card(array $v, bool $isMod, array $me): void {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="/css/styles.css?v=20261005" rel="stylesheet">
     <link href="/css/leClub/espace-entraineur.css?v=20260928" rel="stylesheet">
-    <link href="/css/leClub/espace-entraineur/videos.css?v=20261021" rel="stylesheet">
+    <link href="/css/leClub/espace-entraineur/videos.css?v=20261022" rel="stylesheet">
     <title>Vidéos d'entraînement - VBO</title>
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -264,7 +261,7 @@ function render_video_card(array $v, bool $isMod, array $me): void {
     <div id="footer"></div>
 
     <script src="/js/pdf-modal.js?v=20260721"></script>
-    <script src="/js/espace-entraineur/videos.js?v=20261020"></script>
+    <script src="/js/espace-entraineur/videos.js?v=20261022"></script>
     <script src="/js/main.js?v=20260705"></script>
 </body>
 </html>
