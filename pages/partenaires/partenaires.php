@@ -293,6 +293,6 @@ $dossierPath = file_exists($dossierDir . 'dossier-partenaires.pdf')
     <div id="footer"></div>
 
     <script src="/js/main.js?v=20260705"></script>
-    <script src="/js/partenaires.js"></script>
+    <script src="/js/partenaires.js?v=20261012"></script>
 </body>
 </html>
