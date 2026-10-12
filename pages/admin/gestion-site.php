@@ -76,7 +76,7 @@ try {
                     <button type="button" class="btn-admin btn-admin--sm" onclick="openLogoPicker('logo_club')">Changer</button>
                 </div>
                 <div class="gs-logo-item">
-                    <div class="gs-logo-preview gs-logo-preview--dark">
+                    <div class="gs-logo-preview">
                         <img id="gs-preview-logo_menu" src="/<?= h($logoMenu) ?>" alt="Logo du menu">
                     </div>
                     <p class="gs-logo-item-title">Logo du menu</p>
@@ -294,6 +294,53 @@ try {
             });
         });
 
+        /* ── Fond du cadre d'aperçu adapté à la luminosité du logo ──
+           Un logo clair (texte/trait blanc) devient invisible sur fond blanc :
+           on calcule la luminosité moyenne des pixels opaques et on bascule
+           automatiquement vers un fond sombre si besoin. */
+
+        function analyzeLogoBrightness(img, callback) {
+            try {
+                const w = img.naturalWidth, h = img.naturalHeight;
+                if (!w || !h) { callback(null); return; }
+                const canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                const data = ctx.getImageData(0, 0, w, h).data;
+                let total = 0, count = 0;
+                for (let i = 0; i < data.length; i += 4) {
+                    if (data[i + 3] < 40) continue; // pixel quasi transparent : ignoré
+                    total += 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+                    count++;
+                }
+                callback(count ? total / count : null);
+            } catch (e) {
+                callback(null); // image illisible (erreur canvas) : on garde le fond par défaut
+            }
+        }
+
+        // Bascule la classe `darkClass` sur `el` selon la luminosité de `img`,
+        // une fois l'image chargée (ou immédiatement si elle l'est déjà).
+        function autoBgForImage(img, el, darkClass) {
+            const run = () => {
+                analyzeLogoBrightness(img, avgLum => {
+                    if (avgLum === null) return;
+                    el.classList.toggle(darkClass, avgLum > 150);
+                });
+            };
+            if (img.complete && img.naturalWidth) run();
+            else img.addEventListener('load', run, { once: true });
+        }
+
+        function applyLogoPreviewBg(target) {
+            const img = document.getElementById('gs-preview-' + target);
+            if (!img) return;
+            autoBgForImage(img, img.closest('.gs-logo-preview'), 'gs-logo-preview--dark');
+        }
+
+        ['logo_club', 'logo_menu', 'logo_favicon'].forEach(applyLogoPreviewBg);
+
         /* ── Sélecteur de logo (3 cibles : logo_club, logo_menu, logo_favicon) ── */
 
         const LOGO_TITLES = {
@@ -344,6 +391,7 @@ try {
                             document.getElementById('lp-upload-preview').style.display = 'none';
                         });
                         grid.appendChild(item);
+                        autoBgForImage(item.querySelector('img'), item, 'lm-logo-item--dark');
                     });
                 })
                 .catch(() => { grid.innerHTML = '<p class="lm-empty">Erreur de chargement</p>'; });
@@ -359,6 +407,8 @@ try {
             const preview = document.getElementById('lp-upload-preview');
             preview.src           = URL.createObjectURL(file);
             preview.style.display = 'block';
+            preview.classList.remove('lp-upload-preview--dark');
+            autoBgForImage(preview, preview, 'lp-upload-preview--dark');
             document.querySelectorAll('#lp-grid .lm-logo-item').forEach(i => i.classList.remove('active'));
             lpSelectedPath = null;
         });
@@ -387,6 +437,7 @@ try {
                 const data = await res.json();
                 if (data.success) {
                     document.getElementById('gs-preview-' + lpTarget).src = '/' + data.logo;
+                    applyLogoPreviewBg(lpTarget);
                     status.textContent = 'Logo mis à jour !';
                     status.className   = 'lm-status success';
                     setTimeout(closeLogoPicker, 1200);

@@ -212,6 +212,11 @@
 .lm-logo-item:hover  { border-color: var(--primary-color); background: #f0f7f0; }
 .lm-logo-item.active { border-color: var(--secondary-color); background: #e8f2e8; }
 .lm-logo-item img    { width: 100%; height: 50px; object-fit: contain; }
+
+/* Logo clair difficile à voir sur fond clair : fond sombre calculé en JS */
+.lm-logo-item--dark          { background: var(--bg-dark); }
+.lm-logo-item--dark:hover    { background: #324b34; }
+.lm-logo-item--dark.active   { background: #324b34; }
 .lm-logo-item span {
     font-size: 0.62rem;
     color: #666;
@@ -243,6 +248,9 @@
     display: none;
     border-radius: 0.4rem;
 }
+
+/* Aperçu d'import : fond sombre calculé en JS si le logo importé est clair */
+.lp-upload-preview--dark { background: var(--bg-dark); }
 
 .lm-status {
     flex: 1;
