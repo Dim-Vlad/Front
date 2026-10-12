@@ -14,9 +14,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 check_csrf();
 
+$validThemes = ['echauffement', 'attaque', 'contre', 'service', 'reception', 'passe', 'jeu'];
+
 $titre       = trim($_POST['titre'] ?? '');
 $description = trim($_POST['description'] ?? '');
 $type        = in_array($_POST['type'] ?? '', ['video', 'image', 'pdf'], true) ? $_POST['type'] : 'video';
+$theme       = in_array($_POST['theme'] ?? '', $validThemes, true) ? $_POST['theme'] : 'jeu';
 
 if ($titre === '') {
     ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Titre requis']); exit;
@@ -76,8 +79,8 @@ if ($type === 'video') {
 try {
     $pdo = get_pdo();
     $me  = current_user();
-    $pdo->prepare('INSERT INTO videos_entrainement (type, titre, url, description, user_id) VALUES (?, ?, ?, ?, ?)')
-        ->execute([$type, $titre, $url, $description, (int)$me['id']]);
+    $pdo->prepare('INSERT INTO videos_entrainement (type, theme, titre, url, description, user_id) VALUES (?, ?, ?, ?, ?, ?)')
+        ->execute([$type, $theme, $titre, $url, $description, (int)$me['id']]);
     $id = (int)$pdo->lastInsertId();
     log_activite($pdo, 'ajout', 'video_entrainement', "Partage de « {$titre} »");
 

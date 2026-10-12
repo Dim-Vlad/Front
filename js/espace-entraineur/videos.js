@@ -1,5 +1,20 @@
 'use strict';
 
+// ── Filtre par thème ──
+document.addEventListener('DOMContentLoaded', () => {
+    const bar = document.getElementById('vid-theme-filter');
+    if (!bar) return;
+    bar.addEventListener('click', e => {
+        const btn = e.target.closest('.vid-filter-btn');
+        if (!btn) return;
+        bar.querySelectorAll('.vid-filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+        const theme = btn.dataset.theme;
+        document.querySelectorAll('.vid-theme-section').forEach(section => {
+            section.style.display = (theme === 'all' || section.dataset.theme === theme) ? '' : 'none';
+        });
+    });
+});
+
 let _vPreviewUrl = null;
 
 function _vClearPreview() {
@@ -80,6 +95,7 @@ async function submitVideo(e) {
 
     const fd = new FormData();
     fd.append('type', kind);
+    fd.append('theme', document.getElementById('v-theme').value);
     fd.append('titre', document.getElementById('v-titre').value.trim());
     fd.append('description', document.getElementById('v-description').value.trim());
     if (kind === 'video') {
@@ -90,6 +106,106 @@ async function submitVideo(e) {
 
     try {
         const res  = await fetch('/php/espace-entraineur/save_video.php', { method: 'POST', body: fd });
+        const json = await res.json();
+        if (!json.success) throw new Error(json.error || 'Erreur inconnue');
+        location.reload();
+    } catch (err) {
+        status.textContent = err.message;
+    }
+}
+
+// ── Modification d'une ressource déjà publiée ──
+let _vePreviewUrl = null;
+
+function _veClearPreview() {
+    if (_vePreviewUrl) { URL.revokeObjectURL(_vePreviewUrl); _vePreviewUrl = null; }
+    const preview = document.getElementById('ve-file-preview');
+    preview.style.display = 'none';
+    preview.removeAttribute('src');
+}
+
+function openVideoEditModal(card) {
+    const type = card.dataset.type;
+    document.getElementById('ve-id').value          = card.dataset.id;
+    document.getElementById('ve-type').value        = type;
+    document.getElementById('ve-theme').value       = card.dataset.theme;
+    document.getElementById('ve-titre').value       = card.dataset.titre;
+    document.getElementById('ve-description').value = card.dataset.description;
+    document.getElementById('ve-status').textContent = '';
+    document.getElementById('ve-file').value = '';
+    _veClearPreview();
+
+    const urlGroup  = document.getElementById('veUrlGroup');
+    const fileGroup = document.getElementById('veFileGroup');
+    const file      = document.getElementById('ve-file');
+
+    if (type === 'video') {
+        urlGroup.style.display  = '';
+        fileGroup.style.display = 'none';
+        document.getElementById('ve-url').value = card.dataset.url;
+    } else {
+        urlGroup.style.display  = 'none';
+        fileGroup.style.display = '';
+        file.accept = type === 'image' ? '.jpg,.jpeg,.png,.webp,.gif' : '.pdf';
+        document.getElementById('ve-file-text').textContent = type === 'image' ? 'Image actuelle' : 'Fichier actuel';
+        document.getElementById('ve-file-label').textContent = type === 'image'
+            ? '📁 Cliquer pour remplacer l\'image'
+            : '📁 Cliquer pour remplacer le fichier';
+        if (type === 'image') {
+            const preview = document.getElementById('ve-file-preview');
+            preview.src = card.dataset.url;
+            preview.style.display = 'block';
+        }
+    }
+
+    document.getElementById('videoEditModal').classList.add('open');
+}
+
+function closeVideoEditModal() {
+    document.getElementById('videoEditModal').classList.remove('open');
+    _veClearPreview();
+}
+
+function updateVideoEditFileLabel() {
+    const file  = document.getElementById('ve-file').files[0];
+    const type  = document.getElementById('ve-type').value;
+    const label = document.getElementById('ve-file-label');
+    label.textContent = file
+        ? `📄 ${file.name}`
+        : (type === 'image' ? '📁 Cliquer pour remplacer l\'image' : '📁 Cliquer pour remplacer le fichier');
+
+    if (type === 'image' && file) {
+        if (_vePreviewUrl) URL.revokeObjectURL(_vePreviewUrl);
+        _vePreviewUrl = URL.createObjectURL(file);
+        const preview = document.getElementById('ve-file-preview');
+        preview.src = _vePreviewUrl;
+        preview.style.display = 'block';
+    }
+}
+
+async function submitVideoEdit(e) {
+    e.preventDefault();
+    const status = document.getElementById('ve-status');
+    const type   = document.getElementById('ve-type').value;
+
+    const fd = new FormData();
+    fd.append('id', document.getElementById('ve-id').value);
+    fd.append('theme', document.getElementById('ve-theme').value);
+    fd.append('titre', document.getElementById('ve-titre').value.trim());
+    fd.append('description', document.getElementById('ve-description').value.trim());
+    if (type === 'video') {
+        const url = document.getElementById('ve-url').value.trim();
+        if (!url) { status.textContent = 'Le lien de la vidéo est requis.'; return; }
+        fd.append('url', url);
+    } else {
+        const file = document.getElementById('ve-file').files[0];
+        if (file) fd.append('fichier', file);
+    }
+
+    status.textContent = 'Enregistrement…';
+
+    try {
+        const res  = await fetch('/php/espace-entraineur/update_video.php', { method: 'POST', body: fd });
         const json = await res.json();
         if (!json.success) throw new Error(json.error || 'Erreur inconnue');
         location.reload();

@@ -1,5 +1,48 @@
 /* ══ Vidéos d'entraînement (Espace Entraîneur) ══════════════════════════ */
 
+.vid-theme-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-bottom: 1.5rem;
+}
+
+.vid-filter-btn {
+    background: #f0f0f0;
+    color: #444;
+    border: none;
+    border-radius: 20px;
+    padding: .45rem 1rem;
+    font-size: .85rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+}
+.vid-filter-btn:hover {
+    background: #e2e8e2;
+}
+.vid-filter-btn.active {
+    background: var(--secondary-color);
+    color: #fff;
+}
+
+.vid-theme-section {
+    margin-bottom: 2.2rem;
+}
+.vid-theme-section:last-child {
+    margin-bottom: 0;
+}
+
+.vid-theme-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+    margin: 0 0 1rem;
+    padding-bottom: .5rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
 .vid-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -72,7 +115,7 @@
 
 .vid-card h3 {
     margin: 0;
-    padding-right: 1.8rem;
+    padding-right: 3.1rem;
     font-size: 1rem;
     color: var(--bg-dark);
     overflow-wrap: break-word;
@@ -115,10 +158,15 @@
     color: #999;
 }
 
-.vid-delete-btn {
+.vid-card-actions {
     position: absolute;
     top: .7rem;
     right: .7rem;
+    display: flex;
+    gap: .4rem;
+}
+.vid-edit-btn,
+.vid-delete-btn {
     background: none;
     border: none;
     font-size: .95rem;
@@ -127,6 +175,7 @@
     padding: .15rem;
     line-height: 1;
 }
+.vid-edit-btn:hover,
 .vid-delete-btn:hover { opacity: 1; }
 
 .ps-docs-empty {
@@ -191,4 +240,74 @@
     margin: .25rem 0 0;
     font-size: .78rem;
     color: #999;
+}
+
+/* Bouton flottant "ajouter", mobile uniquement */
+.vid-fab {
+    display: none;
+}
+
+@media (max-width: 600px) {
+    /* Fenêtres d'ajout/modification plus compactes sur mobile */
+    #videoModal .ent-modal-content,
+    #videoEditModal .ent-modal-content {
+        padding: 1.3rem;
+    }
+    #videoModal .ent-modal-title,
+    #videoEditModal .ent-modal-title {
+        margin-bottom: 1rem;
+        padding-bottom: .5rem;
+        font-size: 1.05rem;
+    }
+    #videoModal .form-group,
+    #videoEditModal .form-group {
+        margin-bottom: .75rem;
+    }
+
+    /* "Type de ressource" sur une seule ligne, en 3 cases égales */
+    #videoModal .ps-radio-group {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: .4rem;
+    }
+    #videoModal .ps-radio-group label {
+        flex-direction: column;
+        gap: .2rem;
+        font-size: .76rem;
+        text-align: center;
+        background: #f6f8f6;
+        border-radius: 8px;
+        padding: .5rem .2rem .4rem;
+    }
+    #videoModal .ps-radio-group input {
+        margin: 0;
+    }
+}
+
+@media (max-width: 700px) {
+    .ps-formations-toolbar {
+        display: none;
+    }
+    .vid-fab {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        bottom: 1.2rem;
+        right: 1.2rem;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--secondary-color);
+        color: #fff;
+        font-size: 1.8rem;
+        line-height: 1;
+        border: none;
+        box-shadow: 0 4px 16px rgba(0,0,0,.25);
+        cursor: pointer;
+        z-index: 50;
+    }
+    .vid-fab:active {
+        background: #0a5c10;
+    }
 }

@@ -12,15 +12,32 @@ $pdo   = get_pdo();
 
 function h(string $s): string { return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
 
+$themes = [
+    'echauffement' => ['🔥', 'Échauffement'],
+    'attaque'      => ['💥', 'Attaque'],
+    'contre'       => ['🧱', 'Contre/Bloc'],
+    'service'      => ['🎯', 'Service'],
+    'reception'    => ['🙌', 'Réception'],
+    'passe'        => ['🤲', 'Passe'],
+    'jeu'          => ['🏐', 'Jeu'],
+];
+
 $videos = [];
 try {
     $videos = $pdo->query(
         "SELECT v.*, u.prenom, u.nom
-           FROM videos_entrainement v
-      LEFT JOIN users u ON u.id = v.user_id
-       ORDER BY v.created_at DESC, v.id DESC"
+            FROM videos_entrainement v
+        LEFT JOIN users u ON u.id = v.user_id
+        ORDER BY v.created_at DESC, v.id DESC"
     )->fetchAll();
 } catch (Exception) {}
+
+$videosByTheme = array_fill_keys(array_keys($themes), []);
+foreach ($videos as $v) {
+    $t = $v['theme'] ?? 'jeu';
+    if (!isset($videosByTheme[$t])) $t = 'jeu';
+    $videosByTheme[$t][] = $v;
+}
 
 // Logo de la plateforme pour une vidéo, d'après son nom de domaine.
 function video_source_badge(string $url): array {
@@ -40,6 +57,49 @@ function video_source_badge(string $url): array {
     }
     return ['/images/icons/link.svg', 'Autre plateforme'];
 }
+
+function render_video_card(array $v, bool $isMod, array $me): void {
+    $auteur = trim(($v['prenom'] ?? '') . ' ' . ($v['nom'] ?? '')) ?: 'Un adhérent';
+    $peutGerer = $isMod || (int)$v['user_id'] === (int)$me['id'];
+    ?>
+    <div class="vid-card"
+        data-id="<?= (int)$v['id'] ?>"
+        data-type="<?= h($v['type']) ?>"
+        data-theme="<?= h($v['theme']) ?>"
+        data-titre="<?= h($v['titre']) ?>"
+        data-description="<?= h($v['description'] ?? '') ?>"
+        data-url="<?= h($v['url']) ?>">
+        <?php if ($v['type'] === 'image'): ?>
+        <a class="vid-thumb" href="<?= h($v['url']) ?>" onclick="return openImageLightbox('<?= h($v['url']) ?>', event)">
+            <img src="<?= h($v['url']) ?>" alt="<?= h($v['titre']) ?>" loading="lazy">
+        </a>
+        <?php elseif ($v['type'] === 'video'): ?>
+        <?php [$badgeSrc, $badgeAlt] = video_source_badge($v['url']); ?>
+        <img class="vid-type-badge" src="<?= h($badgeSrc) ?>" alt="<?= h($badgeAlt) ?>" title="<?= h($badgeAlt) ?>">
+        <?php else: ?>
+        <img class="vid-type-badge" src="/images/icons/pdf.svg" alt="PDF" title="Document PDF">
+        <?php endif; ?>
+        <h3><?= h($v['titre']) ?></h3>
+        <?php if ($v['description']): ?><p><?= h($v['description']) ?></p><?php endif; ?>
+        <div class="vid-card-footer">
+            <?php if ($v['type'] === 'video'): ?>
+            <a class="vid-link" href="<?= h($v['url']) ?>" target="_blank" rel="noopener">▶ Voir la vidéo</a>
+            <?php elseif ($v['type'] === 'image'): ?>
+            <button type="button" class="vid-link" onclick="openImageLightbox('<?= h($v['url']) ?>')">🖼 Voir en grand</button>
+            <?php else: ?>
+            <button type="button" class="vid-link" onclick="openPdfModal('<?= h($v['url']) ?>','<?= h($v['titre']) ?>')">📄 Consulter</button>
+            <?php endif; ?>
+            <span class="vid-meta"><?= h($auteur) ?> · <?= h((new DateTime($v['created_at']))->format('d/m/Y')) ?></span>
+        </div>
+        <?php if ($peutGerer): ?>
+        <div class="vid-card-actions">
+            <button type="button" class="vid-edit-btn" onclick="openVideoEditModal(this.closest('.vid-card'))" title="Modifier">✏️</button>
+            <button type="button" class="vid-delete-btn" onclick='deleteVideo(<?= (int)$v['id'] ?>, <?= json_encode($v['titre'], JSON_HEX_APOS | JSON_HEX_QUOT) ?>)' title="Supprimer">🗑</button>
+        </div>
+        <?php endif; ?>
+    </div>
+    <?php
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -48,7 +108,7 @@ function video_source_badge(string $url): array {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="/css/styles.css?v=20261005" rel="stylesheet">
     <link href="/css/leClub/espace-entraineur.css?v=20260928" rel="stylesheet">
-    <link href="/css/leClub/espace-entraineur/videos.css?v=20261007" rel="stylesheet">
+    <link href="/css/leClub/espace-entraineur/videos.css?v=20261016" rel="stylesheet">
     <title>Vidéos d'entraînement - VBO</title>
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -75,44 +135,26 @@ function video_source_badge(string $url): array {
             <button type="button" class="btn-save" onclick="openVideoModal()">＋ Partager une ressource</button>
         </div>
 
-        <div class="vid-grid" id="vid-grid">
-            <?php foreach ($videos as $v): ?>
-            <?php
-                $auteur = trim(($v['prenom'] ?? '') . ' ' . ($v['nom'] ?? '')) ?: 'Un adhérent';
-                $peutSupprimer = $isMod || (int)$v['user_id'] === (int)$me['id'];
-            ?>
-            <div class="vid-card" data-id="<?= (int)$v['id'] ?>">
-                <?php if ($v['type'] === 'image'): ?>
-                <a class="vid-thumb" href="<?= h($v['url']) ?>" onclick="return openImageLightbox('<?= h($v['url']) ?>', event)">
-                    <img src="<?= h($v['url']) ?>" alt="<?= h($v['titre']) ?>" loading="lazy">
-                </a>
-                <?php elseif ($v['type'] === 'video'): ?>
-                <?php [$badgeSrc, $badgeAlt] = video_source_badge($v['url']); ?>
-                <img class="vid-type-badge" src="<?= h($badgeSrc) ?>" alt="<?= h($badgeAlt) ?>" title="<?= h($badgeAlt) ?>">
-                <?php else: ?>
-                <img class="vid-type-badge" src="/images/icons/pdf.svg" alt="PDF" title="Document PDF">
-                <?php endif; ?>
-                <h3><?= h($v['titre']) ?></h3>
-                <?php if ($v['description']): ?><p><?= h($v['description']) ?></p><?php endif; ?>
-                <div class="vid-card-footer">
-                    <?php if ($v['type'] === 'video'): ?>
-                    <a class="vid-link" href="<?= h($v['url']) ?>" target="_blank" rel="noopener">▶ Voir la vidéo</a>
-                    <?php elseif ($v['type'] === 'image'): ?>
-                    <button type="button" class="vid-link" onclick="openImageLightbox('<?= h($v['url']) ?>')">🖼 Voir en grand</button>
-                    <?php else: ?>
-                    <button type="button" class="vid-link" onclick="openPdfModal('<?= h($v['url']) ?>','<?= h($v['titre']) ?>')">📄 Consulter</button>
-                    <?php endif; ?>
-                    <span class="vid-meta"><?= h($auteur) ?> · <?= h((new DateTime($v['created_at']))->format('d/m/Y')) ?></span>
-                </div>
-                <?php if ($peutSupprimer): ?>
-                <button type="button" class="vid-delete-btn" onclick='deleteVideo(<?= (int)$v['id'] ?>, <?= json_encode($v['titre'], JSON_HEX_APOS | JSON_HEX_QUOT) ?>)' title="Supprimer">🗑</button>
+        <button type="button" class="vid-fab" onclick="openVideoModal()" aria-label="Partager une ressource">＋</button>
+
+        <div class="vid-theme-filter" id="vid-theme-filter">
+            <button type="button" class="vid-filter-btn active" data-theme="all">Tous</button>
+            <?php foreach ($themes as $themeKey => [$themeIcon, $themeLabel]): ?>
+            <button type="button" class="vid-filter-btn" data-theme="<?= h($themeKey) ?>"><?= $themeIcon ?> <?= h($themeLabel) ?></button>
+            <?php endforeach; ?>
+        </div>
+
+        <?php foreach ($themes as $themeKey => [$themeIcon, $themeLabel]): ?>
+        <section class="vid-theme-section" data-theme="<?= h($themeKey) ?>">
+            <h2 class="vid-theme-title"><?= $themeIcon ?> <?= h($themeLabel) ?></h2>
+            <div class="vid-grid">
+                <?php foreach ($videosByTheme[$themeKey] as $v) render_video_card($v, $isMod, $me); ?>
+                <?php if (empty($videosByTheme[$themeKey])): ?>
+                <p class="ps-docs-empty">Aucune ressource dans ce thème. Soyez le premier à en proposer une !</p>
                 <?php endif; ?>
             </div>
-            <?php endforeach; ?>
-            <?php if (empty($videos)): ?>
-            <p class="ps-docs-empty">Aucune ressource partagée pour le moment. Soyez le premier à en proposer une !</p>
-            <?php endif; ?>
-        </div>
+        </section>
+        <?php endforeach; ?>
     </main>
 
     <div id="pdf-modal-slot"></div>
@@ -128,6 +170,14 @@ function video_source_badge(string $url): array {
                         <label><input type="radio" name="v-kind" value="image" onchange="toggleVideoKind()"> 🖼 Image</label>
                         <label><input type="radio" name="v-kind" value="pdf" onchange="toggleVideoKind()"> 📄 PDF</label>
                     </div>
+                </div>
+                <div class="form-group">
+                    <label for="v-theme">Thème</label>
+                    <select id="v-theme" required>
+                        <?php foreach ($themes as $themeKey => [$themeIcon, $themeLabel]): ?>
+                        <option value="<?= h($themeKey) ?>"><?= $themeIcon ?> <?= h($themeLabel) ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="v-titre">Titre</label>
@@ -159,10 +209,54 @@ function video_source_badge(string $url): array {
         </div>
     </div>
 
+    <div id="videoEditModal" class="ent-modal" onclick="if(event.target===this)closeVideoEditModal()">
+        <div class="ent-modal-content">
+            <h2 class="ent-modal-title">Modifier la ressource</h2>
+            <form id="videoEditForm" onsubmit="submitVideoEdit(event)" enctype="multipart/form-data">
+                <input type="hidden" id="ve-id">
+                <input type="hidden" id="ve-type">
+                <div class="form-group">
+                    <label for="ve-theme">Thème</label>
+                    <select id="ve-theme" required>
+                        <?php foreach ($themes as $themeKey => [$themeIcon, $themeLabel]): ?>
+                        <option value="<?= h($themeKey) ?>"><?= $themeIcon ?> <?= h($themeLabel) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="ve-titre">Titre</label>
+                    <input type="text" id="ve-titre" required maxlength="150">
+                </div>
+                <div class="form-group" id="veUrlGroup">
+                    <label for="ve-url">Lien de la vidéo</label>
+                    <input type="url" id="ve-url" placeholder="https://…">
+                </div>
+                <div class="form-group" id="veFileGroup" style="display:none">
+                    <label id="ve-file-text">Fichier</label>
+                    <img id="ve-file-preview" class="v-file-preview" alt="" style="display:none">
+                    <div class="ps-upload-zone" onclick="document.getElementById('ve-file').click()">
+                        <div class="ps-upload-label" id="ve-file-label">📁 Cliquer pour remplacer le fichier</div>
+                        <p class="ps-upload-hint">Laissez vide pour conserver le fichier actuel</p>
+                        <input type="file" id="ve-file" onchange="updateVideoEditFileLabel()">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="ve-description">Description</label>
+                    <textarea id="ve-description" rows="3" placeholder="Ce que l'exercice apporte, pour qui… (facultatif)"></textarea>
+                </div>
+                <p class="form-status" id="ve-status"></p>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="closeVideoEditModal()">Annuler</button>
+                    <button type="submit" class="btn-save">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="footer"></div>
 
     <script src="/js/pdf-modal.js?v=20260721"></script>
-    <script src="/js/espace-entraineur/videos.js?v=20261008"></script>
+    <script src="/js/espace-entraineur/videos.js?v=20261014"></script>
     <script src="/js/main.js?v=20260705"></script>
 </body>
 </html>
