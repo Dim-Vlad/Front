@@ -19,6 +19,7 @@ $themes = [
     'service'      => ['🎯', 'Service'],
     'reception'    => ['🙌', 'Réception'],
     'passe'        => ['🤲', 'Passe'],
+    'physique'     => ['💪', 'Physique/Muscu'],
     'jeu'          => ['🏐', 'Jeu'],
 ];
 
@@ -108,7 +109,7 @@ function render_video_card(array $v, bool $isMod, array $me): void {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="/css/styles.css?v=20261005" rel="stylesheet">
     <link href="/css/leClub/espace-entraineur.css?v=20260928" rel="stylesheet">
-    <link href="/css/leClub/espace-entraineur/videos.css?v=20261016" rel="stylesheet">
+    <link href="/css/leClub/espace-entraineur/videos.css?v=20261021" rel="stylesheet">
     <title>Vidéos d'entraînement - VBO</title>
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -145,8 +146,15 @@ function render_video_card(array $v, bool $isMod, array $me): void {
         </div>
 
         <?php foreach ($themes as $themeKey => [$themeIcon, $themeLabel]): ?>
-        <section class="vid-theme-section" data-theme="<?= h($themeKey) ?>">
-            <h2 class="vid-theme-title"><?= $themeIcon ?> <?= h($themeLabel) ?></h2>
+        <?php $themeCount = count($videosByTheme[$themeKey]); ?>
+        <section class="vid-theme-section collapsed" data-theme="<?= h($themeKey) ?>">
+            <div class="vid-theme-header">
+                <h2 class="vid-theme-title"><?= $themeIcon ?> <?= h($themeLabel) ?> <span class="vid-theme-count"><?= $themeCount ?></span></h2>
+                <button type="button" class="vid-theme-toggle" onclick="toggleThemeSection(this)" aria-expanded="false">
+                    <span class="vid-theme-toggle-text">Afficher</span>
+                    <span class="vid-theme-toggle-icon">▾</span>
+                </button>
+            </div>
             <div class="vid-grid">
                 <?php foreach ($videosByTheme[$themeKey] as $v) render_video_card($v, $isMod, $me); ?>
                 <?php if (empty($videosByTheme[$themeKey])): ?>
@@ -256,7 +264,7 @@ function render_video_card(array $v, bool $isMod, array $me): void {
     <div id="footer"></div>
 
     <script src="/js/pdf-modal.js?v=20260721"></script>
-    <script src="/js/espace-entraineur/videos.js?v=20261014"></script>
+    <script src="/js/espace-entraineur/videos.js?v=20261020"></script>
     <script src="/js/main.js?v=20260705"></script>
 </body>
 </html>

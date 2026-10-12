@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 check_csrf();
 
-$validThemes = ['echauffement', 'attaque', 'contre', 'service', 'reception', 'passe', 'jeu'];
+$validThemes = ['echauffement', 'attaque', 'contre', 'service', 'reception', 'passe', 'physique', 'jeu'];
 
 $titre       = trim($_POST['titre'] ?? '');
 $description = trim($_POST['description'] ?? '');

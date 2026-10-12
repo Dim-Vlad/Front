@@ -1,5 +1,13 @@
 'use strict';
 
+// ── Réduire/afficher une section de thème ──
+function toggleThemeSection(btn) {
+    const section   = btn.closest('.vid-theme-section');
+    const collapsed = section.classList.toggle('collapsed');
+    btn.querySelector('.vid-theme-toggle-text').textContent = collapsed ? 'Afficher' : 'Masquer';
+    btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+}
+
 // ── Filtre par thème ──
 document.addEventListener('DOMContentLoaded', () => {
     const bar = document.getElementById('vid-theme-filter');

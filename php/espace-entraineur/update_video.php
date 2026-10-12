@@ -17,7 +17,7 @@ if ($id <= 0) {
     ob_end_clean(); echo json_encode(['success' => false, 'error' => 'ID invalide']); exit;
 }
 
-$validThemes = ['echauffement', 'attaque', 'contre', 'service', 'reception', 'passe', 'jeu'];
+$validThemes = ['echauffement', 'attaque', 'contre', 'service', 'reception', 'passe', 'physique', 'jeu'];
 
 $titre       = trim($_POST['titre'] ?? '');
 $description = trim($_POST['description'] ?? '');
