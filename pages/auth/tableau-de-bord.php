@@ -22,9 +22,34 @@ if ($canEdit) {
     )->fetchAll();
 }
 
+// Photos de la galerie en attente de modération.
+$nbPhotosAttente = 0;
+if ($canEdit) {
+    $nbPhotosAttente = (int)$pdo->query("SELECT COUNT(*) FROM photos_galerie WHERE statut = 'en_attente'")->fetchColumn();
+}
+
+// Un seul bloc "à traiter" pour l'admin/modérateur : une ligne par catégorie
+// non vide, pour tout voir d'un coup d'œil sans naviguer page par page.
+$alertesAdmin = has_role('admin') && $nbAttente > 0;
+$alertesPhotos = $canEdit && $nbPhotosAttente > 0;
+$alertesPartenaires = $canEdit && !empty($partenairesAlerte);
+$hasAlertes = $alertesAdmin || $alertesPhotos || $alertesPartenaires;
+
 $stmtNl = $pdo->prepare('SELECT newsletter FROM users WHERE id = ?');
 $stmtNl->execute([(int)$user['id']]);
 $nlAbonne = (int)$stmtNl->fetchColumn() === 1;
+
+// Badge "nouveau" sur la tuile Vidéos d'entraînement : nombre de ressources
+// ajoutées depuis la dernière visite de cette page par l'utilisateur.
+$videosNouvelles = 0;
+if (has_any_role(['admin', 'moderateur', 'bureau', 'entraineur', 'arbitre'])) {
+    $stmtVisite = $pdo->prepare('SELECT videos_dernier_visite FROM users WHERE id = ?');
+    $stmtVisite->execute([(int)$user['id']]);
+    $derniereVisite = $stmtVisite->fetchColumn() ?: '1970-01-01 00:00:00';
+    $stmtNouvelles = $pdo->prepare('SELECT COUNT(*) FROM videos_entrainement WHERE created_at > ?');
+    $stmtNouvelles->execute([$derniereVisite]);
+    $videosNouvelles = (int)$stmtNouvelles->fetchColumn();
+}
 
 $tiles = ['jeux' => [], 'entraineur' => [], 'commissions' => [], 'general' => []];
 foreach ($pdo->query('SELECT * FROM dashboard_tiles ORDER BY section, ordre, id')->fetchAll() as $t) {
@@ -76,7 +101,7 @@ $sectionLabels = ['jeux' => '🎮 Jeux', 'entraineur' => '🏋️ Espace Entraî
 // pour que les tuiles gardent toujours la bonne orthographe des libellés.
 $tileRoleLabels = ['admin'=>'Admin','moderateur'=>'Modérateur','bureau'=>'Bureau','entraineur'=>'Entraîneur','arbitre'=>'Arbitre','adherent'=>'Adhérent'];
 
-function render_dashboard_tile(array $t, bool $canEdit, array $roleLabels): void {
+function render_dashboard_tile(array $t, bool $canEdit, array $roleLabels, int $badgeCount = 0): void {
     $isExternal  = str_starts_with($t['url'], 'http');
     $tileRoles   = json_decode($t['roles'] ?? '[]', true) ?: [];
     $isRestricted = !empty($tileRoles);
@@ -95,6 +120,9 @@ function render_dashboard_tile(array $t, bool $canEdit, array $roleLabels): void
                     data-url="<?= htmlspecialchars($t['url'], ENT_QUOTES) ?>"
                     data-roles="<?= htmlspecialchars(json_encode($tileRoles), ENT_QUOTES) ?>">
                     <a class="tile-link" href="<?= htmlspecialchars($t['url']) ?>" target="<?= $isExternal ? '_blank' : '_self' ?>" rel="noopener">
+                        <?php if ($badgeCount > 0): ?>
+                        <span class="tile-new-badge" title="<?= $badgeCount ?> nouvelle<?= $badgeCount > 1 ? 's' : '' ?> ressource<?= $badgeCount > 1 ? 's' : '' ?>"><?= $badgeCount > 9 ? '9+' : $badgeCount ?></span>
+                        <?php endif; ?>
                         <div class="card-icon"><?= htmlspecialchars($t['icone']) ?></div>
                         <h2><?= htmlspecialchars($t['titre']) ?></h2>
                         <p><?= htmlspecialchars($t['description']) ?></p>
@@ -124,7 +152,7 @@ foreach ($rolePriority as $r) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de bord - <?= $titleRole ?></title>
     <link href="/css/styles.css?v=20261005" rel="stylesheet">
-    <link href="/css/tableau-de-bord.css?v=20261008" rel="stylesheet">
+    <link href="/css/tableau-de-bord.css?v=20261015" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -163,12 +191,6 @@ foreach ($rolePriority as $r) {
         <div class="dashboard-cards">
             <?php if (has_role('admin')): ?>
             <div class="dashboard-card card-admin card-admin--featured">
-                <?php if ($nbAttente > 0): ?>
-                <a href="/pages/admin/comptes-attente.php" class="card-badge-link" title="Voir les comptes en attente">
-                    <span class="card-badge-number"><?= $nbAttente ?></span>
-                    <span class="card-badge-label">en attente</span>
-                </a>
-                <?php endif; ?>
                 <a href="/pages/admin/index.php" class="card-main-link">
                     <div class="card-icon">⚙️</div>
                     <div>
@@ -193,23 +215,43 @@ foreach ($rolePriority as $r) {
         </div>
         <?php endif; ?>
 
-        <?php if ($canEdit && !empty($partenairesAlerte)): ?>
-        <!-- Alerte : mise en avant partenaire à vérifier -->
-        <a href="/pages/partenaires/partenaires.php" class="partner-alert-banner">
-            <div class="partner-alert-icon">⏰</div>
-            <div class="partner-alert-text">
-                <strong>Mise en avant partenaire à vérifier</strong>
-                <ul>
-                    <?php foreach ($partenairesAlerte as $p):
-                        $expire = $p['date_fin'] < date('Y-m-d');
-                        $dateFr = (new DateTime($p['date_fin']))->format('d/m/Y');
-                    ?>
-                    <li><?= htmlspecialchars($p['nom']) ?> — <?= $expire ? 'expiré depuis le ' . $dateFr : 'expire le ' . $dateFr ?></li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-            <span class="partner-alert-link">Gérer →</span>
-        </a>
+        <?php if ($hasAlertes): ?>
+        <!-- Bloc unique "à traiter" : une ligne par catégorie non vide -->
+        <div class="admin-alert-banner">
+            <?php if ($alertesAdmin): ?>
+            <a href="/pages/admin/comptes-attente.php" class="admin-alert-row">
+                <div class="admin-alert-icon">👤</div>
+                <div class="admin-alert-text"><?= $nbAttente ?> compte<?= $nbAttente > 1 ? 's' : '' ?> en attente de validation</div>
+                <span class="admin-alert-arrow">Gérer →</span>
+            </a>
+            <?php endif; ?>
+
+            <?php if ($alertesPhotos): ?>
+            <a href="/pages/galerie/galerie.html" class="admin-alert-row">
+                <div class="admin-alert-icon">🖼</div>
+                <div class="admin-alert-text"><?= $nbPhotosAttente ?> photo<?= $nbPhotosAttente > 1 ? 's' : '' ?> en attente de modération</div>
+                <span class="admin-alert-arrow">Gérer →</span>
+            </a>
+            <?php endif; ?>
+
+            <?php if ($alertesPartenaires): ?>
+            <a href="/pages/partenaires/partenaires.php" class="admin-alert-row">
+                <div class="admin-alert-icon">⭐</div>
+                <div class="admin-alert-text">
+                    Mise en avant partenaire à vérifier
+                    <ul>
+                        <?php foreach ($partenairesAlerte as $p):
+                            $expire = $p['date_fin'] < date('Y-m-d');
+                            $dateFr = (new DateTime($p['date_fin']))->format('d/m/Y');
+                        ?>
+                        <li><?= htmlspecialchars($p['nom']) ?> — <?= $expire ? 'expiré depuis le ' . $dateFr : 'expire le ' . $dateFr ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+                <span class="admin-alert-arrow">Gérer →</span>
+            </a>
+            <?php endif; ?>
+        </div>
         <?php endif; ?>
 
         <!-- Section Jeux -->
@@ -257,7 +299,10 @@ foreach ($rolePriority as $r) {
             </div>
             <div class="dashboard-cards">
 
-                <?php foreach ($tiles['entraineur'] as $t) render_dashboard_tile($t, $canEdit, $tileRoleLabels); ?>
+                <?php foreach ($tiles['entraineur'] as $t): ?>
+                    <?php $badge = ($t['url'] === '/pages/leClub/espace-entraineur/videos-entrainement.php') ? $videosNouvelles : 0; ?>
+                    <?php render_dashboard_tile($t, $canEdit, $tileRoleLabels, $badge); ?>
+                <?php endforeach; ?>
 
             </div>
         </div>

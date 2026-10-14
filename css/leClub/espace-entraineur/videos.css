@@ -66,6 +66,18 @@
     margin-left: .15rem;
 }
 
+.vid-theme-new-badge {
+    display: inline-block;
+    font-size: .72rem;
+    font-weight: 700;
+    color: #fff;
+    background: #c0392b;
+    border-radius: 10px;
+    padding: .1rem .55rem;
+    vertical-align: middle;
+    margin-left: .3rem;
+}
+
 .vid-theme-toggle {
     flex-shrink: 0;
     display: flex;

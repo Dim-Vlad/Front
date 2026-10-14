@@ -57,51 +57,6 @@
     box-shadow: 0 10px 28px rgba(0,0,0,.12);
 }
 
-/* Zone gauche — badge comptes en attente */
-.card-badge-link {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 1.2rem 1.4rem;
-    gap: 6px;
-    text-decoration: none;
-    background: rgba(229, 57, 53, 0.07);
-    border-right: 2px solid rgba(229, 57, 53, 0.18);
-    flex-shrink: 0;
-    transition: background 0.18s;
-    border-radius: 0 0 0 10px;
-}
-
-.card-badge-link:hover {
-    background: rgba(229, 57, 53, 0.16);
-}
-
-.card-badge-number {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    background: #e53935;
-    color: #fff;
-    font-size: 1.05rem;
-    font-weight: 700;
-    font-family: var(--font-poppins);
-}
-
-.card-badge-label {
-    font-size: 0.65rem;
-    font-weight: 700;
-    color: #c0392b;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-family: var(--font-poppins);
-    text-align: center;
-    line-height: 1.3;
-}
-
 /* Zone droite — lien principal */
 .card-main-link {
     flex: 1;
@@ -313,6 +268,24 @@
     opacity: 1;
 }
 
+/* ── Badge "nouveau" (ex: ressources ajoutées depuis la dernière visite) ── */
+.tile-new-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: #c0392b;
+    color: #fff;
+    font-size: .7rem;
+    font-weight: 700;
+    line-height: 20px;
+    text-align: center;
+    z-index: 2;
+}
+
 .tile-edit-btn:hover {
     background: #f0f0f0;
 }
@@ -509,29 +482,6 @@
         display: none;
     }
 
-    /* Badge en bandeau bas — coins arrondis en haut */
-    .card-badge-link {
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        padding: 0.55rem 1rem;
-        border-right: none;
-        border-top: none;
-        border-radius: 10px 10px 0 0;
-        margin: 0 10px;
-        gap: 8px;
-    }
-
-    .card-badge-number {
-        width: 22px;
-        height: 22px;
-        font-size: 0.75rem;
-    }
-
-    .card-badge-label {
-        font-size: 0.72rem;
-        letter-spacing: 0.03em;
-    }
 }
 
 @media (max-width: 380px) {
@@ -870,49 +820,53 @@
 }
 .nl-modal-frame[hidden] { display: none; }
 
-/* ── Alerte : mise en avant partenaire à vérifier ── */
-.partner-alert-banner {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+/* ── Alerte admin/modérateur : éléments à traiter (comptes, photos, partenaires…) ── */
+.admin-alert-banner {
     width: 100%;
     max-width: 980px;
     background: linear-gradient(135deg, #fff8e6 0%, #fff0d1 100%);
     border: 1.5px solid #e0a429;
     border-radius: 14px;
-    padding: 1rem 1.4rem;
+    padding: 0 1.4rem;
     margin-bottom: 1.5rem;
-    text-decoration: none;
     box-shadow: 0 2px 10px rgba(184, 134, 10, .12);
-    transition: box-shadow .2s, transform .2s;
 }
-.partner-alert-banner:hover {
-    box-shadow: 0 4px 16px rgba(184, 134, 10, .2);
-    transform: translateY(-1px);
+.admin-alert-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: .9rem 0;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(224, 164, 41, .35);
+    transition: opacity .15s;
 }
-.partner-alert-icon {
+.admin-alert-row:last-child {
+    border-bottom: none;
+}
+.admin-alert-row:hover {
+    opacity: .75;
+}
+.admin-alert-icon {
     font-size: 1.6rem;
     flex-shrink: 0;
 }
-.partner-alert-text {
+.admin-alert-text {
     flex: 1;
     min-width: 0;
-}
-.partner-alert-text strong {
-    display: block;
     color: #8a6d16;
     font-size: .92rem;
-    margin-bottom: .3rem;
+    font-weight: 600;
 }
-.partner-alert-text ul {
-    margin: 0;
+.admin-alert-text ul {
+    margin: .3rem 0 0;
     padding: 0;
     list-style: none;
     font-size: .85rem;
+    font-weight: 400;
     color: #6b5a2a;
 }
-.partner-alert-text li { line-height: 1.5; }
-.partner-alert-link {
+.admin-alert-text li { line-height: 1.5; }
+.admin-alert-arrow {
     flex-shrink: 0;
     font-weight: 700;
     font-size: .85rem;
@@ -920,6 +874,6 @@
     white-space: nowrap;
 }
 @media (max-width: 560px) {
-    .partner-alert-banner { flex-wrap: wrap; }
-    .partner-alert-link { width: 100%; text-align: right; }
+    .admin-alert-row { flex-wrap: wrap; }
+    .admin-alert-arrow { width: 100%; text-align: right; }
 }

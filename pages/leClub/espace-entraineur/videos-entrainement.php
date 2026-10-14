@@ -10,6 +10,16 @@ $isMod = has_any_role(['admin', 'moderateur']);
 $me    = current_user();
 $pdo   = get_pdo();
 
+// Date de la visite précédente (avant mise à jour), pour pouvoir marquer
+// les ressources ajoutées depuis comme "nouvelles" dans chaque section.
+$stmtVisite = $pdo->prepare('SELECT videos_dernier_visite FROM users WHERE id = ?');
+$stmtVisite->execute([(int)$me['id']]);
+$derniereVisite = $stmtVisite->fetchColumn() ?: '1970-01-01 00:00:00';
+
+// Marque les ressources comme vues : le badge "nouveau" du tableau de bord
+// se base sur cette date pour ne plus compter ce qui a déjà été consulté.
+$pdo->prepare('UPDATE users SET videos_dernier_visite = NOW() WHERE id = ?')->execute([(int)$me['id']]);
+
 function h(string $s): string { return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
 
 $themes = [
@@ -30,11 +40,13 @@ try {
     )->fetchAll();
 } catch (Exception) {}
 
-$videosByTheme = array_fill_keys(array_keys($themes), []);
+$videosByTheme    = array_fill_keys(array_keys($themes), []);
+$nouvellesByTheme = array_fill_keys(array_keys($themes), 0);
 foreach ($videos as $v) {
     $t = $v['theme'] ?? 'jeu';
     if (!isset($videosByTheme[$t])) $t = 'jeu';
     $videosByTheme[$t][] = $v;
+    if ($v['created_at'] > $derniereVisite) $nouvellesByTheme[$t]++;
 }
 
 // Logo de la plateforme pour une vidéo, d'après son nom de domaine.
@@ -106,7 +118,7 @@ function render_video_card(array $v, bool $isMod, array $me): void {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="/css/styles.css?v=20261005" rel="stylesheet">
     <link href="/css/leClub/espace-entraineur.css?v=20260928" rel="stylesheet">
-    <link href="/css/leClub/espace-entraineur/videos.css?v=20261022" rel="stylesheet">
+    <link href="/css/leClub/espace-entraineur/videos.css?v=20261023" rel="stylesheet">
     <title>Vidéos d'entraînement - VBO</title>
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -144,9 +156,10 @@ function render_video_card(array $v, bool $isMod, array $me): void {
 
         <?php foreach ($themes as $themeKey => [$themeIcon, $themeLabel]): ?>
         <?php $themeCount = count($videosByTheme[$themeKey]); ?>
+        <?php $themeNouvelles = $nouvellesByTheme[$themeKey]; ?>
         <section class="vid-theme-section collapsed" data-theme="<?= h($themeKey) ?>">
             <div class="vid-theme-header">
-                <h2 class="vid-theme-title"><?= $themeIcon ?> <?= h($themeLabel) ?> <span class="vid-theme-count"><?= $themeCount ?></span></h2>
+                <h2 class="vid-theme-title"><?= $themeIcon ?> <?= h($themeLabel) ?> <span class="vid-theme-count"><?= $themeCount ?></span><?php if ($themeNouvelles > 0): ?> <span class="vid-theme-new-badge" title="<?= $themeNouvelles ?> nouvelle<?= $themeNouvelles > 1 ? 's' : '' ?> ressource<?= $themeNouvelles > 1 ? 's' : '' ?>">🆕 <?= $themeNouvelles ?></span><?php endif; ?></h2>
                 <button type="button" class="vid-theme-toggle" onclick="toggleThemeSection(this)" aria-expanded="false">
                     <span class="vid-theme-toggle-text">Afficher</span>
                     <span class="vid-theme-toggle-icon">▾</span>
