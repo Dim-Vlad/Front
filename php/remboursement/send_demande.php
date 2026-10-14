@@ -140,23 +140,20 @@ foreach ($lignes as $i => $ligne) {
     if (!move_uploaded_file($ligne['fileTmp'], $dir . $filename)) {
         ob_end_clean(); echo json_encode(['success' => false, 'error' => "Erreur d'enregistrement du justificatif de la ligne $num"]); exit;
     }
-    $justificatifUrl = 'https://volleyballollioulais.fr/documents/remboursements/' . $filename;
-    $piecesJointes[]  = ['path' => $dir . $filename, 'name' => $filename];
+    $piecesJointes[] = ['path' => $dir . $filename, 'name' => $filename];
 
     if ($ligne['type'] === 'km') {
         $lignesTexte[] = sprintf(
-            "Ligne %d — Remboursement kilométrique\r\n  Équipe : %s\r\n  Date : %s\r\n  Trajet : Ollioules → %s (%s)\r\n  Distance : %s km\r\n  Montant : %s €\r\n  Justificatif : %s",
+            "Ligne %d — Remboursement kilométrique\r\n  Équipe : %s\r\n  Date : %s\r\n  Trajet : Ollioules → %s (%s)\r\n  Distance : %s km\r\n  Montant : %s €",
             $num, $ligne['equipe'], $dateFr, $ligne['arrivee'],
             $ligne['aller_retour'] ? 'aller-retour' : 'aller simple',
             rtrim(rtrim(number_format($ligne['distance'], 2, ',', ' '), '0'), ','),
-            number_format($ligne['montant'], 2, ',', ' '),
-            $justificatifUrl
+            number_format($ligne['montant'], 2, ',', ' ')
         );
     } else {
         $lignesTexte[] = sprintf(
-            "Ligne %d — Remboursement sur facture\r\n  Équipe : %s\r\n  Date : %s\r\n  Motif : %s\r\n  Montant : %s €\r\n  Justificatif : %s",
-            $num, $ligne['equipe'], $dateFr, $ligne['motif'], number_format($ligne['montant'], 2, ',', ' '),
-            $justificatifUrl
+            "Ligne %d — Remboursement sur facture\r\n  Équipe : %s\r\n  Date : %s\r\n  Motif : %s\r\n  Montant : %s €",
+            $num, $ligne['equipe'], $dateFr, $ligne['motif'], number_format($ligne['montant'], 2, ',', ' ')
         );
     }
 }
