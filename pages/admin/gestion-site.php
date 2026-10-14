@@ -26,6 +26,12 @@ $logoMenu     = gs_param($pdo, 'logo_menu',           'images/logo-club/Logo-VBO
 $logoFavicon  = gs_param($pdo, 'logo_favicon',        'images/favicon-36x36.png');
 
 try {
+    $villes = $pdo->query('SELECT * FROM remboursement_villes ORDER BY nom ASC')->fetchAll();
+} catch (Exception) {
+    $villes = [];
+}
+
+try {
     $reseaux = $pdo->query('SELECT * FROM reseaux_sociaux ORDER BY ordre ASC, id ASC')->fetchAll();
 } catch (Exception) {
     $reseaux = [];
@@ -40,7 +46,7 @@ try {
     <link href="/css/styles.css?v=20261005" rel="stylesheet">
     <link href="/css/tableau-de-bord.css?v=20260623" rel="stylesheet">
     <link href="/css/admin.css?v=20260702" rel="stylesheet">
-    <link href="/css/admin/gestion-site.css?v=20260718" rel="stylesheet">
+    <link href="/css/admin/gestion-site.css?v=20261015" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -162,6 +168,30 @@ try {
             </div>
         </div>
 
+        <!-- ── Villes & distances (remboursement kilométrique) ── -->
+        <div class="admin-card">
+            <h2>Villes &amp; distances (remboursement)</h2>
+            <p class="gs-desc">Villes proposées sur le formulaire de remboursement kilométrique, avec leur distance depuis Ollioules (aller simple).</p>
+
+            <div class="gs-villes-list" id="gs-villes-list">
+                <?php foreach ($villes as $v): ?>
+                <div class="gs-ville-row" data-id="<?= (int)$v['id'] ?>">
+                    <div class="gs-ville-info">
+                        <span class="gs-ville-nom"><?= h($v['nom']) ?></span>
+                        <span class="gs-ville-distance"><?= h(rtrim(rtrim(number_format((float)$v['distance_km'], 1, ',', ''), '0'), ',')) ?> km</span>
+                    </div>
+                    <div class="gs-reseau-actions">
+                        <button type="button" class="btn-icon" onclick='openVilleModal(<?= h(json_encode($v)) ?>)' title="Modifier">✏️</button>
+                        <button type="button" class="btn-icon" onclick="deleteVille(<?= (int)$v['id'] ?>, <?= h(json_encode($v['nom'])) ?>)" title="Supprimer">🗑️</button>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <div class="gs-form-footer">
+                <button type="button" class="btn-admin" onclick="openVilleModal()">+ Ajouter une ville</button>
+            </div>
+        </div>
+
         <!-- ── Informations techniques ── -->
         <div class="admin-card gs-tech-card">
             <h2>Informations techniques</h2>
@@ -246,6 +276,29 @@ try {
                 <div class="modal-actions">
                     <span class="lm-status" id="reseau-status"></span>
                     <button type="button" class="btn-cancel" onclick="closeReseauModal()">Annuler</button>
+                    <button type="submit" class="btn-admin">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ── Modale : ajouter / modifier une ville (remboursement) ── -->
+    <div class="modal-overlay" id="ville-modal" style="display:none" onclick="if (event.target === this) closeVilleModal()">
+        <div class="modal-card">
+            <h3 id="ville-modal-title">Ajouter une ville</h3>
+            <form id="ville-form" class="admin-form">
+                <input type="hidden" id="ville-id" name="id" value="">
+                <div class="form-group">
+                    <label for="ville-nom">Ville</label>
+                    <input type="text" id="ville-nom" name="nom" placeholder="ex : Toulon" required>
+                </div>
+                <div class="form-group">
+                    <label for="ville-distance">Distance aller depuis Ollioules (km)</label>
+                    <input type="number" id="ville-distance" name="distance_km" min="0.1" step="0.1" required>
+                </div>
+                <div class="modal-actions">
+                    <span class="lm-status" id="ville-status"></span>
+                    <button type="button" class="btn-cancel" onclick="closeVilleModal()">Annuler</button>
                     <button type="submit" class="btn-admin">Enregistrer</button>
                 </div>
             </form>
@@ -554,6 +607,103 @@ try {
                 if (data.success) {
                     document.querySelector(`.gs-reseau-row[data-id="${id}"]`)?.remove();
                     showAlert('✓ Réseau supprimé.', true);
+                } else {
+                    showAlert('✗ ' + (data.error || 'Erreur inconnue.'), false);
+                }
+            } catch {
+                showAlert('✗ Erreur réseau.', false);
+            }
+        }
+
+        /* ── Villes & distances (remboursement kilométrique) ── */
+
+        function openVilleModal(data) {
+            document.getElementById('ville-form').reset();
+            document.getElementById('ville-status').textContent = '';
+            document.getElementById('ville-status').className   = 'lm-status';
+
+            if (data) {
+                document.getElementById('ville-modal-title').textContent = 'Modifier une ville';
+                document.getElementById('ville-id').value       = data.id;
+                document.getElementById('ville-nom').value      = data.nom;
+                document.getElementById('ville-distance').value = data.distance_km;
+            } else {
+                document.getElementById('ville-modal-title').textContent = 'Ajouter une ville';
+                document.getElementById('ville-id').value = '';
+            }
+            document.getElementById('ville-modal').style.display = 'flex';
+        }
+
+        function closeVilleModal() {
+            document.getElementById('ville-modal').style.display = 'none';
+        }
+
+        document.getElementById('ville-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const status = document.getElementById('ville-status');
+            const btn    = this.querySelector('button[type="submit"]');
+            const id     = document.getElementById('ville-id').value;
+            const url    = id ? '/php/remboursement/update_ville.php' : '/php/remboursement/add_ville.php';
+
+            status.textContent = '';
+            btn.disabled = true;
+
+            try {
+                const res  = await fetch(url, { method: 'POST', body: new FormData(this) });
+                const data = await res.json();
+                if (data.success) {
+                    renderVilleRow(data.data);
+                    closeVilleModal();
+                    showAlert('✓ Ville enregistrée.', true);
+                } else {
+                    status.textContent = data.error || 'Erreur inconnue';
+                    status.className   = 'lm-status error';
+                }
+            } catch {
+                status.textContent = 'Erreur réseau.';
+                status.className   = 'lm-status error';
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        function renderVilleRow(data) {
+            const list = document.getElementById('gs-villes-list');
+            let row = list.querySelector(`.gs-ville-row[data-id="${data.id}"]`);
+            if (!row) {
+                row = document.createElement('div');
+                row.className = 'gs-ville-row';
+                list.appendChild(row);
+            }
+            row.dataset.id = data.id;
+            const distanceAffichee = parseFloat(data.distance_km).toString().replace('.', ',');
+            row.innerHTML = `
+                <div class="gs-ville-info">
+                    <span class="gs-ville-nom">${escHtml(data.nom)}</span>
+                    <span class="gs-ville-distance">${escHtml(distanceAffichee)} km</span>
+                </div>
+                <div class="gs-reseau-actions">
+                    <button type="button" class="btn-icon" title="Modifier">✏️</button>
+                    <button type="button" class="btn-icon" title="Supprimer">🗑️</button>
+                </div>
+            `;
+            row.querySelector('[title="Modifier"]').addEventListener('click', () => openVilleModal(data));
+            row.querySelector('[title="Supprimer"]').addEventListener('click', () => deleteVille(data.id, data.nom));
+            // Garde la liste triée alphabétiquement après un ajout.
+            [...list.children].sort((a, b) => a.querySelector('.gs-ville-nom').textContent.localeCompare(b.querySelector('.gs-ville-nom').textContent))
+                .forEach(el => list.appendChild(el));
+        }
+
+        async function deleteVille(id, nom) {
+            if (!confirm(`Supprimer la ville « ${nom} » de la liste ?`)) return;
+            const fd = new FormData();
+            fd.append('id', id);
+            try {
+                const res  = await fetch('/php/remboursement/delete_ville.php', { method: 'POST', body: fd });
+                const data = await res.json();
+                if (data.success) {
+                    document.querySelector(`.gs-ville-row[data-id="${id}"]`)?.remove();
+                    showAlert('✓ Ville supprimée.', true);
                 } else {
                     showAlert('✗ ' + (data.error || 'Erreur inconnue.'), false);
                 }

@@ -97,6 +97,48 @@
     margin-bottom: 1rem;
 }
 
+.gs-villes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 340px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    padding-right: 0.3rem;
+}
+
+.gs-ville-row {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    background: #f7f9f7;
+    border-radius: 0.6rem;
+    padding: 0.5rem 0.9rem;
+}
+
+.gs-ville-info {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.gs-ville-nom {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--bg-dark);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.gs-ville-distance {
+    font-size: 0.78rem;
+    color: #888;
+    flex-shrink: 0;
+}
+
 .gs-reseau-row {
     display: flex;
     align-items: center;

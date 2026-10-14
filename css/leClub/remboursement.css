@@ -60,30 +60,243 @@
     line-height: 1.55;
 }
 
-/* ── Carte iframe ────────────────────────────────────────────────── */
+/* ── Carte formulaire ────────────────────────────────────────────── */
 
-.remb-frame-card {
+.remb-form-card {
     background: #fff;
     border-radius: 12px;
     box-shadow: var(--card-shadow);
-    overflow: hidden;
+    padding: 1.8rem 2rem;
 }
 
-.remb-frame-card iframe {
-    display: block;
-    width: 100%;
-    height: 900px;
-    border: none;
+.remb-form-row {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: .2rem;
 }
+
+.remb-form-row--3col {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.form-group { margin-bottom: 1.1rem; }
+
+.form-group label {
+    display: block;
+    font-size: .82rem;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: .4rem;
+    text-transform: uppercase;
+    letter-spacing: .02em;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="date"],
+.form-group input[type="number"],
+.form-group select {
+    width: 100%;
+    padding: .6rem .85rem;
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: .95rem;
+    box-sizing: border-box;
+}
+
+.form-group input[type="file"] { font-family: inherit; font-size: .88rem; }
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(6,62,11,.08);
+}
+
+.form-group--checkbox {
+    display: flex;
+    align-items: flex-start;
+}
+.form-group--checkbox label {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    width: 100%;
+    margin-top: 1.55rem;
+    padding: .65rem .9rem;
+    background: #fff6e0;
+    border: 1.5px solid #e0c35a;
+    border-radius: 8px;
+    font-size: .9rem;
+    font-weight: 700;
+    color: #8a6d16;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+}
+.form-group--checkbox label:hover {
+    background: #fdeeb8;
+}
+.form-group--checkbox label:has(input:checked) {
+    background: #b07000;
+    border-color: #8a6d16;
+    color: #fff;
+}
+.form-group--checkbox input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    accent-color: #8a6d16;
+    cursor: pointer;
+}
+.remb-field-hint {
+    margin: .3rem 0 0;
+    font-size: .78rem;
+    color: #888;
+}
+
+.remb-lignes-hint {
+    font-size: .85rem;
+    color: #666;
+    background: #f6f8f6;
+    border-radius: 8px;
+    padding: .7rem 1rem;
+    margin: .5rem 0 1.3rem;
+}
+
+.remb-lignes-empty {
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    font-size: .88rem;
+    margin: 0 0 1.3rem;
+}
+
+/* ── Ligne de remboursement ──────────────────────────────────────── */
+
+.remb-ligne {
+    border: 1.5px solid #e0e8e0;
+    border-radius: 10px;
+    padding: 1.1rem 1.3rem;
+    margin-bottom: 1.1rem;
+    background: #fbfdfb;
+}
+
+.remb-ligne-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: .6rem;
+    border-bottom: 1px solid #e0e8e0;
+}
+
+.remb-ligne-header strong {
+    font-size: .92rem;
+    color: var(--secondary-color);
+}
+
+.remb-ligne-delete {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: .95rem;
+    opacity: .6;
+    padding: .15rem;
+}
+.remb-ligne-delete:hover { opacity: 1; }
+
+.remb-ligne-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+/* ── Boutons d'ajout + envoi ─────────────────────────────────────── */
+
+.remb-add-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-bottom: 1.6rem;
+}
+
+.remb-add-btn {
+    background: #eef4ee;
+    color: var(--secondary-color);
+    border: 1.5px solid #cfe0cf;
+    border-radius: 20px;
+    padding: .55rem 1.1rem;
+    font-family: inherit;
+    font-size: .88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+}
+.remb-add-btn:hover {
+    background: #e0ede0;
+    border-color: var(--secondary-color);
+}
+
+.remb-submit-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+    border-top: 1px solid #eee;
+    padding-top: 1.2rem;
+}
+
+.remb-status {
+    font-size: .88rem;
+    font-weight: 600;
+}
+.remb-status.success { color: var(--secondary-color); }
+.remb-status.error   { color: #c0392b; }
+
+.btn-save {
+    background: var(--secondary-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: .65rem 1.6rem;
+    font-family: inherit;
+    font-size: .9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s;
+}
+.btn-save:hover    { background: #0a5512; }
+.btn-save:disabled { opacity: .55; cursor: not-allowed; }
 
 /* ── Responsive ─────────────────────────────────────────────────── */
+
+@media (max-width: 700px) {
+    .remb-form-row--3col {
+        grid-template-columns: 1fr;
+    }
+    .remb-ligne-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    .form-group--checkbox label {
+        margin-top: .2rem;
+    }
+}
 
 @media (max-width: 600px) {
     .remb-main {
         padding: 1.2rem 1rem 3rem;
     }
-
-    .remb-frame-card iframe {
-        height: 1100px;
+    .remb-form-card {
+        padding: 1.3rem 1.2rem;
+    }
+    .remb-submit-row {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: right;
+    }
+    .remb-submit-row .btn-save {
+        width: 100%;
     }
 }

@@ -372,7 +372,7 @@ $hasPronoCol  = $canEdit || $showPronostics;
     </div>
     <span class="btn home-banner-card__btn" id="home-member-btn"><?= ($user && !empty($user['prenom'])) ? 'Mon espace' : 'Se connecter' ?> →</span>
   </a>
-  <a href="/pages/leClub/remboursement.html" class="home-banner-card">
+  <a href="/pages/leClub/remboursement.php" class="home-banner-card">
     <span class="home-banner-card__icon">📋</span>
     <div class="home-banner-card__text">
       <h2>Remboursement de frais</h2>
