@@ -139,6 +139,7 @@
 .ent-doc-icon { font-size: 1.1rem; flex-shrink: 0; line-height: 1; }
 .ent-doc-label { flex: 1; }
 .ent-doc-ext { font-size: .75rem; opacity: .45; }
+.ent-doc-date { flex-shrink: 0; font-size: .72rem; font-weight: 400; color: #999; }
 
 .ent-doc-new-badge {
     flex-shrink: 0;
@@ -524,4 +525,9 @@
     .ent-modal-content {
         max-height: calc(100vh - 130px);
     }
+}
+
+@media (max-width: 480px) {
+    /* Priorité au titre et au badge "nouveau" sur une ligne compacte. */
+    .ent-doc-date { display: none; }
 }

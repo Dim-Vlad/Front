@@ -70,6 +70,11 @@
     overflow-wrap: break-word;
 }
 
+.ps-formation-date {
+    font-size: .72rem;
+    color: #999;
+}
+
 .ps-formation-actions {
     display: flex;
     justify-content: space-between;

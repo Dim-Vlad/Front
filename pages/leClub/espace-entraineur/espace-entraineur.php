@@ -143,7 +143,7 @@ $pdo->prepare('UPDATE users SET ressources_dernier_visite = NOW() WHERE id = ?')
     <?php if ($isMod): ?><script>const IS_MOD = true;</script><?php endif; ?>
     <script>const ENT_DERNIERE_VISITE = <?= json_encode($derniereVisite) ?>;</script>
     <script src="/js/pdf-modal.js?v=20260721"></script>
-    <script src="/js/espace-entraineur/espace-entraineur.js?v=20261014"></script>
+    <script src="/js/espace-entraineur/espace-entraineur.js?v=20261015"></script>
     <script src="/js/main.js?v=20260705"></script>
 </body>
 </html>

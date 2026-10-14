@@ -40,7 +40,7 @@ $typeIcons = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="/css/styles.css?v=20261005" rel="stylesheet">
-    <link href="/css/leClub/espace-entraineur.css?v=20260928" rel="stylesheet">
+    <link href="/css/leClub/espace-entraineur.css?v=20261014" rel="stylesheet">
     <link href="/css/leClub/espace-entraineur/formations.css?v=20261014" rel="stylesheet">
     <title>Formations - VBO</title>
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
@@ -79,6 +79,7 @@ $typeIcons = [
                 <span class="ps-formation-type ps-cat-<?= h($f['categorie']) ?>"><?= h($categorieLabels[$f['categorie']] ?? $f['categorie']) ?></span>
                 <h3><?= $f['url'] !== '' ? ($typeIcons[$f['type']] ?? '') . ' ' : '' ?><?= h($f['label']) ?></h3>
                 <?php if ($f['description']): ?><p><?= h($f['description']) ?></p><?php endif; ?>
+                <span class="ps-formation-date">Mis à jour le <?= h((new DateTime($f['updated_at']))->format('d/m/Y')) ?></span>
                 <div class="ps-formation-actions">
                     <?php if ($f['url'] === ''): ?>
                     <span></span>
