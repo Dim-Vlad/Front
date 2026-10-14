@@ -98,10 +98,13 @@ function buildDocEl(doc) {
     item.className  = 'ent-doc-item';
     item.dataset.id = doc.id;
 
+    const isNew = typeof ENT_DERNIERE_VISITE !== 'undefined' && doc.created_at > ENT_DERNIERE_VISITE;
+
     const btn = document.createElement('button');
     btn.className = 'ent-doc-btn';
     btn.innerHTML = `<span class="ent-doc-icon">${doc.type === 'pdf' ? '📄' : '🔗'}</span>
         <span class="ent-doc-label">${escHtml(doc.label)}</span>
+        ${isNew ? '<span class="ent-doc-new-badge">🆕 Nouveau</span>' : ''}
         ${doc.type !== 'pdf' ? '<span class="ent-doc-ext">↗</span>' : ''}`;
     btn.addEventListener('click', () => {
         if (doc.type === 'pdf') openPdfModal(doc.url, doc.label);

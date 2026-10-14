@@ -10,7 +10,7 @@ if (!is_logged_in() || !has_any_role(['entraineur', 'arbitre', 'bureau', 'modera
 try {
     $pdo      = get_pdo();
     $sections = $pdo->query("SELECT id, label, ordre FROM entraineur_sections ORDER BY ordre, id")->fetchAll();
-    $docs     = $pdo->query("SELECT id, section_id, label, url, type, ordre FROM entraineur_documents ORDER BY section_id, ordre, id")->fetchAll();
+    $docs     = $pdo->query("SELECT id, section_id, label, url, type, ordre, created_at FROM entraineur_documents ORDER BY section_id, ordre, id")->fetchAll();
 
     $bySection = [];
     foreach ($docs as $doc) {

@@ -62,6 +62,18 @@ $stmtNouvellesF = $pdo->prepare('SELECT COUNT(*) FROM formations WHERE created_a
 $stmtNouvellesF->execute([$derniereVisiteF]);
 $formationsNouvelles = (int)$stmtNouvellesF->fetchColumn();
 
+// Badge "nouveau" sur la tuile Ressources : page restreinte aux mêmes rôles
+// que l'espace entraîneur, calcul limité à ces rôles comme pour les vidéos.
+$ressourcesNouvelles = 0;
+if (has_any_role(['entraineur', 'arbitre', 'bureau', 'moderateur', 'admin'])) {
+    $stmtVisiteR = $pdo->prepare('SELECT ressources_dernier_visite FROM users WHERE id = ?');
+    $stmtVisiteR->execute([(int)$user['id']]);
+    $derniereVisiteR = $stmtVisiteR->fetchColumn() ?: '1970-01-01 00:00:00';
+    $stmtNouvellesR = $pdo->prepare('SELECT COUNT(*) FROM entraineur_documents WHERE created_at > ?');
+    $stmtNouvellesR->execute([$derniereVisiteR]);
+    $ressourcesNouvelles = (int)$stmtNouvellesR->fetchColumn();
+}
+
 $tiles = ['jeux' => [], 'entraineur' => [], 'commissions' => [], 'general' => []];
 foreach ($pdo->query('SELECT * FROM dashboard_tiles ORDER BY section, ordre, id')->fetchAll() as $t) {
     $tiles[$t['section']][] = $t;
@@ -314,6 +326,7 @@ foreach ($rolePriority as $r) {
                 $badgesEntraineur = [
                     '/pages/leClub/espace-entraineur/videos-entrainement.php' => $videosNouvelles,
                     '/pages/leClub/espace-entraineur/formations.php'          => $formationsNouvelles,
+                    '/pages/leClub/espace-entraineur/espace-entraineur.php'   => $ressourcesNouvelles,
                 ];
                 ?>
                 <?php foreach ($tiles['entraineur'] as $t): ?>

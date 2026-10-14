@@ -6,6 +6,16 @@ if (!has_any_role(['entraineur', 'arbitre', 'bureau', 'moderateur', 'admin'])) {
     exit;
 }
 $isMod = has_any_role(['admin', 'moderateur']);
+$pdo   = get_pdo();
+$me    = current_user();
+
+// Date de la visite précédente (avant mise à jour), pour marquer les documents
+// ajoutés depuis comme "nouveaux". Le badge du tableau de bord se base sur la
+// même date, remise à jour ci-dessous une fois lue.
+$stmtVisite = $pdo->prepare('SELECT ressources_dernier_visite FROM users WHERE id = ?');
+$stmtVisite->execute([(int)$me['id']]);
+$derniereVisite = $stmtVisite->fetchColumn() ?: '1970-01-01 00:00:00';
+$pdo->prepare('UPDATE users SET ressources_dernier_visite = NOW() WHERE id = ?')->execute([(int)$me['id']]);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -14,7 +24,7 @@ $isMod = has_any_role(['admin', 'moderateur']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Documents et ressources pour les entraineurs, arbitres et marqueurs du VBO.">
     <link href="/css/styles.css?v=20261005" rel="stylesheet">
-    <link href="/css/leClub/espace-entraineur.css?v=20260928" rel="stylesheet">
+    <link href="/css/leClub/espace-entraineur.css?v=20261014" rel="stylesheet">
     <title>Ressources - VBO</title>
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -131,8 +141,9 @@ $isMod = has_any_role(['admin', 'moderateur']);
     <div id="footer"></div>
 
     <?php if ($isMod): ?><script>const IS_MOD = true;</script><?php endif; ?>
+    <script>const ENT_DERNIERE_VISITE = <?= json_encode($derniereVisite) ?>;</script>
     <script src="/js/pdf-modal.js?v=20260721"></script>
-    <script src="/js/espace-entraineur/espace-entraineur.js?v=20260926"></script>
+    <script src="/js/espace-entraineur/espace-entraineur.js?v=20261014"></script>
     <script src="/js/main.js?v=20260705"></script>
 </body>
 </html>
