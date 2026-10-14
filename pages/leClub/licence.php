@@ -438,6 +438,6 @@ function render_action_card(array $l, string $slug, string $icon, bool $canEdit)
     <div id="footer"></div>
 
     <script src="/js/main.js?v=20260705"></script>
-    <script src="/js/licence.js"></script>
+    <script src="/js/licence.js?v=20261014"></script>
 </body>
 </html>

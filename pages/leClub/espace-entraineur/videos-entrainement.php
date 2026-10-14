@@ -85,7 +85,7 @@ function render_video_card(array $v, bool $isMod, array $me): void {
             <?php elseif ($v['type'] === 'image'): ?>
             <button type="button" class="vid-link" onclick="openImageLightbox('<?= h($v['url']) ?>')">🖼 Voir en grand</button>
             <?php else: ?>
-            <button type="button" class="vid-link" onclick="openPdfModal('<?= h($v['url']) ?>','<?= h($v['titre']) ?>')">📄 Consulter</button>
+            <button type="button" class="vid-link" onclick='openPdfModal(<?= json_encode($v['url'], JSON_HEX_APOS | JSON_HEX_QUOT) ?>, <?= json_encode($v['titre'], JSON_HEX_APOS | JSON_HEX_QUOT) ?>)'>📄 Consulter</button>
             <?php endif; ?>
             <span class="vid-meta"><?= h($auteur) ?> · <?= h((new DateTime($v['created_at']))->format('d/m/Y')) ?></span>
         </div>

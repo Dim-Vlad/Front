@@ -249,6 +249,6 @@ try {
     <div id="footer"></div>
 
     <script src="/js/main.js?v=20260705"></script>
-    <script src="/js/nosEquipes.js"></script>
+    <script src="/js/nosEquipes.js?v=20261014"></script>
 </body>
 </html>

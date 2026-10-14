@@ -35,6 +35,9 @@ $validCategories = ['partenaire', 'institutionnel', 'federation'];
 if ($nom === '' || !in_array($categorie, $validCategories, true)) {
     http_response_code(400); ob_end_clean(); echo json_encode(['error' => 'Nom et catégorie requis.']); exit;
 }
+if ($url !== '' && (!preg_match('#^https?://#i', $url) || !filter_var($url, FILTER_VALIDATE_URL))) {
+    http_response_code(400); ob_end_clean(); echo json_encode(['error' => 'Lien invalide : il doit commencer par http:// ou https://']); exit;
+}
 
 $misEnAvant  = ($_POST['mis_en_avant'] ?? '') === '1' ? 1 : 0;
 $dateFin     = trim($_POST['date_fin'] ?? '');

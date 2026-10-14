@@ -288,6 +288,6 @@ function cardAttrs(array $m): string {
         const STAFF_DESC       = <?= json_encode($descMap, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
     </script>
     <script src="/js/main.js?v=20260705"></script>
-    <script src="/js/staff.js"></script>
+    <script src="/js/staff.js?v=20261014"></script>
 </body>
 </html>

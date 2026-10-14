@@ -138,6 +138,6 @@ function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES); }
     </script>
     <script src="/js/pdf-modal.js?v=20260721"></script>
     <script src="/js/main.js?v=20260705"></script>
-    <script src="/js/documents.js"></script>
+    <script src="/js/documents.js?v=20261014"></script>
 </body>
 </html>

@@ -27,6 +27,11 @@ if ($nom === '' || $url === '') {
     ob_end_clean(); echo json_encode(['error' => 'Nom et lien requis.']);
     exit;
 }
+if (!preg_match('#^https?://#i', $url) || !filter_var($url, FILTER_VALIDATE_URL)) {
+    http_response_code(400);
+    ob_end_clean(); echo json_encode(['error' => 'Lien invalide : il doit commencer par http:// ou https://']);
+    exit;
+}
 
 $pdo      = get_pdo();
 $maxOrdre = $pdo->query('SELECT COALESCE(MAX(ordre), 0) FROM reseaux_sociaux')->fetchColumn();
