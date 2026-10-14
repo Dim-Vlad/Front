@@ -3,8 +3,17 @@ require_once __DIR__ . '/../../../php/auth.php';
 require_login();
 $isMod = has_any_role(['admin', 'moderateur']);
 $pdo   = get_pdo();
+$me    = current_user();
 
 function h(string $s): string { return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
+
+// Date de la visite précédente (avant mise à jour), pour marquer les
+// formations ajoutées depuis comme "nouvelles". Le badge du tableau de bord
+// se base sur la même date, remise à jour ci-dessous une fois lue.
+$stmtVisite = $pdo->prepare('SELECT formations_dernier_visite FROM users WHERE id = ?');
+$stmtVisite->execute([(int)$me['id']]);
+$derniereVisite = $stmtVisite->fetchColumn() ?: '1970-01-01 00:00:00';
+$pdo->prepare('UPDATE users SET formations_dernier_visite = NOW() WHERE id = ?')->execute([(int)$me['id']]);
 
 $formations = [];
 try {
@@ -32,7 +41,7 @@ $typeIcons = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="/css/styles.css?v=20261005" rel="stylesheet">
     <link href="/css/leClub/espace-entraineur.css?v=20260928" rel="stylesheet">
-    <link href="/css/leClub/espace-entraineur/formations.css?v=20260732" rel="stylesheet">
+    <link href="/css/leClub/espace-entraineur/formations.css?v=20261014" rel="stylesheet">
     <title>Formations - VBO</title>
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -64,6 +73,9 @@ $typeIcons = [
         <div class="ps-formations-grid" id="ps-formations-grid">
             <?php foreach ($formations as $f): ?>
             <div class="ps-formation-card" data-id="<?= (int)$f['id'] ?>">
+                <?php if ($f['created_at'] > $derniereVisite): ?>
+                <span class="ps-formation-new-badge" title="Ajoutée depuis votre dernière visite">🆕 Nouveau</span>
+                <?php endif; ?>
                 <span class="ps-formation-type ps-cat-<?= h($f['categorie']) ?>"><?= h($categorieLabels[$f['categorie']] ?? $f['categorie']) ?></span>
                 <h3><?= $f['url'] !== '' ? ($typeIcons[$f['type']] ?? '') . ' ' : '' ?><?= h($f['label']) ?></h3>
                 <?php if ($f['description']): ?><p><?= h($f['description']) ?></p><?php endif; ?>

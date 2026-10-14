@@ -51,6 +51,17 @@ if (has_any_role(['admin', 'moderateur', 'bureau', 'entraineur', 'arbitre'])) {
     $videosNouvelles = (int)$stmtNouvelles->fetchColumn();
 }
 
+// Badge "nouveau" sur la tuile Formations : la page n'est pas restreinte à des
+// rôles particuliers dans le code (sa visibilité est gérée via les tuiles du
+// tableau de bord), donc le compteur est calculé pour tout membre connecté.
+$formationsNouvelles = 0;
+$stmtVisiteF = $pdo->prepare('SELECT formations_dernier_visite FROM users WHERE id = ?');
+$stmtVisiteF->execute([(int)$user['id']]);
+$derniereVisiteF = $stmtVisiteF->fetchColumn() ?: '1970-01-01 00:00:00';
+$stmtNouvellesF = $pdo->prepare('SELECT COUNT(*) FROM formations WHERE created_at > ?');
+$stmtNouvellesF->execute([$derniereVisiteF]);
+$formationsNouvelles = (int)$stmtNouvellesF->fetchColumn();
+
 $tiles = ['jeux' => [], 'entraineur' => [], 'commissions' => [], 'general' => []];
 foreach ($pdo->query('SELECT * FROM dashboard_tiles ORDER BY section, ordre, id')->fetchAll() as $t) {
     $tiles[$t['section']][] = $t;
@@ -299,8 +310,14 @@ foreach ($rolePriority as $r) {
             </div>
             <div class="dashboard-cards">
 
+                <?php
+                $badgesEntraineur = [
+                    '/pages/leClub/espace-entraineur/videos-entrainement.php' => $videosNouvelles,
+                    '/pages/leClub/espace-entraineur/formations.php'          => $formationsNouvelles,
+                ];
+                ?>
                 <?php foreach ($tiles['entraineur'] as $t): ?>
-                    <?php $badge = ($t['url'] === '/pages/leClub/espace-entraineur/videos-entrainement.php') ? $videosNouvelles : 0; ?>
+                    <?php $badge = $badgesEntraineur[$t['url']] ?? 0; ?>
                     <?php render_dashboard_tile($t, $canEdit, $tileRoleLabels, $badge); ?>
                 <?php endforeach; ?>
 
