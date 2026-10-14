@@ -110,7 +110,7 @@ function addLigne(type) {
         <input type="hidden" name="ligne_${i}_type" value="${type}">
         <div class="remb-ligne-header">
             <strong>${titre}</strong>
-            <button type="button" class="remb-ligne-delete" onclick="removeLigne(this)" title="Supprimer cette ligne">🗑</button>
+            <button type="button" class="remb-ligne-delete" onclick="removeLigne(this)" title="Supprimer cette ligne">🗑 Supprimer</button>
         </div>
         ${type === 'km' ? champsKm : champsFacture}`;
 

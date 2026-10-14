@@ -23,7 +23,7 @@ $distancesVilles = array_combine(array_column($villes, 'nom'), array_map('floatv
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Formulaire de remboursement des frais engagés pour le VBO.">
     <link href="/css/styles.css?v=20261005" rel="stylesheet">
-    <link href="/css/leClub/remboursement.css?v=20261018" rel="stylesheet">
+    <link href="/css/leClub/remboursement.css?v=20261020" rel="stylesheet">
     <title>Remboursement - VBO</title>
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -106,6 +106,6 @@ $distancesVilles = array_combine(array_column($villes, 'nom'), array_map('floatv
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="/js/main.js?v=20260705"></script>
-    <script src="/js/leClub/remboursement.js?v=20261019"></script>
+    <script src="/js/leClub/remboursement.js?v=20261020"></script>
 </body>
 </html>

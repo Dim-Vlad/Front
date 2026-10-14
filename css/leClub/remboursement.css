@@ -197,14 +197,25 @@
 }
 
 .remb-ligne-delete {
-    background: none;
-    border: none;
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    background: #fdeceb;
+    border: 1.5px solid #e8b4ae;
+    border-radius: 20px;
+    color: #c0392b;
     cursor: pointer;
-    font-size: .95rem;
-    opacity: .6;
-    padding: .15rem;
+    font-family: inherit;
+    font-size: .8rem;
+    font-weight: 700;
+    padding: .4rem .9rem;
+    transition: background .15s, border-color .15s;
 }
-.remb-ligne-delete:hover { opacity: 1; }
+.remb-ligne-delete:hover {
+    background: #c0392b;
+    border-color: #c0392b;
+    color: #fff;
+}
 
 .remb-ligne-row {
     display: grid;
