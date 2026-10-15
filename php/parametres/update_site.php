@@ -16,6 +16,7 @@ $allowedKeys = [
     'club_adresse_ligne1', 'club_adresse_ligne2',
     'club_email',
     'arbitres_sheet_url', 'minibus_sheet_url',
+    'remboursement_tarif_km',
 ];
 
 $updates = [];
@@ -23,6 +24,14 @@ foreach ($allowedKeys as $key) {
     if (array_key_exists($key, $_POST)) {
         $updates[$key] = trim($_POST[$key]);
     }
+}
+
+if (isset($updates['remboursement_tarif_km'])) {
+    $tarif = (float)str_replace(',', '.', $updates['remboursement_tarif_km']);
+    if ($tarif <= 0 || $tarif > 10) {
+        ob_end_clean(); echo json_encode(['success' => false, 'error' => 'Tarif kilométrique invalide.']); exit;
+    }
+    $updates['remboursement_tarif_km'] = (string)$tarif;
 }
 
 if (empty($updates)) {

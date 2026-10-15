@@ -15,6 +15,9 @@ try {
     $villes = $pdo->query("SELECT nom, distance_km FROM remboursement_villes ORDER BY nom ASC")->fetchAll();
 } catch (Exception) {}
 $distancesVilles = array_combine(array_column($villes, 'nom'), array_map('floatval', array_column($villes, 'distance_km')));
+
+$rowTarif = $pdo->query("SELECT valeur FROM parametres WHERE cle = 'remboursement_tarif_km'")->fetch();
+$tarifKm  = $rowTarif ? (float)$rowTarif['valeur'] : 0.14;
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -103,9 +106,10 @@ $distancesVilles = array_combine(array_column($villes, 'nom'), array_map('floatv
         const REMB_EQUIPES_SENIORS = <?= json_encode(array_column($equipesSeniors, 'nom')) ?>;
         const REMB_EQUIPES_JEUNES  = <?= json_encode(array_column($equipesJeunes, 'nom')) ?>;
         const REMB_DISTANCES       = <?= json_encode($distancesVilles, JSON_FORCE_OBJECT) ?>;
+        const REMB_TARIF_KM        = <?= json_encode($tarifKm) ?>;
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="/js/main.js?v=20260705"></script>
-    <script src="/js/leClub/remboursement.js?v=20261020"></script>
+    <script src="/js/leClub/remboursement.js?v=20261021"></script>
 </body>
 </html>

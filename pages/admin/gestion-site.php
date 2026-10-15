@@ -24,6 +24,7 @@ $email        = gs_param($pdo, 'club_email',          'dimitrigarrigues@gmail.co
 $logoClub     = gs_param($pdo, 'logo_club',           'images/logo-club/LogoVBO.png');
 $logoMenu     = gs_param($pdo, 'logo_menu',           'images/logo-club/Logo-VBO-blanc.png');
 $logoFavicon  = gs_param($pdo, 'logo_favicon',        'images/favicon-36x36.png');
+$tarifKm      = gs_param($pdo, 'remboursement_tarif_km', '0.14');
 
 try {
     $villes = $pdo->query('SELECT * FROM remboursement_villes ORDER BY nom ASC')->fetchAll();
@@ -166,6 +167,24 @@ try {
             <div class="gs-form-footer">
                 <button type="button" class="btn-admin" onclick="openReseauModal()">+ Ajouter un réseau</button>
             </div>
+        </div>
+
+        <!-- ── Tarif kilométrique (remboursement) ── -->
+        <div class="admin-card">
+            <h2>Tarif kilométrique (remboursement)</h2>
+            <p class="gs-desc">Montant appliqué par kilomètre pour les demandes de remboursement de frais de déplacement.</p>
+            <form class="admin-form gs-form" data-section="tarif-km">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="remboursement_tarif_km">Tarif par km (€)</label>
+                        <input type="number" id="remboursement_tarif_km" name="remboursement_tarif_km"
+                               value="<?= h($tarifKm) ?>" min="0.01" max="10" step="0.01" required>
+                    </div>
+                </div>
+                <div class="gs-form-footer">
+                    <button type="submit" class="btn-admin">Enregistrer</button>
+                </div>
+            </form>
         </div>
 
         <!-- ── Villes & distances (remboursement kilométrique) ── -->
