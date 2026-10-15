@@ -107,6 +107,13 @@
 
 .form-group input[type="file"] { font-family: inherit; font-size: .88rem; }
 
+.form-group input[readonly] {
+    background: #f3f5f3;
+    color: #555;
+    font-weight: 600;
+    cursor: not-allowed;
+}
+
 .form-group input:focus,
 .form-group select:focus {
     outline: none;

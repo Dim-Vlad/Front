@@ -93,6 +93,10 @@ for ($i = 0; $i < $nbLignes; $i++) {
         $ligne['arrivee']      = $arrivee;
         $ligne['distance']     = $distance;
         $ligne['aller_retour'] = ($_POST["ligne_{$i}_aller_retour"] ?? '') === '1';
+        // Détail du montant (indicatif, affiché dans l'email) : le total validé
+        // ci-dessus reste la seule valeur garantie correcte côté serveur.
+        $ligne['montant_km']   = max(0, (float)str_replace(',', '.', $_POST["ligne_{$i}_montant_km"] ?? '0'));
+        $ligne['autres_frais'] = max(0, (float)str_replace(',', '.', $_POST["ligne_{$i}_autres_frais"] ?? '0'));
     } else { // facture
         $motif = trim($_POST["ligne_{$i}_motif"] ?? '');
         if ($motif === '' || mb_strlen($motif) > 200) {
@@ -144,11 +148,16 @@ foreach ($lignes as $i => $ligne) {
     $justificatifUrl = 'https://volleyballollioulais.fr/documents/remboursements/' . $filename;
 
     if ($ligne['type'] === 'km') {
+        $detailMontant = "Frais kilométriques : " . number_format($ligne['montant_km'], 2, ',', ' ') . ' €';
+        if ($ligne['autres_frais'] > 0) {
+            $detailMontant .= " + Autres frais (péages, etc.) : " . number_format($ligne['autres_frais'], 2, ',', ' ') . ' €';
+        }
         $lignesTexte[] = sprintf(
-            "Ligne %d — Remboursement kilométrique\r\n  Équipe : %s\r\n  Date : %s\r\n  Trajet : Ollioules → %s (%s)\r\n  Distance : %s km\r\n  Montant : %s €\r\n  Justificatif : %s",
+            "Ligne %d — Remboursement kilométrique\r\n  Équipe : %s\r\n  Date : %s\r\n  Trajet : Ollioules → %s (%s)\r\n  Distance : %s km\r\n  %s\r\n  Montant total : %s €\r\n  Justificatif : %s",
             $num, $ligne['equipe'], $dateFr, $ligne['arrivee'],
             $ligne['aller_retour'] ? 'aller-retour' : 'aller simple',
             rtrim(rtrim(number_format($ligne['distance'], 2, ',', ' '), '0'), ','),
+            $detailMontant,
             number_format($ligne['montant'], 2, ',', ' '),
             $justificatifUrl
         );

@@ -10,24 +10,31 @@ function _rembDistanceOptions() {
 
 // Si la ville saisie correspond à une ville connue, remplit la distance
 // automatiquement (aller simple, ou doublée si "aller-retour" est coché),
-// puis le montant selon le tarif kilométrique (REMB_TARIF_KM, réglable par
-// un admin). Les deux champs restent modifiables à la main ensuite.
+// puis le montant kilométrique selon le tarif (REMB_TARIF_KM, réglable par
+// un admin). La distance reste modifiable à la main pour une ville absente.
 function _rembAutoDistance(i) {
     const ville = document.querySelector(`input[name="ligne_${i}_arrivee"]`).value.trim();
     if (REMB_DISTANCES[ville] === undefined) return;
     const allerRetour = document.querySelector(`input[name="ligne_${i}_aller_retour"]`).checked;
     const distance = allerRetour ? REMB_DISTANCES[ville] * 2 : REMB_DISTANCES[ville];
     document.querySelector(`input[name="ligne_${i}_distance"]`).value = distance;
-    _rembAutoMontant(i);
+    _rembAutoMontantKm(i);
 }
 
-// Recalcule le montant à partir de la distance actuellement saisie (ville
-// connue ou non) et du tarif kilométrique. Appelé aussi lors d'une saisie
-// manuelle de la distance, pour une ville absente de la liste.
-function _rembAutoMontant(i) {
-    const distance = parseFloat(document.querySelector(`input[name="ligne_${i}_distance"]`).value);
-    if (!distance || distance <= 0) return;
-    document.querySelector(`input[name="ligne_${i}_montant"]`).value = (distance * REMB_TARIF_KM).toFixed(2);
+// Recalcule le montant kilométrique (distance × tarif) à partir de la
+// distance actuellement saisie, puis le total de la ligne. Champ non
+// modifiable à la main : seuls la distance et les "autres frais" le sont.
+function _rembAutoMontantKm(i) {
+    const distance = parseFloat(document.querySelector(`input[name="ligne_${i}_distance"]`).value) || 0;
+    document.querySelector(`input[name="ligne_${i}_montant_km"]`).value = (distance * REMB_TARIF_KM).toFixed(2);
+    _rembRecalcTotal(i);
+}
+
+// Montant total de la ligne = frais kilométriques + autres frais (péages…).
+function _rembRecalcTotal(i) {
+    const montantKm    = parseFloat(document.querySelector(`input[name="ligne_${i}_montant_km"]`).value) || 0;
+    const autresFrais  = parseFloat(document.querySelector(`input[name="ligne_${i}_autres_frais"]`).value) || 0;
+    document.querySelector(`input[name="ligne_${i}_montant"]`).value = (montantKm + autresFrais).toFixed(2);
 }
 
 function _rembTeamOptions() {
@@ -74,12 +81,22 @@ function addLigne(type) {
         <div class="remb-ligne-row">
             <div class="form-group">
                 <label>Distance (km)</label>
-                <input type="number" name="ligne_${i}_distance" min="0.1" step="0.1" required oninput="_rembAutoMontant(${i})">
+                <input type="number" name="ligne_${i}_distance" min="0.1" step="0.1" required oninput="_rembAutoMontantKm(${i})">
+            </div>
+            <div class="form-group">
+                <label>Montant des frais kilométriques (€)</label>
+                <input type="number" name="ligne_${i}_montant_km" min="0" step="0.01" value="0.00" required readonly tabindex="-1">
+                <p class="remb-field-hint">Calculé automatiquement à ${REMB_TARIF_KM.toString().replace('.', ',')} €/km.</p>
+            </div>
+        </div>
+        <div class="remb-ligne-row">
+            <div class="form-group">
+                <label>Autres frais (péages, etc.) (€)</label>
+                <input type="number" name="ligne_${i}_autres_frais" min="0" step="0.01" placeholder="0" oninput="_rembRecalcTotal(${i})">
             </div>
             <div class="form-group">
                 <label>Montant total des frais (€)</label>
-                <input type="number" name="ligne_${i}_montant" min="0.01" step="0.01" required>
-                <p class="remb-field-hint">Calculé à ${REMB_TARIF_KM.toString().replace('.', ',')} €/km.<br>Modifiable par un administrateur si nécessaire.</p>
+                <input type="number" name="ligne_${i}_montant" min="0.01" step="0.01" value="0.00" required readonly tabindex="-1">
             </div>
         </div>
         <div class="remb-ligne-row">
@@ -174,6 +191,8 @@ function _rembCollectLignes() {
             date:    val('date'),
             equipe:  val('equipe'),
             montant: parseFloat(val('montant')) || 0,
+            montantKm: parseFloat(val('montant_km')) || 0,
+            autresFrais: parseFloat(val('autres_frais')) || 0,
             arrivee: val('arrivee'),
             distance: parseFloat(val('distance')) || 0,
             allerRetour: wrap.querySelector(`[name="ligne_${i}_aller_retour"]`)?.checked || false,
@@ -256,9 +275,11 @@ async function _rembGenerateRecapPdf(dossier, prenom, nom, lignes) {
         const dateFr = l.date ? l.date.split('-').reverse().join('/').slice(0, 8) : '';
         // Police par défaut de jsPDF (Helvetica/WinAnsi) : pas de glyphe "→", on reste en ASCII.
         const tarifStr = REMB_TARIF_KM.toString().replace('.', ',');
-        const details = l.type === 'km'
-            ? `Ollioules -> ${l.arrivee} (${l.allerRetour ? 'aller-retour' : 'aller simple'}) - ${l.distance} km x ${tarifStr} EUR/km`
-            : l.motif;
+        let details = l.motif;
+        if (l.type === 'km') {
+            details = `Ollioules -> ${l.arrivee} (${l.allerRetour ? 'aller-retour' : 'aller simple'}) - ${l.distance} km x ${tarifStr} EUR/km = ${l.montantKm.toFixed(2)} EUR`;
+            if (l.autresFrais > 0) details += ` + ${l.autresFrais.toFixed(2)} EUR (autres frais)`;
+        }
         const km = l.type === 'km' ? String(l.distance) : '-';
         return [
             dateFr,
