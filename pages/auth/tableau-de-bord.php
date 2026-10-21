@@ -28,12 +28,20 @@ if ($canEdit) {
     $nbPhotosAttente = (int)$pdo->query("SELECT COUNT(*) FROM photos_galerie WHERE statut = 'en_attente'")->fetchColumn();
 }
 
+// Villes demandées sur le formulaire de remboursement sans figurer dans la
+// liste officielle (gérable uniquement depuis gestion-site.php, admin only).
+$nbVillesAttente = 0;
+if (has_role('admin')) {
+    $nbVillesAttente = (int)$pdo->query("SELECT COUNT(DISTINCT nom) FROM remboursement_villes_attente")->fetchColumn();
+}
+
 // Un seul bloc "à traiter" pour l'admin/modérateur : une ligne par catégorie
 // non vide, pour tout voir d'un coup d'œil sans naviguer page par page.
 $alertesAdmin = has_role('admin') && $nbAttente > 0;
 $alertesPhotos = $canEdit && $nbPhotosAttente > 0;
 $alertesPartenaires = $canEdit && !empty($partenairesAlerte);
-$hasAlertes = $alertesAdmin || $alertesPhotos || $alertesPartenaires;
+$alertesVilles = has_role('admin') && $nbVillesAttente > 0;
+$hasAlertes = $alertesAdmin || $alertesPhotos || $alertesPartenaires || $alertesVilles;
 
 $stmtNl = $pdo->prepare('SELECT newsletter FROM users WHERE id = ?');
 $stmtNl->execute([(int)$user['id']]);
@@ -271,6 +279,14 @@ foreach ($rolePriority as $r) {
                         <?php endforeach; ?>
                     </ul>
                 </div>
+                <span class="admin-alert-arrow">Gérer →</span>
+            </a>
+            <?php endif; ?>
+
+            <?php if ($alertesVilles): ?>
+            <a href="/pages/admin/gestion-site.php#gs-villes-attente" class="admin-alert-row">
+                <div class="admin-alert-icon">🗺️</div>
+                <div class="admin-alert-text"><?= $nbVillesAttente ?> ville<?= $nbVillesAttente > 1 ? 's' : '' ?> à vérifier pour le remboursement kilométrique</div>
                 <span class="admin-alert-arrow">Gérer →</span>
             </a>
             <?php endif; ?>

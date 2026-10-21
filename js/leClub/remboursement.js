@@ -21,6 +21,25 @@ function _rembAutoDistance(i) {
     _rembAutoMontantKm(i);
 }
 
+// Coché/décoché sur "Trajet aller-retour" : pour une ville connue, recalcule
+// depuis la distance de référence (fiable, pas de dérive possible). Pour une
+// ville absente de la liste (distance saisie à la main), il n'y a pas de valeur
+// de référence à relire : on double/divise par deux la distance déjà saisie,
+// sinon cocher la case n'avait aucun effet pour les villes hors liste.
+function _rembToggleAllerRetour(i) {
+    const ville = document.querySelector(`input[name="ligne_${i}_arrivee"]`).value.trim();
+    const allerRetour = document.querySelector(`input[name="ligne_${i}_aller_retour"]`).checked;
+    const distanceInput = document.querySelector(`input[name="ligne_${i}_distance"]`);
+
+    if (REMB_DISTANCES[ville] !== undefined) {
+        distanceInput.value = allerRetour ? REMB_DISTANCES[ville] * 2 : REMB_DISTANCES[ville];
+    } else {
+        const current = parseFloat(distanceInput.value) || 0;
+        distanceInput.value = Math.round((allerRetour ? current * 2 : current / 2) * 10) / 10;
+    }
+    _rembAutoMontantKm(i);
+}
+
 // Recalcule le montant kilométrique (distance × tarif) à partir de la
 // distance actuellement saisie, puis le total de la ligne. Champ non
 // modifiable à la main : seuls la distance et les "autres frais" le sont.
@@ -35,6 +54,11 @@ function _rembRecalcTotal(i) {
     const montantKm    = parseFloat(document.querySelector(`input[name="ligne_${i}_montant_km"]`).value) || 0;
     const autresFrais  = parseFloat(document.querySelector(`input[name="ligne_${i}_autres_frais"]`).value) || 0;
     document.querySelector(`input[name="ligne_${i}_montant"]`).value = (montantKm + autresFrais).toFixed(2);
+
+    // Justificatif obligatoire uniquement s'il y a d'autres frais à justifier
+    // (péages, etc.) : un trajet kilométrique seul n'a rien à joindre.
+    const fileInput = document.querySelector(`input[name="ligne_${i}_justificatif"]`);
+    if (fileInput) fileInput.required = autresFrais > 0;
 }
 
 function _rembTeamOptions() {
@@ -75,7 +99,7 @@ function addLigne(type) {
                 <p class="remb-field-hint">Départ : Ollioules. Distance pré-remplie pour les villes connues, modifiable sinon.</p>
             </div>
             <div class="form-group form-group--checkbox">
-                <label><input type="checkbox" name="ligne_${i}_aller_retour" value="1" onchange="_rembAutoDistance(${i})"> Trajet aller-retour</label>
+                <label><input type="checkbox" name="ligne_${i}_aller_retour" value="1" onchange="_rembToggleAllerRetour(${i})"> Trajet aller-retour</label>
             </div>
         </div>
         <div class="remb-ligne-row">
@@ -102,8 +126,8 @@ function addLigne(type) {
         <div class="remb-ligne-row">
             <div class="form-group">
                 <label>Justificatif (PDF)</label>
-                <input type="file" name="ligne_${i}_justificatif" accept="application/pdf" required>
-                <p class="remb-field-hint">Ex : tickets de péage, autres frais liés au trajet</p>
+                <input type="file" name="ligne_${i}_justificatif" accept="application/pdf">
+                <p class="remb-field-hint">Obligatoire uniquement si vous avez renseigné d'autres frais (péages, etc.) ci-dessus.</p>
             </div>
         </div>`;
 
@@ -197,6 +221,7 @@ function _rembCollectLignes() {
             distance: parseFloat(val('distance')) || 0,
             allerRetour: wrap.querySelector(`[name="ligne_${i}_aller_retour"]`)?.checked || false,
             motif: val('motif'),
+            hasJustificatif: !!(wrap.querySelector(`[name="ligne_${i}_justificatif"]`)?.files?.length),
         };
     });
 }
@@ -287,7 +312,7 @@ async function _rembGenerateRecapPdf(dossier, prenom, nom, lignes) {
             details,
             km,
             `${l.montant.toFixed(2)} €`,
-            `${dossier}_${nomSafe}_Justificatif_${num}.pdf`,
+            l.hasJustificatif ? `${dossier}_${nomSafe}_Justificatif_${num}.pdf` : '-',
         ];
     }
 

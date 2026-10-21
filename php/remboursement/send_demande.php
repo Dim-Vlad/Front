@@ -40,6 +40,7 @@ if ($nbLignes <= 0 || $nbLignes > 20) {
 
 $pdo = get_pdo();
 $equipesValides = $pdo->query('SELECT nom FROM equipes')->fetchAll(PDO::FETCH_COLUMN);
+$villesConnues  = $pdo->query('SELECT nom FROM remboursement_villes')->fetchAll(PDO::FETCH_COLUMN);
 
 // ── 1er passage : on valide toutes les lignes sans rien écrire sur le disque,
 //    pour ne jamais se retrouver avec un fichier orphelin si une ligne suivante échoue.
@@ -60,20 +61,6 @@ for ($i = 0; $i < $nbLignes; $i++) {
 
     $ligne = ['type' => $type, 'date' => $date, 'montant' => $montant];
 
-    // Justificatif PDF requis sur les deux types de ligne (trajet : péages, etc.).
-    $fileKey = "ligne_{$i}_justificatif";
-    if (!isset($_FILES[$fileKey]) || $_FILES[$fileKey]['error'] !== UPLOAD_ERR_OK) {
-        ob_end_clean(); echo json_encode(['success' => false, 'error' => "Justificatif PDF requis pour la ligne $num"]); exit;
-    }
-    $file = $_FILES[$fileKey];
-    if ($file['size'] > 10 * 1024 * 1024) {
-        ob_end_clean(); echo json_encode(['success' => false, 'error' => "Le justificatif de la ligne $num ne doit pas dépasser 10 Mo"]); exit;
-    }
-    if (strtolower(pathinfo($file['name'], PATHINFO_EXTENSION)) !== 'pdf' || mime_content_type($file['tmp_name']) !== 'application/pdf') {
-        ob_end_clean(); echo json_encode(['success' => false, 'error' => "Le justificatif de la ligne $num doit être un fichier PDF"]); exit;
-    }
-    $ligne['fileTmp'] = $file['tmp_name'];
-
     // Équipe requise sur les deux types de ligne.
     $equipe = trim($_POST["ligne_{$i}_equipe"] ?? '');
     if (!in_array($equipe, $equipesValides, true)) {
@@ -90,8 +77,11 @@ for ($i = 0; $i < $nbLignes; $i++) {
         if ($distance <= 0 || $distance > 5000) {
             ob_end_clean(); echo json_encode(['success' => false, 'error' => "Distance invalide pour la ligne $num"]); exit;
         }
-        $ligne['arrivee']      = $arrivee;
-        $ligne['distance']     = $distance;
+        $ligne['arrivee']       = $arrivee;
+        $ligne['distance']      = $distance;
+        // Ville absente de la liste officielle : signalée aux admins après
+        // validation complète de la demande (voir 2e passage plus bas).
+        $ligne['ville_inconnue'] = !in_array($arrivee, $villesConnues, true);
         $ligne['aller_retour'] = ($_POST["ligne_{$i}_aller_retour"] ?? '') === '1';
         // Détail du montant (indicatif, affiché dans l'email) : le total validé
         // ci-dessus reste la seule valeur garantie correcte côté serveur.
@@ -104,6 +94,27 @@ for ($i = 0; $i < $nbLignes; $i++) {
         }
         $ligne['motif'] = $motif;
     }
+
+    // Justificatif PDF : toujours requis sur une ligne "facture", et sur une
+    // ligne kilométrique uniquement si d'autres frais (péages, etc.) sont déclarés.
+    $fileKey         = "ligne_{$i}_justificatif";
+    $hasFile         = isset($_FILES[$fileKey]) && $_FILES[$fileKey]['error'] === UPLOAD_ERR_OK;
+    $fileObligatoire = $type === 'facture' || ($type === 'km' && $ligne['autres_frais'] > 0);
+
+    if (!$hasFile && $fileObligatoire) {
+        ob_end_clean(); echo json_encode(['success' => false, 'error' => "Justificatif PDF requis pour la ligne $num"]); exit;
+    }
+    if ($hasFile) {
+        $file = $_FILES[$fileKey];
+        if ($file['size'] > 10 * 1024 * 1024) {
+            ob_end_clean(); echo json_encode(['success' => false, 'error' => "Le justificatif de la ligne $num ne doit pas dépasser 10 Mo"]); exit;
+        }
+        if (strtolower(pathinfo($file['name'], PATHINFO_EXTENSION)) !== 'pdf' || mime_content_type($file['tmp_name']) !== 'application/pdf') {
+            ob_end_clean(); echo json_encode(['success' => false, 'error' => "Le justificatif de la ligne $num doit être un fichier PDF"]); exit;
+        }
+        $ligne['fileTmp'] = $file['tmp_name'];
+    }
+    $ligne['hasFile'] = $hasFile;
 
     $lignes[] = $ligne;
 }
@@ -140,26 +151,42 @@ foreach ($lignes as $i => $ligne) {
     // Même convention de nommage que l'ancien système (et que le PDF récapitulatif
     // généré côté client), pour que le nom affiché dans le tableau corresponde réellement
     // au fichier joint : {dossier}_{Nom}_Justificatif_{n}.pdf
-    $filename = "{$dossier}_{$nomSafe}_Justificatif_{$num}.pdf";
-    if (!move_uploaded_file($ligne['fileTmp'], $dir . $filename)) {
-        ob_end_clean(); echo json_encode(['success' => false, 'error' => "Erreur d'enregistrement du justificatif de la ligne $num"]); exit;
+    // Ligne kilométrique sans autres frais : aucun justificatif n'a été demandé/joint.
+    $justificatifUrl = null;
+    if ($ligne['hasFile']) {
+        $filename = "{$dossier}_{$nomSafe}_Justificatif_{$num}.pdf";
+        if (!move_uploaded_file($ligne['fileTmp'], $dir . $filename)) {
+            ob_end_clean(); echo json_encode(['success' => false, 'error' => "Erreur d'enregistrement du justificatif de la ligne $num"]); exit;
+        }
+        $piecesJointes[]  = ['path' => $dir . $filename, 'name' => $filename];
+        $justificatifUrl = 'https://volleyballollioulais.fr/documents/remboursements/' . $filename;
     }
-    $piecesJointes[]  = ['path' => $dir . $filename, 'name' => $filename];
-    $justificatifUrl = 'https://volleyballollioulais.fr/documents/remboursements/' . $filename;
+
+    // Ville absente de la liste officielle : journalisée pour qu'un admin
+    // vérifie la distance déclarée et l'ajoute éventuellement à la liste.
+    if ($ligne['type'] === 'km' && $ligne['ville_inconnue']) {
+        $pdo->prepare('INSERT INTO remboursement_villes_attente (nom, distance_declaree, demandeur) VALUES (?, ?, ?)')
+            ->execute([$ligne['arrivee'], $ligne['distance'], "$prenom $nom"]);
+    }
 
     if ($ligne['type'] === 'km') {
         $detailMontant = "Frais kilométriques : " . number_format($ligne['montant_km'], 2, ',', ' ') . ' €';
         if ($ligne['autres_frais'] > 0) {
             $detailMontant .= " + Autres frais (péages, etc.) : " . number_format($ligne['autres_frais'], 2, ',', ' ') . ' €';
         }
+        // Ville absente de la liste officielle : rappel en tête de ligne pour que la
+        // trésorerie le voie dès l'email, avant même d'ouvrir le PDF joint.
+        $alerteVille = $ligne['ville_inconnue']
+            ? "  ⚠️ VILLE NON RECONNUE DANS LA LISTE OFFICIELLE — vérifier la distance déclarée avant remboursement\r\n"
+            : '';
         $lignesTexte[] = sprintf(
-            "Ligne %d — Remboursement kilométrique\r\n  Équipe : %s\r\n  Date : %s\r\n  Trajet : Ollioules → %s (%s)\r\n  Distance : %s km\r\n  %s\r\n  Montant total : %s €\r\n  Justificatif : %s",
-            $num, $ligne['equipe'], $dateFr, $ligne['arrivee'],
+            "Ligne %d — Remboursement kilométrique\r\n%s  Équipe : %s\r\n  Date : %s\r\n  Trajet : Ollioules → %s (%s)\r\n  Distance : %s km\r\n  %s\r\n  Montant total : %s €\r\n  Justificatif : %s",
+            $num, $alerteVille, $ligne['equipe'], $dateFr, $ligne['arrivee'],
             $ligne['aller_retour'] ? 'aller-retour' : 'aller simple',
             rtrim(rtrim(number_format($ligne['distance'], 2, ',', ' '), '0'), ','),
             $detailMontant,
             number_format($ligne['montant'], 2, ',', ' '),
-            $justificatifUrl
+            $justificatifUrl ?? 'Aucun (pas d\'autres frais)'
         );
     } else {
         $lignesTexte[] = sprintf(

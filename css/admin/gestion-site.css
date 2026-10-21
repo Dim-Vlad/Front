@@ -139,6 +139,53 @@
     flex-shrink: 0;
 }
 
+.gs-sub-section {
+    margin-bottom: 0.3rem;
+}
+
+.gs-subheading {
+    margin: 0 0 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--secondary-color);
+}
+
+.gs-subheading--warning {
+    color: #a9780f;
+}
+
+.gs-desc--sub {
+    margin: -0.3rem 0 1rem;
+    font-size: 0.82rem;
+}
+
+.gs-divider {
+    border: none;
+    border-top: 1px solid #e5e9e5;
+    margin: 1.4rem 0 1.2rem;
+}
+
+.gs-ville-attente-row {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    background: #fff8e6;
+    border: 1px solid #e0c35a;
+    border-radius: 0.6rem;
+    padding: 0.6rem 0.9rem;
+}
+.gs-ville-attente-row .gs-ville-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+}
+.gs-ville-attente-demandeurs {
+    font-size: 0.74rem;
+    color: #999;
+}
+
 .gs-reseau-row {
     display: flex;
     align-items: center;

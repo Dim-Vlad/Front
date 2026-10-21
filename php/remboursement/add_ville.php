@@ -46,6 +46,9 @@ if ($exists->fetch()) {
 $pdo->prepare('INSERT INTO remboursement_villes (nom, distance_km) VALUES (?, ?)')->execute([$nom, $distance]);
 $newId = (int)$pdo->lastInsertId();
 
+// La ville est désormais connue : l'alerte « à vérifier » n'a plus lieu d'être.
+$pdo->prepare('DELETE FROM remboursement_villes_attente WHERE nom = ?')->execute([$nom]);
+
 log_activite($pdo, 'ajout', 'remboursement_ville', "Ajout de la ville « {$nom} » ({$distance} km)");
 
 ob_end_clean();

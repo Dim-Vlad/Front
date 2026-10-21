@@ -33,6 +33,27 @@ try {
 }
 
 try {
+    $villesAttente = $pdo->query(
+        "SELECT nom,
+                COUNT(*) AS nb,
+                GROUP_CONCAT(DISTINCT distance_declaree ORDER BY created_at DESC SEPARATOR ', ') AS distances,
+                GROUP_CONCAT(DISTINCT demandeur ORDER BY created_at DESC SEPARATOR ', ') AS demandeurs,
+                MAX(created_at) AS derniere_demande
+         FROM remboursement_villes_attente
+         GROUP BY nom
+         ORDER BY derniere_demande DESC"
+    )->fetchAll();
+    // Distance déclarée la plus récente, pour pré-remplir le formulaire d'ajout
+    // (le GROUP_CONCAT ci-dessus est déjà trié de la plus récente à la plus ancienne).
+    foreach ($villesAttente as &$va) {
+        $va['derniere_distance'] = explode(', ', $va['distances'])[0];
+    }
+    unset($va);
+} catch (Exception) {
+    $villesAttente = [];
+}
+
+try {
     $reseaux = $pdo->query('SELECT * FROM reseaux_sociaux ORDER BY ordre ASC, id ASC')->fetchAll();
 } catch (Exception) {
     $reseaux = [];
@@ -46,8 +67,8 @@ try {
     <title>Gestion du site - VBO</title>
     <link href="/css/styles.css?v=20261005" rel="stylesheet">
     <link href="/css/tableau-de-bord.css?v=20260623" rel="stylesheet">
-    <link href="/css/admin.css?v=20260702" rel="stylesheet">
-    <link href="/css/admin/gestion-site.css?v=20261015" rel="stylesheet">
+    <link href="/css/admin.css?v=20261022" rel="stylesheet">
+    <link href="/css/admin/gestion-site.css?v=20261021" rel="stylesheet">
     <link rel="icon" href="/images/favicon-36x36.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -192,6 +213,35 @@ try {
             <h2>Villes &amp; distances (remboursement)</h2>
             <p class="gs-desc">Villes proposées sur le formulaire de remboursement kilométrique, avec leur distance depuis Ollioules (aller simple).</p>
 
+            <?php if (!empty($villesAttente)): ?>
+            <div class="gs-sub-section" id="gs-villes-attente">
+                <h3 class="gs-subheading gs-subheading--warning">⚠️ À vérifier</h3>
+                <p class="gs-desc gs-desc--sub">Ces villes ont été saisies sur une demande de remboursement sans figurer dans la liste ci-dessous : vérifiez la distance déclarée par le demandeur, corrigez-la si besoin, puis ajoutez-la à la liste officielle.</p>
+
+                <div class="gs-villes-list" id="gs-villes-attente-list">
+                    <?php foreach ($villesAttente as $va): ?>
+                    <div class="gs-ville-attente-row" data-nom="<?= h($va['nom']) ?>">
+                        <div class="gs-ville-info">
+                            <span class="gs-ville-nom"><?= h($va['nom']) ?></span>
+                            <span class="gs-ville-distance">
+                                <?= $va['nb'] > 1 ? (int)$va['nb'] . '× demandée' : '1× demandée' ?>
+                                — distance<?= strpos($va['distances'], ',') !== false ? 's' : '' ?> déclarée<?= strpos($va['distances'], ',') !== false ? 's' : '' ?> : <?= h($va['distances']) ?> km
+                            </span>
+                            <span class="gs-ville-attente-demandeurs">Par : <?= h($va['demandeurs']) ?></span>
+                        </div>
+                        <div class="gs-reseau-actions">
+                            <button type="button" class="btn-icon" onclick="openVilleAttenteModal(<?= h(json_encode($va['nom'])) ?>, <?= h(json_encode($va['derniere_distance'])) ?>)" title="Modifier la demande">✏️</button>
+                            <button type="button" class="btn-icon" onclick="openVilleModal({ nom: <?= h(json_encode($va['nom'])) ?>, distance_km: <?= h(json_encode($va['derniere_distance'])) ?> })" title="Ajouter à la liste officielle">➕</button>
+                            <button type="button" class="btn-icon" onclick="dismissVilleAttente(<?= h(json_encode($va['nom'])) ?>)" title="Ignorer">🗑️</button>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <hr class="gs-divider">
+            <h3 class="gs-subheading">Liste officielle</h3>
+            <?php endif; ?>
+
             <div class="gs-villes-list" id="gs-villes-list">
                 <?php foreach ($villes as $v): ?>
                 <div class="gs-ville-row" data-id="<?= (int)$v['id'] ?>">
@@ -324,6 +374,29 @@ try {
         </div>
     </div>
 
+    <!-- ── Modale : corriger une demande en attente (nom / distance déclarée) ── -->
+    <div class="modal-overlay" id="ville-attente-modal" style="display:none" onclick="if (event.target === this) closeVilleAttenteModal()">
+        <div class="modal-card">
+            <h3>Modifier la demande</h3>
+            <form id="ville-attente-form" class="admin-form">
+                <input type="hidden" id="va-nom-actuel" name="nom_actuel" value="">
+                <div class="form-group">
+                    <label for="va-nom">Ville</label>
+                    <input type="text" id="va-nom" name="nom" required>
+                </div>
+                <div class="form-group">
+                    <label for="va-distance">Distance aller déclarée (km)</label>
+                    <input type="number" id="va-distance" name="distance_km" min="0.1" step="0.1" required>
+                </div>
+                <div class="modal-actions">
+                    <span class="lm-status" id="va-status"></span>
+                    <button type="button" class="btn-cancel" onclick="closeVilleAttenteModal()">Annuler</button>
+                    <button type="submit" class="btn-admin">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="footer"></div>
 
     <script src="/js/main.js?v=20260705"></script>
@@ -335,7 +408,6 @@ try {
             alert.textContent = msg;
             alert.className   = 'admin-alert ' + (ok ? 'admin-alert--success' : 'admin-alert--error');
             alert.style.display = 'block';
-            alert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             setTimeout(() => { alert.style.display = 'none'; }, 4000);
         }
 
@@ -634,21 +706,26 @@ try {
             }
         }
 
-        /* ── Villes & distances (remboursement kilométrique) ── */
+        /* ── Villes & distances (remboursement kilométrique) ──
+           data.id présent : modification d'une ville existante.
+           data sans id (ou absent) : ajout, avec éventuellement nom/distance
+           pré-remplis (ex : depuis une alerte "ville à vérifier"). */
 
         function openVilleModal(data) {
             document.getElementById('ville-form').reset();
             document.getElementById('ville-status').textContent = '';
             document.getElementById('ville-status').className   = 'lm-status';
 
-            if (data) {
+            if (data && data.id) {
                 document.getElementById('ville-modal-title').textContent = 'Modifier une ville';
                 document.getElementById('ville-id').value       = data.id;
                 document.getElementById('ville-nom').value      = data.nom;
                 document.getElementById('ville-distance').value = data.distance_km;
             } else {
                 document.getElementById('ville-modal-title').textContent = 'Ajouter une ville';
-                document.getElementById('ville-id').value = '';
+                document.getElementById('ville-id').value       = '';
+                document.getElementById('ville-nom').value      = data ? data.nom : '';
+                document.getElementById('ville-distance').value = data ? data.distance_km : '';
             }
             document.getElementById('ville-modal').style.display = 'flex';
         }
@@ -672,6 +749,7 @@ try {
                 const data = await res.json();
                 if (data.success) {
                     renderVilleRow(data.data);
+                    if (!id) removeVilleAttenteRow(data.data.nom);
                     closeVilleModal();
                     showAlert('✓ Ville enregistrée.', true);
                 } else {
@@ -729,6 +807,92 @@ try {
             } catch {
                 showAlert('✗ Erreur réseau.', false);
             }
+        }
+
+        /* ── Villes à vérifier (demandées hors liste) ── */
+
+        async function dismissVilleAttente(nom) {
+            if (!confirm(`Ignorer l'alerte pour « ${nom} » ? Elle réapparaîtra si cette ville est redemandée.`)) return;
+            const fd = new FormData();
+            fd.append('nom', nom);
+            try {
+                const res  = await fetch('/php/remboursement/dismiss_ville_attente.php', { method: 'POST', body: fd });
+                const data = await res.json();
+                if (data.success) {
+                    removeVilleAttenteRow(nom);
+                    showAlert('✓ Alerte ignorée.', true);
+                } else {
+                    showAlert('✗ ' + (data.error || 'Erreur inconnue.'), false);
+                }
+            } catch {
+                showAlert('✗ Erreur réseau.', false);
+            }
+        }
+
+        function removeVilleAttenteRow(nom) {
+            const row = document.querySelector(`.gs-ville-attente-row[data-nom="${CSS.escape(nom)}"]`);
+            row?.remove();
+            const list = document.getElementById('gs-villes-attente-list');
+            if (list && list.children.length === 0) {
+                document.getElementById('gs-villes-attente')?.remove();
+                document.querySelector('.gs-divider')?.remove();
+                document.querySelectorAll('.gs-subheading').forEach(el => el.remove());
+            }
+        }
+
+        function openVilleAttenteModal(nom, distance) {
+            document.getElementById('ville-attente-form').reset();
+            document.getElementById('va-status').textContent = '';
+            document.getElementById('va-status').className   = 'lm-status';
+            document.getElementById('va-nom-actuel').value = nom;
+            document.getElementById('va-nom').value        = nom;
+            document.getElementById('va-distance').value   = distance;
+            document.getElementById('ville-attente-modal').style.display = 'flex';
+        }
+
+        function closeVilleAttenteModal() {
+            document.getElementById('ville-attente-modal').style.display = 'none';
+        }
+
+        document.getElementById('ville-attente-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const status = document.getElementById('va-status');
+            const btn    = this.querySelector('button[type="submit"]');
+
+            status.textContent = '';
+            btn.disabled = true;
+
+            try {
+                const res  = await fetch('/php/remboursement/update_ville_attente.php', { method: 'POST', body: new FormData(this) });
+                const data = await res.json();
+                if (data.success) {
+                    renderVilleAttenteRow(data.data);
+                    closeVilleAttenteModal();
+                    showAlert('✓ Demande corrigée.', true);
+                } else {
+                    status.textContent = data.error || 'Erreur inconnue';
+                    status.className   = 'lm-status error';
+                }
+            } catch {
+                status.textContent = 'Erreur réseau.';
+                status.className   = 'lm-status error';
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        function renderVilleAttenteRow(data) {
+            const row = document.querySelector(`.gs-ville-attente-row[data-nom="${CSS.escape(data.nom_actuel)}"]`);
+            if (!row) return;
+            row.dataset.nom = data.nom;
+            const distanceAffichee = parseFloat(data.distance_km).toString().replace('.', ',');
+            row.querySelector('.gs-ville-nom').textContent = data.nom;
+            row.querySelector('.gs-ville-distance').innerHTML =
+                (data.nb > 1 ? `${data.nb}× demandée` : '1× demandée') + ` — distance déclarée : ${escHtml(distanceAffichee)} km`;
+            row.querySelector('.gs-ville-attente-demandeurs').textContent = `Par : ${data.demandeurs}`;
+            row.querySelector('[title="Modifier la demande"]').setAttribute('onclick', `openVilleAttenteModal(${JSON.stringify(data.nom)}, ${JSON.stringify(data.distance_km)})`);
+            row.querySelector('[title="Ajouter à la liste officielle"]').setAttribute('onclick', `openVilleModal({ nom: ${JSON.stringify(data.nom)}, distance_km: ${JSON.stringify(data.distance_km)} })`);
+            row.querySelector('[title="Ignorer"]').setAttribute('onclick', `dismissVilleAttente(${JSON.stringify(data.nom)})`);
         }
 
         function escHtml(str) {

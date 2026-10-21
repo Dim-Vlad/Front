@@ -8,10 +8,32 @@
 }
 
 .admin-alert {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    left: auto;
+    z-index: 1000;
+    max-width: min(380px, calc(100vw - 2rem));
     padding: 0.9rem 1.2rem;
     border-radius: 0.5rem;
     font-size: 0.95rem;
     font-weight: 500;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+    animation: admin-alert-in 0.25s ease-out;
+}
+
+@keyframes admin-alert-in {
+    from { opacity: 0; transform: translateY(0.5rem); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 480px) {
+    .admin-alert {
+        left: 1rem;
+        right: 1rem;
+        bottom: 1rem;
+        max-width: none;
+    }
 }
 
 .admin-alert--success {
