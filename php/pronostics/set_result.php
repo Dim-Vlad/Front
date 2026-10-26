@@ -33,18 +33,19 @@ if ($victoire === 0 && !in_array($sets, $setsDefaite, true)) {
 
 try {
     $pdo = get_pdo();
-    $stmt = $pdo->prepare('SELECT adversaire FROM pronostics_matchs WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT adversaire, resultat_victoire FROM pronostics_matchs WHERE id = ?');
     $stmt->execute([$matchId]);
     $match = $stmt->fetch();
     if (!$match) {
         echo json_encode(['success' => false, 'error' => 'Match introuvable']); exit;
     }
+    $estCorrection = $match['resultat_victoire'] !== null;
 
     $pdo->prepare('UPDATE pronostics_matchs SET resultat_victoire = ?, resultat_sets = ? WHERE id = ?')
         ->execute([$victoire, $sets, $matchId]);
 
     log_activite($pdo, 'modification', 'pronostics',
-        'Résultat saisi : VBO vs ' . $match['adversaire'] . ' → ' . ($victoire ? 'Victoire' : 'Défaite') . ' ' . $sets);
+        ($estCorrection ? 'Résultat corrigé' : 'Résultat saisi') . ' : VBO vs ' . $match['adversaire'] . ' → ' . ($victoire ? 'Victoire' : 'Défaite') . ' ' . $sets);
     echo json_encode(['success' => true]);
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'error' => 'Erreur serveur']);

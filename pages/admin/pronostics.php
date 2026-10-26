@@ -32,6 +32,9 @@ function match_titre(string $adversaire, int $domicile): string {
     $adv = htmlspecialchars($adversaire);
     return $domicile ? 'VBO vs ' . $adv : $adv . ' vs VBO';
 }
+
+$setsWin  = ['3-0', '3-1', '3-2'];
+$setsLose = ['0-3', '1-3', '2-3'];
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -194,16 +197,46 @@ function match_titre(string $adversaire, int $domicile): string {
         <?php if (empty($termines)): ?>
             <p class="prono-empty">Aucun match terminé.</p>
         <?php else: foreach ($termines as $m): ?>
-        <div class="admin-match-item admin-match-item--inline prono-card--closed">
-            <span class="admin-match-title"><?= match_titre($m['adversaire'], (int)$m['domicile']) ?></span>
-            <span class="admin-match-meta-inline">
-                <?= fmt_date($m['date_match']) ?>
-                <?php if ($m['competition']): ?> · <?= htmlspecialchars($m['competition']) ?><?php endif; ?>
-                · <?= $m['nb_votes'] ?> pronostic<?= $m['nb_votes'] > 1 ? 's' : '' ?>
-            </span>
-            <span class="prono-result-badge <?= $m['resultat_victoire'] ? 'prono-result-badge--win' : 'prono-result-badge--lose' ?>">
-                <?= $m['resultat_victoire'] ? 'Victoire' : 'Défaite' ?> <?= htmlspecialchars($m['resultat_sets'] ?? '') ?>
-            </span>
+        <div class="admin-match-item prono-card--closed" id="admin-match-<?= $m['id'] ?>" style="flex-direction:column;align-items:stretch">
+            <div class="admin-match-item--inline" style="display:flex">
+                <span class="admin-match-title"><?= match_titre($m['adversaire'], (int)$m['domicile']) ?></span>
+                <span class="admin-match-meta-inline">
+                    <?= fmt_date($m['date_match']) ?>
+                    <?php if ($m['competition']): ?> · <?= htmlspecialchars($m['competition']) ?><?php endif; ?>
+                    · <?= $m['nb_votes'] ?> pronostic<?= $m['nb_votes'] > 1 ? 's' : '' ?>
+                </span>
+                <span class="prono-result-badge <?= $m['resultat_victoire'] ? 'prono-result-badge--win' : 'prono-result-badge--lose' ?>">
+                    <?= $m['resultat_victoire'] ? 'Victoire' : 'Défaite' ?> <?= htmlspecialchars($m['resultat_sets'] ?? '') ?>
+                </span>
+                <button class="btn-sm btn-sm--edit" onclick="toggleResultForm(<?= $m['id'] ?>)">✏️ Modifier</button>
+            </div>
+            <div class="result-form-inline" id="result-form-<?= $m['id'] ?>">
+                <p class="result-form-inline-title" style="color:var(--secondary-color)">✏️ Corriger le résultat officiel</p>
+                <div class="result-form-fields">
+                    <div class="result-form-group">
+                        <label for="rv-<?= $m['id'] ?>">Résultat</label>
+                        <select id="rv-<?= $m['id'] ?>" onchange="updateSetsOpts(<?= $m['id'] ?>)">
+                            <option value="">-- Choisir --</option>
+                            <option value="1" <?= $m['resultat_victoire'] ? 'selected' : '' ?>>✅ Victoire</option>
+                            <option value="0" <?= !$m['resultat_victoire'] ? 'selected' : '' ?>>❌ Défaite</option>
+                        </select>
+                    </div>
+                    <div class="result-form-group">
+                        <label for="rs-<?= $m['id'] ?>">Score en sets</label>
+                        <select id="rs-<?= $m['id'] ?>">
+                            <?php foreach (($m['resultat_victoire'] ? $setsWin : $setsLose) as $opt): ?>
+                            <option value="<?= $opt ?>" <?= $opt === $m['resultat_sets'] ? 'selected' : '' ?>><?= $opt ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="result-form-footer">
+                    <button class="btn-sm btn-sm--result" onclick="correctResult(<?= $m['id'] ?>)">✓ Enregistrer la correction</button>
+                    <button class="btn-sm" style="background:#f0f0f0;color:#666" onclick="toggleResultForm(<?= $m['id'] ?>)">Annuler</button>
+                    <span class="result-err" id="result-err-<?= $m['id'] ?>"></span>
+                </div>
+                <p style="margin:0;font-size:0.75rem;color:#999">La correction recalcule automatiquement les points des pronostics déjà joués sur ce match.</p>
+            </div>
         </div>
         <?php endforeach; endif; ?>
 
@@ -358,6 +391,14 @@ function match_titre(string $adversaire, int $domicile): string {
             } else {
                 err.textContent = data.error || 'Erreur';
             }
+        }
+
+        // Correction d'un résultat déjà validé (match dans "Terminés") : même
+        // endpoint que la saisie initiale, avec une confirmation en plus puisque
+        // ça modifie rétroactivement le classement des pronostics.
+        async function correctResult(id) {
+            if (!confirm('Corriger ce résultat ? Les points des pronostics déjà joués sur ce match seront recalculés.')) return;
+            await setResult(id);
         }
     </script>
 </body>
