@@ -21,6 +21,7 @@ function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8')
 $adresse1     = gs_param($pdo, 'club_adresse_ligne1', '34 Allée des Bleuets');
 $adresse2     = gs_param($pdo, 'club_adresse_ligne2', '83 190 Ollioules');
 $email        = gs_param($pdo, 'club_email',          'dimitrigarrigues@gmail.com');
+$emailRemb    = gs_param($pdo, 'email_remboursement_notif', '');
 $logoClub     = gs_param($pdo, 'logo_club',           'images/logo-club/LogoVBO.png');
 $logoMenu     = gs_param($pdo, 'logo_menu',           'images/logo-club/Logo-VBO-blanc.png');
 $logoFavicon  = gs_param($pdo, 'logo_favicon',        'images/favicon-36x36.png');
@@ -39,9 +40,9 @@ try {
                 GROUP_CONCAT(DISTINCT distance_declaree ORDER BY created_at DESC SEPARATOR ', ') AS distances,
                 GROUP_CONCAT(DISTINCT demandeur ORDER BY created_at DESC SEPARATOR ', ') AS demandeurs,
                 MAX(created_at) AS derniere_demande
-         FROM remboursement_villes_attente
-         GROUP BY nom
-         ORDER BY derniere_demande DESC"
+        FROM remboursement_villes_attente
+        GROUP BY nom
+        ORDER BY derniere_demande DESC"
     )->fetchAll();
     // Distance déclarée la plus récente, pour pré-remplir le formulaire d'ajout
     // (le GROUP_CONCAT ci-dessus est déjà trié de la plus récente à la plus ancienne).
@@ -129,12 +130,12 @@ try {
                     <div class="form-group">
                         <label for="club_adresse_ligne1">Adresse (ligne 1)</label>
                         <input type="text" id="club_adresse_ligne1" name="club_adresse_ligne1"
-                               value="<?= h($adresse1) ?>" placeholder="34 Allée des Bleuets">
+                                value="<?= h($adresse1) ?>" placeholder="34 Allée des Bleuets">
                     </div>
                     <div class="form-group">
                         <label for="club_adresse_ligne2">Adresse (ligne 2)</label>
                         <input type="text" id="club_adresse_ligne2" name="club_adresse_ligne2"
-                               value="<?= h($adresse2) ?>" placeholder="83 190 Ollioules">
+                                value="<?= h($adresse2) ?>" placeholder="83 190 Ollioules">
                     </div>
                 </div>
                 <div class="gs-form-footer">
@@ -146,13 +147,20 @@ try {
         <!-- ── Email de contact ── -->
         <div class="admin-card">
             <h2>Email de contact</h2>
-            <p class="gs-desc">Les messages envoyés via le formulaire de contact seront transmis à cette adresse.</p>
             <form class="admin-form gs-form" data-section="email">
                 <div class="form-row">
                     <div class="form-group gs-email-group">
-                        <label for="club_email">Adresse email de réception</label>
+                        <label for="club_email">Adresse email de réception, formulaire de contact</label>
                         <input type="email" id="club_email" name="club_email"
                                 value="<?= h($email) ?>" placeholder="contact@votreclub.fr">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group gs-email-group">
+                        <label for="email_remboursement_notif">Adresse email pour les demandes de remboursement</label>
+                        <input type="email" id="email_remboursement_notif" name="email_remboursement_notif"
+                                value="<?= h($emailRemb) ?>" placeholder="<?= h($email) ?>">
+                        <p class="gs-desc gs-desc--sub">Laisser vide pour utiliser l'adresse email de réception ci-dessus.</p>
                     </div>
                 </div>
                 <div class="gs-form-footer">
@@ -279,6 +287,8 @@ try {
                 <div class="gs-tech-item">
                     <span class="gs-tech-label">Base de données</span>
                     <span class="gs-tech-value">MySQL · phpMyAdmin disponible sur le panneau OVH</span>
+                    <a href="https://phpmyadmin-gra.hosting.ovh.net/?pma_username=volleykdimitri&pma_servername=volleykdimitri.mysql.db"
+                       target="_blank" rel="noopener" class="gs-tech-btn">🔗 Ouvrir phpMyAdmin</a>
                 </div>
                 <div class="gs-tech-item">
                     <span class="gs-tech-label">Accès FTP</span>

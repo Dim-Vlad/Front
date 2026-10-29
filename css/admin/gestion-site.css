@@ -161,6 +161,12 @@
     font-size: 0.82rem;
 }
 
+/* Sous un champ de saisie (plutôt qu'un titre), l'espacement négatif de
+   .gs-desc--sub colle le texte au champ : on le repousse un peu ici. */
+.form-group input + .gs-desc--sub {
+    margin-top: 0.5rem;
+}
+
 .gs-divider {
     border: none;
     border-top: 1px solid #e5e9e5;
@@ -400,6 +406,25 @@
 }
 .gs-tech-link:hover {
     text-decoration: underline;
+}
+
+.gs-tech-btn {
+    margin-left: auto;
+    flex-shrink: 0;
+    background: #eef4ee;
+    color: var(--secondary-color);
+    border: 1.5px solid #cfe0cf;
+    border-radius: 20px;
+    padding: 0.35rem 0.9rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background .15s, border-color .15s;
+}
+.gs-tech-btn:hover {
+    background: #e0ede0;
+    border-color: var(--secondary-color);
 }
 
 .gs-tech-notice {
