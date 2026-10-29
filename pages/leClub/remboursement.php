@@ -59,6 +59,10 @@ $tarifKm  = $rowTarif ? (float)$rowTarif['valeur'] : 0.14;
                     <span class="remb-rule-num">2</span>
                     <p>Les demandes doivent être soumises dans un délai de <strong>15 jours</strong> après la date de la dépense.</p>
                 </div>
+                <div class="remb-rule">
+                    <span class="remb-rule-num">3</span>
+                    <p>📷 Depuis un smartphone, vous pouvez directement sélectionner une photo de votre justificatif depuis votre galerie : elle sera <strong>automatiquement convertie en PDF</strong> avant l'envoi.</p>
+                </div>
             </div>
         </div>
 
@@ -110,6 +114,6 @@ $tarifKm  = $rowTarif ? (float)$rowTarif['valeur'] : 0.14;
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="/js/main.js?v=20260705"></script>
-    <script src="/js/leClub/remboursement.js?v=20261023"></script>
+    <script src="/js/leClub/remboursement.js?v=20261029"></script>
 </body>
 </html>

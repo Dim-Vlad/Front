@@ -162,6 +162,15 @@
     color: #888;
 }
 
+.remb-file-status {
+    margin: .3rem 0 0;
+    font-size: .8rem;
+    font-weight: 600;
+}
+.remb-file-status:empty { display: none; }
+.remb-file-status.success { color: var(--secondary-color); }
+.remb-file-status.error   { color: #c0392b; }
+
 .remb-lignes-hint {
     font-size: .85rem;
     color: #666;

@@ -61,6 +61,78 @@ function _rembRecalcTotal(i) {
     if (fileInput) fileInput.required = autresFrais > 0;
 }
 
+// Convertit une photo (JPEG/PNG…) en PDF via un <canvas> + jsPDF, pour que les
+// utilisateurs sur smartphone puissent joindre une photo prise depuis leur galerie :
+// le serveur n'accepte que du PDF (voir send_demande.php), donc la conversion doit
+// se faire ici, avant l'envoi.
+function _rembImageToPdf(file) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            try {
+                const maxDim = 1600;
+                const scale  = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+                const w = Math.round(img.naturalWidth * scale);
+                const h = Math.round(img.naturalHeight * scale);
+                const canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, w, h);
+                ctx.drawImage(img, 0, 0, w, h);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: w >= h ? 'landscape' : 'portrait', unit: 'mm', format: 'a4' });
+                const pageW = doc.internal.pageSize.getWidth();
+                const pageH = doc.internal.pageSize.getHeight();
+                const margin = 10;
+                const ratio  = Math.min((pageW - margin * 2) / w, (pageH - margin * 2) / h);
+                const drawW  = w * ratio;
+                const drawH  = h * ratio;
+                doc.addImage(dataUrl, 'JPEG', (pageW - drawW) / 2, (pageH - drawH) / 2, drawW, drawH);
+
+                const name = (file.name || 'photo').replace(/\.[^.]+$/, '') + '.pdf';
+                resolve(new File([doc.output('blob')], name, { type: 'application/pdf' }));
+            } catch (err) {
+                reject(err);
+            } finally {
+                URL.revokeObjectURL(img.src);
+            }
+        };
+        img.onerror = reject;
+        img.src = URL.createObjectURL(file);
+    });
+}
+
+// Déclenché à la sélection d'un justificatif : si c'est une photo, la convertit en
+// PDF puis remplace le contenu de l'<input type="file"> (via DataTransfer, le seul
+// moyen d'assigner des fichiers à un input natif) pour que l'envoi se comporte
+// exactement comme si un PDF avait été choisi directement.
+async function _rembHandleJustificatifChange(i) {
+    const input  = document.querySelector(`input[name="ligne_${i}_justificatif"]`);
+    const status = document.getElementById(`remb-file-status-${i}`);
+    const file   = input.files[0];
+
+    if (status) { status.textContent = ''; status.className = 'remb-file-status'; }
+    if (!file || !file.type.startsWith('image/')) return;
+
+    if (status) { status.textContent = '⏳ Conversion de la photo en PDF…'; status.className = 'remb-file-status'; }
+    input.disabled = true;
+    try {
+        const pdfFile = await _rembImageToPdf(file);
+        const dt = new DataTransfer();
+        dt.items.add(pdfFile);
+        input.files = dt.files;
+        if (status) { status.textContent = `✓ Photo convertie en PDF (${pdfFile.name})`; status.className = 'remb-file-status success'; }
+    } catch {
+        input.value = '';
+        if (status) { status.textContent = 'Erreur lors de la conversion de la photo. Réessayez ou joignez directement un PDF.'; status.className = 'remb-file-status error'; }
+    } finally {
+        input.disabled = false;
+    }
+}
+
 function _rembTeamOptions() {
     let html = '<option value="" disabled selected>Choisissez une équipe</option>';
     if (REMB_EQUIPES_SENIORS.length) {
@@ -125,9 +197,11 @@ function addLigne(type) {
         </div>
         <div class="remb-ligne-row">
             <div class="form-group">
-                <label>Justificatif (PDF)</label>
-                <input type="file" name="ligne_${i}_justificatif" accept="application/pdf">
+                <label>Justificatif (PDF ou photo)</label>
+                <input type="file" name="ligne_${i}_justificatif" accept="application/pdf,image/*" onchange="_rembHandleJustificatifChange(${i})">
                 <p class="remb-field-hint">Obligatoire uniquement si vous avez renseigné d'autres frais (péages, etc.) ci-dessus.</p>
+                <p class="remb-field-hint">📷 Une photo sélectionnée depuis la galerie est automatiquement convertie en PDF.</p>
+                <p class="remb-file-status" id="remb-file-status-${i}"></p>
             </div>
         </div>`;
 
@@ -154,8 +228,10 @@ function addLigne(type) {
         </div>
         <div class="remb-ligne-row">
             <div class="form-group">
-                <label>Justificatif (PDF)</label>
-                <input type="file" name="ligne_${i}_justificatif" accept="application/pdf" required>
+                <label>Justificatif (PDF ou photo)</label>
+                <input type="file" name="ligne_${i}_justificatif" accept="application/pdf,image/*" required onchange="_rembHandleJustificatifChange(${i})">
+                <p class="remb-field-hint">📷 Une photo sélectionnée depuis la galerie est automatiquement convertie en PDF.</p>
+                <p class="remb-file-status" id="remb-file-status-${i}"></p>
             </div>
         </div>`;
 
