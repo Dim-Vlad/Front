@@ -123,6 +123,19 @@ body {
     background: #0d47a1;
     transform: translateY(-1px);
 }
+.vc-section .vc-btn-dl + .vc-btn-dl {
+    margin-top: 10px;
+}
+.vc-btn-dl--outline {
+    background: linear-gradient(135deg, #ff7a30, #ea580c);
+    color: #fff;
+    border: none;
+    box-shadow: 0 6px 16px rgba(234, 88, 12, .35);
+}
+.vc-btn-dl--outline:hover {
+    background: linear-gradient(135deg, #ff8a45, #d94f0a);
+    box-shadow: 0 8px 20px rgba(234, 88, 12, .45);
+}
 
 /* ── Social links ── */
 .vc-section-title {
