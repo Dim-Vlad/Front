@@ -4,6 +4,8 @@ ob_start();
  * Purge des journaux RGPD
  * - journal_connexions : suppression des entrées > 90 jours
  * - journal_activites  : suppression des entrées > 365 jours
+ * - analytics_visites  : suppression des entrées > 13 mois (durée recommandée
+ *   par la CNIL pour les mesures d'audience)
  *
  * Utilisation HTTP (admin uniquement) : GET /php/rgpd/purge_logs.php
  * Utilisation CLI (CRON OVH)         : php purge_logs.php
@@ -63,6 +65,15 @@ try {
     $s2->execute();
     $n2 = $s2->rowCount();
 
+    // Statistiques de fréquentation : rétention 13 mois
+    try {
+        $s3 = $pdo->prepare("DELETE FROM analytics_visites WHERE created_at < DATE_SUB(NOW(), INTERVAL 13 MONTH)");
+        $s3->execute();
+        $n3 = $s3->rowCount();
+    } catch (PDOException $e) {
+        $n3 = 0; // table pas encore créée (migration _local/migration_analytics.sql non appliquée)
+    }
+
     // Mémorisation de la date de dernière purge
     $now = date('Y-m-d H:i:s');
     $pdo->prepare("INSERT INTO parametres (cle, valeur) VALUES ('derniere_purge_logs', ?) ON DUPLICATE KEY UPDATE valeur = ?")
@@ -70,16 +81,24 @@ try {
 
     if ($isCli) {
         echo '[purge_logs] Terminé — journal_connexions : ' . $n1 . ' ligne(s) supprimée(s)'
-            . ', journal_activites : ' . $n2 . ' ligne(s) supprimée(s)' . PHP_EOL;
+            . ', journal_activites : ' . $n2 . ' ligne(s) supprimée(s)'
+            . ', analytics_visites : ' . $n3 . ' ligne(s) supprimée(s)' . PHP_EOL;
     } else {
         $r1 = (int)$pdo->query('SELECT COUNT(*) FROM journal_connexions')->fetchColumn();
         $r2 = (int)$pdo->query('SELECT COUNT(*) FROM journal_activites')->fetchColumn();
+        try {
+            $r3 = (int)$pdo->query('SELECT COUNT(*) FROM analytics_visites')->fetchColumn();
+        } catch (PDOException $e) {
+            $r3 = 0;
+        }
         ob_end_clean(); echo json_encode([
             'success'                => true,
             'connexions_supprimees'  => $n1,
             'activites_supprimees'   => $n2,
+            'visites_supprimees'     => $n3,
             'connexions_restantes'   => $r1,
             'activites_restantes'    => $r2,
+            'visites_restantes'      => $r3,
             'date_purge'             => $now,
         ]);
     }

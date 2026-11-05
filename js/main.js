@@ -499,6 +499,29 @@ function _pwaHideInstallBtn() {
     document.getElementById('pwa-install-btn')?.remove();
 }
 
+/* ── Suivi de fréquentation interne ──────────────────────────────── */
+
+function trackPageview() {
+    let sessionId;
+    try {
+        sessionId = sessionStorage.getItem('vbo_session_id');
+        if (!sessionId) {
+            sessionId = (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random()).replace(/-/g, '');
+            sessionStorage.setItem('vbo_session_id', sessionId);
+        }
+        const pagePrecedente = sessionStorage.getItem('vbo_last_page') || '';
+        sessionStorage.setItem('vbo_last_page', location.pathname);
+
+        const fd = new FormData();
+        fd.append('session_id', sessionId);
+        fd.append('url', location.pathname);
+        fd.append('page_precedente', pagePrecedente);
+        fetch('/php/analytics/track.php', { method: 'POST', body: fd, keepalive: true }).catch(() => {});
+    } catch {
+        /* sessionStorage indisponible (navigation privée…) : on n'enregistre pas la visite */
+    }
+}
+
 /* ── Initialisation ──────────────────────────────────────────────── */
 
 fetchLogoActif();
@@ -507,3 +530,4 @@ loadHTML('/commun/footer.php', 'footer');
 if (document.getElementById('pdf-modal-slot')) {
     loadHTML('/commun/pdf-modal.html', 'pdf-modal-slot');
 }
+trackPageview();

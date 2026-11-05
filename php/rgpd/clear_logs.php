@@ -21,6 +21,11 @@ try {
     $pdo = get_pdo();
     $pdo->exec('DELETE FROM journal_connexions');
     $pdo->exec('DELETE FROM journal_activites');
+    try {
+        $pdo->exec('DELETE FROM analytics_visites');
+    } catch (PDOException $e) {
+        // table pas encore créée (migration _local/migration_analytics.sql non appliquée)
+    }
 
     $now = date('Y-m-d H:i:s');
     $pdo->prepare("INSERT INTO parametres (cle, valeur) VALUES ('dernier_vidage_logs', ?) ON DUPLICATE KEY UPDATE valeur = ?")
@@ -30,6 +35,7 @@ try {
         'success'              => true,
         'connexions_restantes' => 0,
         'activites_restantes'  => 0,
+        'visites_restantes'    => 0,
         'date_vidage'          => $now,
     ]);
 } catch (Exception $e) {

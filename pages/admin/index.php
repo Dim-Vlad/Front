@@ -14,6 +14,11 @@ $dernierVidage  = $pdo->query("SELECT valeur FROM parametres WHERE cle = 'dernie
 
 $nbConnexions = (int)$pdo->query('SELECT COUNT(*) FROM journal_connexions')->fetchColumn();
 $nbActivites  = (int)$pdo->query('SELECT COUNT(*) FROM journal_activites')->fetchColumn();
+try {
+    $nbVisites = (int)$pdo->query('SELECT COUNT(*) FROM analytics_visites')->fetchColumn();
+} catch (PDOException $e) {
+    $nbVisites = 0; // table pas encore créée (migration _local/migration_analytics.sql non appliquée)
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -144,6 +149,12 @@ $nbActivites  = (int)$pdo->query('SELECT COUNT(*) FROM journal_activites')->fetc
                     <p>Rédiger une édition et l'envoyer aux adhérents abonnés.</p>
                 </a>
 
+                <a href="/pages/admin/statistiques.php" class="dashboard-card card-admin">
+                    <div class="card-icon">📊</div>
+                    <h2>Statistiques du site</h2>
+                    <p>Visites, pages vues, navigateurs, pays et parcours des visiteurs.</p>
+                </a>
+
             </div>
         </div>
 
@@ -159,6 +170,10 @@ $nbActivites  = (int)$pdo->query('SELECT COUNT(*) FROM journal_activites')->fetc
                     <div class="rgpd-row">
                         <span class="rgpd-label">Journal des activités</span>
                         <span class="rgpd-meta">Rétention <strong>365 jours</strong> · <span id="rgpd-nb-activites"><?= $nbActivites ?> entrée<?= $nbActivites > 1 ? 's' : '' ?></span></span>
+                    </div>
+                    <div class="rgpd-row">
+                        <span class="rgpd-label">Statistiques de fréquentation</span>
+                        <span class="rgpd-meta">Rétention <strong>13 mois</strong> · <span id="rgpd-nb-visites"><?= $nbVisites ?> entrée<?= $nbVisites > 1 ? 's' : '' ?></span></span>
                     </div>
                     <div class="rgpd-row">
                         <span class="rgpd-label">Dernière purge RGPD</span>
@@ -215,6 +230,7 @@ $nbActivites  = (int)$pdo->query('SELECT COUNT(*) FROM journal_activites')->fetc
                 status.className   = 'purge-status purge-ok';
                 document.getElementById('rgpd-nb-connexions').textContent = '0 entrée';
                 document.getElementById('rgpd-nb-activites').textContent  = '0 entrée';
+                document.getElementById('rgpd-nb-visites').textContent    = '0 entrée';
                 if (data.date_vidage) {
                     const d = new Date(data.date_vidage.replace(' ', 'T'));
                     document.getElementById('rgpd-last-vidage').textContent =
@@ -235,7 +251,7 @@ $nbActivites  = (int)$pdo->query('SELECT COUNT(*) FROM journal_activites')->fetc
     }
 
     async function purgerLogs() {
-        if (!confirm('Supprimer les entrées anciennes ?\n\n• Connexions de plus de 90 jours\n• Activités de plus de 365 jours')) return;
+        if (!confirm('Supprimer les entrées anciennes ?\n\n• Connexions de plus de 90 jours\n• Activités de plus de 365 jours\n• Statistiques de fréquentation de plus de 13 mois')) return;
         const btn    = document.getElementById('btn-purge');
         const status = document.getElementById('purge-status');
         btn.disabled     = true;
@@ -251,11 +267,12 @@ $nbActivites  = (int)$pdo->query('SELECT COUNT(*) FROM journal_activites')->fetc
             });
             const data = await res.json();
             if (data.success) {
-                status.textContent = '✅ ' + data.connexions_supprimees + ' connexion(s) et ' + data.activites_supprimees + ' activité(s) supprimée(s).';
+                status.textContent = '✅ ' + data.connexions_supprimees + ' connexion(s), ' + data.activites_supprimees + ' activité(s) et ' + data.visites_supprimees + ' statistique(s) de fréquentation supprimée(s).';
                 status.className   = 'purge-status purge-ok';
                 const fmt = n => n + ' entrée' + (n > 1 ? 's' : '');
                 document.getElementById('rgpd-nb-connexions').textContent = fmt(data.connexions_restantes);
                 document.getElementById('rgpd-nb-activites').textContent  = fmt(data.activites_restantes);
+                document.getElementById('rgpd-nb-visites').textContent    = fmt(data.visites_restantes);
                 if (data.date_purge) {
                     const d = new Date(data.date_purge.replace(' ', 'T'));
                     document.getElementById('rgpd-last-purge').textContent =
