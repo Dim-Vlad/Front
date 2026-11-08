@@ -1,0 +1,5 @@
+# Empêche l'accès direct au prototype de développement (données fictives),
+# qui n'a pas vocation à être public une fois l'app déployée.
+<Files "prototype.html">
+  Require all denied
+</Files>

@@ -6,6 +6,10 @@ php/config.php
 tournoi/api/config.php
 _local
 
+# Dépôt source original de l'app Tournoi (contient son propre .git) —
+# la version intégrée et déployée est dans tournoi/, celle-ci est redondante.
+app-tournoi/
+
 # Scripts temporaires
 php/create_user.php
 
