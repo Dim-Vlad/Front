@@ -3,6 +3,7 @@
 
 # Credentials BDD — ne jamais committer
 php/config.php
+tournoi/api/config.php
 _local
 
 # Scripts temporaires
