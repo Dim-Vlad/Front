@@ -187,6 +187,15 @@ input,select{font-family:inherit;font-size:15px}
 .gymhead .dot{width:10px;height:10px;border-radius:50%;flex:none}
 .gymhead h3{font-size:15px}
 .gymhead .count{margin-left:auto;font-size:12px;color:var(--muted);font-weight:700}
+/* Planning : le tour déplié est mis dans un cadre pour bien le distinguer des
+   tours repliés au-dessus/en-dessous (couleur du cadre = statut du tour). */
+.round{margin:18px 0 10px}
+.round .gymhead{margin:0}
+/* Ligne de séparation entre deux tours repliés consécutifs (les tours ouverts
+   ont déjà leur propre cadre, donc pas besoin de ligne en plus autour d'eux). */
+.round:not(.open)+.round:not(.open){border-top:1px solid var(--line);padding-top:12px}
+.round.open{border:2px solid var(--round-col,var(--brand));border-radius:16px;background:var(--round-bg,var(--brand-soft));padding:12px 12px 14px;margin:18px 0 14px}
+.round.open .gymhead{margin:0 0 10px}
 .gymblock{border:1px solid var(--line);border-left:5px solid var(--gc,var(--brand));border-radius:16px;padding:12px 12px 14px;margin-top:16px;background:color-mix(in srgb, var(--gc,var(--brand)) 7%, var(--surface))}
 .gymblock .gymhead{margin:2px 2px 12px}
 .gymblock .badge-gym{display:inline-flex;align-items:center;gap:7px;background:var(--gc,var(--brand));color:#fff;padding:5px 12px;border-radius:999px;font-weight:800;font-size:13.5px;font-family:var(--font-display);letter-spacing:-.01em}
@@ -218,8 +227,13 @@ input,select{font-family:inherit;font-size:15px}
 .rk.top{background:var(--ok-soft);color:var(--ok)}
 
 /* Match card */
-.match{border:1px solid var(--line);border-radius:14px;padding:13px;display:flex;flex-direction:column;gap:10px;background:var(--surface)}
+.match{border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;padding:13px;display:flex;flex-direction:column;gap:10px;background:var(--surface)}
 .match+.match{margin-top:10px}
+/* Planning : distinguer d'un coup d'œil à venir / en cours / terminé (au-delà du badge,
+   trop proche visuellement entre "brand" et "ok"). */
+.match.upcoming{border-left-color:var(--brand)}
+.match.live{border-left-color:var(--warn);background:var(--warn-soft)}
+.match.done{border-left-color:var(--ok);background:var(--surface-2);opacity:.74}
 /* Sections « Mes matchs » (capitaine) */
 .mm-sep{margin:24px 0 10px;padding-top:18px;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px;
   font-family:var(--font-display);font-weight:800;font-size:15.5px;letter-spacing:-.01em}
@@ -279,6 +293,19 @@ input,select{font-family:inherit;font-size:15px}
 .bm .r.win{background:var(--ok-soft)}
 .bm .r.win .nm{font-weight:800}
 .bm .r.win .sc b{color:var(--fg)}
+.bm.tap{cursor:pointer}
+.bm.tap .bmEdit{position:absolute;top:50%;right:9px;transform:translateY(-50%);font-size:13px;opacity:.55;pointer-events:none}
+.bm.tap .r{padding-right:28px}
+
+/* Podium */
+.podium{display:flex;align-items:flex-end;gap:8px;margin:16px 0 6px}
+.podium .pcard{flex:1;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:12px 6px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px}
+.podium .pcard .medal{font-size:22px;line-height:1}
+.podium .pcard .pname{font-weight:800;font-size:12.5px;line-height:1.25;word-break:break-word;min-height:2.6em;display:flex;align-items:center}
+.podium .pcard .prank{font-size:11px;color:var(--muted);font-weight:700}
+.podium .p1{padding-top:22px;padding-bottom:20px;background:var(--ok-soft);border-color:var(--ok)}
+.podium .p1 .pname{color:var(--ok-ink,var(--brand-ink))}
 .round:not(:last-child) .rmatch::after{content:'';position:absolute;top:50%;left:100%;width:calc(var(--bgap)/2);height:2px;margin-top:-1px;background:var(--line)}
 .round:not(:last-child) .rmatch::before{content:'';position:absolute;left:calc(100% + var(--bgap)/2);width:calc(var(--bgap)/2);border-left:2px solid var(--line)}
 .round:not(:last-child) .rmatch:nth-child(odd)::before{top:50%;bottom:0;border-bottom:2px solid var(--line)}
@@ -288,6 +315,9 @@ input,select{font-family:inherit;font-size:15px}
 .seg{display:flex;background:var(--surface-2);border-radius:12px;padding:4px;gap:4px;margin:6px 0 14px}
 .seg button{flex:1;border:none;background:none;padding:9px;border-radius:9px;font-weight:700;font-size:13px;color:var(--muted)}
 .seg button.on{background:var(--surface);color:var(--fg);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.seg-strong{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:5px;gap:5px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.seg-strong button{padding:11px 6px;font-size:13.5px;font-weight:800;border-radius:10px;border:1.5px solid transparent}
+.seg-strong button.on{background:var(--brand-soft);color:var(--brand-ink);border-color:var(--brand);box-shadow:0 2px 6px rgba(0,0,0,.1)}
 
 /* Phase flow */
 .phase{display:flex;gap:12px;align-items:flex-start}
@@ -299,7 +329,7 @@ input,select{font-family:inherit;font-size:15px}
 .phase .line{width:2px;background:var(--line);margin:4px auto 0;height:14px}
 
 /* Toast */
-.toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%) translateY(20px);z-index:60;
+.toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%) translateY(20px);z-index:90;
   background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-weight:600;font-size:13.5px;
   box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.25s;max-width:360px;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -446,8 +476,9 @@ window.api = (function(){
     setStatus:      (id,status,extra)=> call('tournaments.setStatus',  {body:Object.assign({id,status},extra||{})}),
     removeTournament:(id)=>            call('tournaments.remove',      {body:{id}}),
     saveStructure:  (tid,s)=>          call('tournaments.saveStructure',{body:{tid,s}}),
+    addPhase:       (tid,s)=>          call('tournaments.addPhase',    {body:{tid,s}}),
     loadStructure:  (tid)=>            call('tournaments.loadStructure',{query:{tid}}),
-    setMatchScore:  (id,sets)=>        call('matches.setScore',        {body:{id,sets}}),
+    setMatchScore:  (id,sets,complete)=> call('matches.setScore',       {body:{id,sets,complete}}),
     publicByCode:   (code)=>           call('tournaments.publicByCode', {query:{code}}),
     listReferents:  ()=>               call('referents.list'),
     createReferent: (name,email,password)=> call('referents.create',   {body:{name,email,password}}),
@@ -547,6 +578,12 @@ window.sb = { _ovh:true };
       if(!isUuid(tid)) throw new Error('Tournoi non encore enregistré.');
       return await api.saveStructure(tid, s);
     },
+    // Ajoute les poules/matchs d'une nouvelle phase (Principale/Consolante…) sans
+    // toucher à ce qui est déjà enregistré (contrairement à saveStructure).
+    async addPhase(tid, s){
+      if(!isUuid(tid)) throw new Error('Tournoi non encore enregistré.');
+      return await api.addPhase(tid, s);
+    },
     // Relit la structure persistée ; le serveur renvoie déjà les formes
     // attendues par l'app ({ pools, schedule }), ou null si rien n'est persisté.
     async loadStructure(tid){
@@ -554,9 +591,11 @@ window.sb = { _ovh:true };
       return await api.loadStructure(tid);
     },
     // Saisie manuelle d'un score (admin/référent) : `sets` = [[sa,sb], ...].
-    async setMatchScore(matchId, sets){
+    // `complete` indique si tous les sets du match sont saisis (sinon le match
+    // reste 'upcoming' : possibilité de valider le score set par set).
+    async setMatchScore(matchId, sets, complete){
       if(!isUuid(matchId)) throw new Error('Match non synchronisé — rouvrez le tournoi.');
-      return await api.setMatchScore(matchId, sets);
+      return await api.setMatchScore(matchId, sets, complete);
     },
   };
 })();
@@ -725,6 +764,13 @@ function fmtDate(iso,long){
   return long?`${d.getDate()} ${ml[d.getMonth()]} ${d.getFullYear()}`:`${d.getDate()} ${ms[d.getMonth()]}`;
 }
 function genJoinCode(){ const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<4;i++) s+=a[Math.floor(Math.random()*a.length)]; return 'VB-'+s; }
+// Évite qu'un nouveau tournoi hérite du code d'un tournoi déjà en cours (conflit
+// capitaines) : on retire tant que le code tombe sur un autre tournoi encore live.
+function genUniqueJoinCode(){
+  let code, guard=0;
+  do{ code=genJoinCode(); } while((state.tournaments||[]).some(x=>x.status==='live'&&x.joinCode===code) && guard++<20);
+  return code;
+}
 // URL de rejointe (QR + partage) : base réelle de l'app + code en ancre (#join=…), lisible sans serveur.
 function buildJoinUrl(code){
   let base='https://dim-vlad.github.io/app-tournoi-vbo/';
@@ -823,12 +869,18 @@ function slotTime(r){
   const t=(sh*60+sm)+(r-1)*per, h=Math.floor(t/60)%24, m=t%60;
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
 }
+// Sets effectivement joués (valeurs non nulles) : un match peut être saisi
+// set par set, donc `m.sets` peut contenir des sets non encore joués.
+function matchSetsPlayed(m){
+  const sets=(m.sets&&m.sets.length)?m.sets : (m.sa!=null?[[m.sa,m.sb]]:null);
+  return sets ? sets.filter(s=>s&&s[0]!=null&&s[1]!=null) : [];
+}
 // Affichage d'un score (1 set → ancienne mise en forme ; plusieurs sets → set par set)
 function scoreSC(m){
-  const sets=(m.sets&&m.sets.length)?m.sets : (m.sa!=null?[[m.sa,m.sb]]:null);
-  if(!sets) return `<span class="vs">vs</span>`;
-  if(sets.length===1) return `<span>${sets[0][0]??'–'}</span><span class="vs">–</span><span>${sets[0][1]??'–'}</span>`;
-  return `<span style="font-variant-numeric:tabular-nums;font-weight:800;font-size:12.5px;white-space:nowrap">${sets.map(([a,b])=>`${a}-${b}`).join(' · ')}</span>`;
+  const played=matchSetsPlayed(m);
+  if(!played.length) return `<span class="vs">vs</span>`;
+  if(played.length===1) return `<span>${played[0][0]}</span><span class="vs">–</span><span>${played[0][1]}</span>`;
+  return `<span style="font-variant-numeric:tabular-nums;font-weight:800;font-size:12.5px;white-space:nowrap">${played.map(([a,b])=>`${a}-${b}`).join(' · ')}</span>`;
 }
 // Vainqueur d'un match (jamais de nul au volley) : d'abord les sets gagnés,
 // puis, si le nombre de sets est pair et qu'on est à égalité de sets, le total de points.
@@ -1005,6 +1057,107 @@ function buildPhase2(){
 }
 function ensurePhases(){ if(!state.phasePrincipal||!state.phaseConsolante) buildPhase2(); }
 function phaseData(key){ ensurePhases(); return key==='principal'?state.phasePrincipal : key==='consolante'?state.phaseConsolante : {pools:state.pools, schedule:state.schedule}; }
+// Bracket (phase finale) persisté pour une catégorie — vide tant que le 1er tour
+// n'a pas été généré par confirmPhaseSwitch().
+function bracketData(key){ return key==='consolante' ? (state.bracketConsolante||{pools:[],schedule:[]}) : (state.bracketPrincipal||{pools:[],schedule:[]}); }
+// Match de la 3e place (perdants des demi-finales) — mini-phase indépendante du
+// tableau principal, un seul match, voir advanceBracketIfRoundDone().
+function bracketData3e(key){ return key==='consolante' ? (state.bracketConsolante3e||{pools:[],schedule:[]}) : (state.bracketPrincipal3e||{pools:[],schedule:[]}); }
+// Cherche un match par id dans TOUTES les phases (pas seulement le brassage) :
+// nécessaire pour la saisie de score admin une fois la phase 2 ou le bracket lancés.
+function findMatchById(id){
+  ensurePhases();
+  return (state.schedule||[]).find(x=>x.id===id)
+    || (state.phasePrincipal.schedule||[]).find(x=>x.id===id)
+    || (state.phaseConsolante.schedule||[]).find(x=>x.id===id)
+    || ((state.bracketPrincipal&&state.bracketPrincipal.schedule)||[]).find(x=>x.id===id)
+    || ((state.bracketConsolante&&state.bracketConsolante.schedule)||[]).find(x=>x.id===id)
+    || ((state.bracketPrincipal3e&&state.bracketPrincipal3e.schedule)||[]).find(x=>x.id===id)
+    || ((state.bracketConsolante3e&&state.bracketConsolante3e.schedule)||[]).find(x=>x.id===id);
+}
+// Construit le payload {gyms,pools,matches} d'UNE phase (principal/consolante) pour
+// tournaments.addPhase — même forme que la structure de brassage envoyée par
+// launchTournament(), mais sans `teams` (déjà créées en base, réutilisées par nom).
+function buildPhaseStructure(phaseKey, cat){
+  const gymNames=[...new Set((cat.pools||[]).map(p=>gymName(p.gym)))];
+  return {
+    gyms: gymNames.map(name=>({ name, position: Math.max(0, GYMS.findIndex(g=>gymName(g.id)===name)) })),
+    pools: (cat.pools||[]).map(p=>({ letter:p.letter, phase:phaseKey, gymName:gymName(p.gym), court:p.court, teamKeys:p.teams.map(x=>x.t) })),
+    matches: (cat.schedule||[]).map(m=>({ round:m.r, time:m.time, phase:phaseKey, poolKey:m.pool, gymName:m.gym, court:m.court, aKey:m.a, bKey:m.b, refKey:m.ref })),
+  };
+}
+// Répartit une structure rechargée (pools+matchs de TOUTES les phases, fusionnés par
+// le serveur) dans les bons buckets d'état selon le champ `phase` — brassage dans
+// state.pools/schedule, phase 2 dans phasePrincipal/phaseConsolante (avec leurs vrais
+// id de match, nécessaires pour la saisie de score).
+function applyLoadedStructure(fresh){
+  if(!fresh || !fresh.schedule || !fresh.schedule.length) return false;
+  const pools=fresh.pools||[], sched=fresh.schedule;
+  const byPhase=ph=>({ pools: pools.filter(p=>(p.phase||'brassage')===ph), schedule: sched.filter(m=>(m.phase||'brassage')===ph) });
+  const bra=byPhase('brassage');
+  if(bra.pools.length) state.pools=bra.pools;
+  if(bra.schedule.length) state.schedule=bra.schedule;
+  state.phasePrincipal=byPhase('principal');
+  state.phaseConsolante=byPhase('consolante');
+  state.bracketPrincipal=byPhase('finalesPrincipal');
+  state.bracketConsolante=byPhase('finalesConsolante');
+  state.bracketPrincipal3e=byPhase('finalesPrincipal3e');
+  state.bracketConsolante3e=byPhase('finalesConsolante3e');
+  return true;
+}
+// Construit le payload {gyms,pools,matches} d'UN tour du bracket (phase finale) pour
+// tournaments.addPhase. Pas de poule ici (duels directs) ; `court` est réutilisé comme
+// simple position dans le tour (et non un vrai terrain) pour pouvoir réassembler les
+// vainqueurs dans le bon ordre au tour suivant — l'ordre renvoyé par SQL n'est pas fiable.
+function buildBracketMatches(phaseKey, round, pairs){
+  // Filtre les paires incomplètes : buildBracket() impose un minimum de 2 têtes de
+  // série même quand le classement n'en fournit pas assez (ex: Consolante avec trop
+  // peu de qualifiés) — on ne veut pas persister un match fantôme sans équipes.
+  const valid=(pairs||[]).filter(([a,b])=>a&&b);
+  return { gyms:[], pools:[], matches: valid.map(([a,b],i)=>({ round, time:null, phase:phaseKey, poolKey:null, gymName:null, court:i+1, aKey:a, bKey:b, refKey:null })) };
+}
+// Nom du tour affiché pour un match de bracket (ex: "1/4", "Finale"), déduit du nombre
+// de matchs du 1er tour déjà persisté pour cette catégorie.
+function bracketRoundLabel(m){
+  if(m.phase==='finalesPrincipal3e'||m.phase==='finalesConsolante3e') return 'Petite finale (3e place)';
+  const catKey = m.phase==='finalesConsolante' ? 'consolante' : 'principal';
+  const round1Count=(bracketData(catKey).schedule||[]).filter(x=>x.r===1).length || 1;
+  const K=Math.max(2, round1Count*2);
+  return roundNames(K)[(m.r||1)-1] || 'Phase finale';
+}
+// Une fois tous les matchs d'un tour du bracket saisis, génère et persiste
+// automatiquement le tour suivant (vainqueurs appariés dans l'ordre du tableau).
+// Quand ce tour était la demi-finale (2 matchs -> 1 seule finale ensuite), génère
+// aussi le match de la 3e place entre les 2 perdants, dans sa propre mini-phase
+// indépendante (sinon elle fausserait la détection de fin de tableau ci-dessus).
+async function advanceBracketIfRoundDone(phaseKey){
+  if(phaseKey==='finalesPrincipal3e'||phaseKey==='finalesConsolante3e') return; // match unique, terminal
+  const catKey = phaseKey==='finalesConsolante' ? 'consolante' : 'principal';
+  const sched=(bracketData(catKey).schedule||[]);
+  if(!sched.length) return;
+  const maxR=Math.max(...sched.map(m=>m.r||1));
+  const cur=sched.filter(m=>m.r===maxR).sort((a,b)=>(a.court||0)-(b.court||0));
+  if(cur.length<=1) return; // pas de tour, ou déjà la finale : rien à générer après
+  if(cur.some(m=>m.status!=='done')) return; // tour pas encore terminé
+  if(sched.some(m=>m.r===maxR+1)) return; // tour suivant déjà généré (ré-saisie d'un score)
+  const winners=cur.map(m=> matchWinner(m)==='a' ? m.a : m.b);
+  const pairs=[]; for(let i=0;i<winners.length;i+=2) pairs.push([winners[i], winners[i+1]]);
+  const structure=buildBracketMatches(phaseKey, maxR+1, pairs);
+  if(cur.length===2){
+    const phase3e = phaseKey==='finalesConsolante' ? 'finalesConsolante3e' : 'finalesPrincipal3e';
+    const already3e = (bracketData3e(catKey).schedule||[]).length>0;
+    if(!already3e){
+      const losers=cur.map(m=> matchWinner(m)==='a' ? m.b : m.a);
+      structure.matches.push(...buildBracketMatches(phase3e, 1, [[losers[0], losers[1]]]).matches);
+    }
+  }
+  const t=state.tournaments.find(x=>x.id===state.currentDraftId);
+  if(window.vboDb && t && vboDb.isUuid(t.id) && structure.matches.length){
+    await vboDb.addPhase(t.id, structure);
+    const fresh=await vboDb.loadStructure(t.id);
+    applyLoadedStructure(fresh);
+  }
+}
 // Bracket seedé depuis le classement global d'une catégorie (phase 2)
 function seedOrder(n){ let r=[0]; while(r.length<n){ const m=r.length*2; const nr=[]; r.forEach(s=>{nr.push(s);nr.push(m-1-s);}); r=nr; } return r; }
 function categoryRanking(cat){
@@ -1242,7 +1395,7 @@ screens.dashboard = ()=>{
       </div>
       <p class="eyebrow">Mes tournois</p>
       <h3 style="font-size:22px;margin:4px 0 14px">Espace organisateur</h3>
-      <div class="seg" style="margin-bottom:6px">
+      <div class="seg seg-strong" style="margin-bottom:6px">
         <button class="${view==='active'?'on':''}" onclick="setDashView('active')">Actifs</button>
         <button class="${view==='archived'?'on':''}" onclick="setDashView('archived')">Archivés${archived.length?` (${archived.length})`:''}</button>
       </div>
@@ -1282,15 +1435,17 @@ window.openTournament=async (id)=>{
   if(t.joinCode) state.joinCode=t.joinCode;
   state.currentDraftId=t.id;
   state.livePhase=t.livePhase||'brassage';
+  // Planning/Classements doivent s'ouvrir sur la phase réellement en cours, pas
+  // rester bloqués sur le brassage si ce tournoi a déjà avancé.
+  schedPhase = state.livePhase==='brassage' ? 'brassage' : 'principal'; schedGym='all';
+  standPhase = state.livePhase==='brassage' ? 'brassage' : 'principal'; standPool=null;
   rebuildPools();
   renderTabs('orgLive'); go('orgLive');
   // Source de vérité : structure persistée (identique sur tous les appareils).
   if(window.vboDb && vboDb.isUuid(t.id)){
     try{
       const struct=await vboDb.loadStructure(t.id);
-      if(struct && struct.schedule && struct.schedule.length){
-        if(struct.pools && struct.pools.length) state.pools=struct.pools;
-        state.schedule=struct.schedule;
+      if(applyLoadedStructure(struct)){
         state.loadedStructTid=t.id;
         const cur=navStack[navStack.length-1];
         if(cur && (cur.screen==='orgLive'||cur.screen==='myMatches')) render(cur.screen, cur.opts);
@@ -1346,10 +1501,13 @@ function resumeDraft(id){
 // Lancement : enregistre le tournoi dans la liste (statut « En cours ») puis génère le QR
 async function launchTournament(){
   saveWizard();
-  if(!state.joinCode) state.joinCode=genJoinCode();
   const snap=snapshotTournament();
   let t=state.tournaments.find(x=>x.id===state.currentDraftId);
   if(!t){ t={id:'t'+Date.now()}; state.tournaments.push(t); state.currentDraftId=t.id; }
+  // Code propre à CE tournoi : on réutilise le sien s'il en a déjà un (relance),
+  // sinon on en génère un nouveau — jamais celui, périmé, d'un autre tournoi déjà
+  // consulté dans cette session (state.joinCode est un global, pas par tournoi).
+  state.joinCode = t.joinCode || genUniqueJoinCode();
   state.livePhase='brassage';
   Object.assign(t, snap, {id:t.id, status:'live', archived:false, joinCode:state.joinCode, launchedAt:Date.now(), livePhase:'brassage'});
   if(window.vboDb){
@@ -1370,10 +1528,7 @@ async function launchTournament(){
           // Recharge immédiatement : récupère les id réels des matchs (nécessaires
           // pour la saisie de score admin/référent), comme le fait openTournament().
           const fresh=await vboDb.loadStructure(t.id);
-          if(fresh && fresh.schedule && fresh.schedule.length){
-            if(fresh.pools && fresh.pools.length) state.pools=fresh.pools;
-            state.schedule=fresh.schedule;
-          }
+          applyLoadedStructure(fresh);
           state.loadedStructTid=t.id;
         }
         catch(e){ console.warn('Persistance structure:', e); toast('⚠️ Structure non enregistrée (tournoi créé)'); }
@@ -1830,7 +1985,9 @@ screens.summary = ()=>{
 screens.qr = ()=>{
   tabbar.hidden=true;
   setTop('Tournoi lancé',{step:'✓', prog:createProgArr(7)});
-  if(!state.joinCode) state.joinCode=genJoinCode();   // code + QR générés automatiquement au lancement
+  // Filet de sécurité (normalement déjà généré par launchTournament) : on repart
+  // du code du tournoi courant, jamais d'un code global potentiellement périmé.
+  if(!state.joinCode){ const ct=state.tournaments.find(x=>x.id===state.currentDraftId); state.joinCode=(ct&&ct.joinCode)||genUniqueJoinCode(); }
   const code=state.joinCode;
   const joinUrl=buildJoinUrl(code);
   host.innerHTML=`<div class="screen" style="padding:0;text-align:center">
@@ -1910,7 +2067,9 @@ screens.orgLive = ()=>{
     </div>`:''}
     ${liveRules().timed?timerCard():''}
     ${(()=>{
-      const sch=state.schedule||[];
+      // Jauge/compteurs de la phase EN COURS, pas toujours le brassage (sinon la
+      // jauge reste figée à 100% une fois la phase 2 lancée).
+      const sch=currentPhaseMatches();
       const played=sch.filter(m=>m.status==='done').length;
       const total=sch.length;
       const left=total-played;
@@ -1935,7 +2094,7 @@ screens.orgLive = ()=>{
     <div class="gymhead"><span class="dot" style="background:var(--accent)"></span><h3>Déroulé du tournoi</h3></div>
     ${(()=>{
       const order=phaseOrder(), cur=order.indexOf(state.livePhase);
-      const badge=i=> i<cur?`<span class="badge ok">Terminé</span>` : i===cur?`<span class="badge warn">● En cours</span>` : `<span class="badge brand">À venir</span>`;
+      const badge=i=> i<cur?`<span class="badge ok">Terminé</span>` : i===cur?`<span class="badge warn">● En cours</span>` : `<span class="badge wait">À venir</span>`;
       const subRules=ph=> phaseRulesSet(ph)?' · '+fmtRules(rulesFor(ph)):'';
       const nxt=nextPhase(state.livePhase);
       const rowDefs={
@@ -1944,9 +2103,11 @@ screens.orgLive = ()=>{
         finales:`<div class="phase" style="cursor:pointer" onclick="go('bracket')"><div class="num">{N}</div><div style="flex:1"><b>Phases finales</b><small>${C.phaseConsolante?'Tableau à élimination':'Les 1ers–2es du brassage basculent directement en tableau à élimination'}${subRules('finales')}</small></div>{B}</div>`,
       };
       const rows=order.map((p,i)=> rowDefs[p].replace('{N}',i+1).replace('{B}',badge(i))).join('');
+      const remaining = nxt ? currentPhaseRemaining() : 0;
       return `<div class="card">${rows}</div>
     ${nxt
-      ? `<button class="btn" style="margin-top:12px;width:100%" onclick="openPhaseSwitch()">✅ Clôturer « ${phaseName(state.livePhase)} » → lancer « ${phaseName(nxt)} »</button>`
+      ? `<button class="btn" style="margin-top:12px;width:100%" onclick="openPhaseSwitch()">✅ Clôturer « ${phaseName(state.livePhase)} » → lancer « ${phaseName(nxt)} »</button>
+         ${remaining>0?`<p class="muted" style="text-align:center;margin-top:6px;font-size:12px">⚠️ ${remaining} match${remaining>1?'s':''} sans score pour l'instant</p>`:''}`
       : `<p class="muted" style="text-align:center;margin-top:12px;font-size:12.5px">Dernière phase en cours — tableau à élimination.</p>`}
     ${cur>0?`<button class="btn ghost sm" style="margin-top:8px;width:100%" onclick="revertPhase()">↩︎ Revenir à la phase précédente</button>`:''}`;
     })()}
@@ -1970,6 +2131,8 @@ window.closeSheet=closeSheet;
 window.openPhaseSwitch=()=>{
   const cur=state.livePhase, nxt=nextPhase(cur);
   if(!nxt) return;
+  const remaining=currentPhaseRemaining();
+  if(remaining>0){ toast(`⚠️ ${remaining} match${remaining>1?'s':''} sans score — terminez « ${phaseName(cur)} » avant de la clôturer`); return; }
   const r=rulesFor(nxt); // défaut = copie des règles de brassage tant que non définies
   const hor=horaireFor(nxt); // horaire de la phase suivante (défaut = horaire du brassage)
   const intro = nxt==='finales'
@@ -2033,7 +2196,7 @@ window.openPhaseSwitch=()=>{
       <label class="field" style="margin:10px 0 0"><span>Mise en place entre les tours (min)</span>${numCtl('nh_setup',hor.setupMinutes!=null?hor.setupMinutes:10,0,60)}</label>
       <div id="nhPreview" style="font-size:12px;margin:12px 2px 0;line-height:1.45;font-weight:700;color:var(--brand)"></div>
     </div>
-    <button class="btn" style="margin-top:16px;width:100%" onclick="confirmPhaseSwitch()">Démarrer « ${phaseName(nxt)} »</button>
+    <button class="btn" style="margin-top:16px;width:100%" id="phaseSwitchBtn" onclick="confirmPhaseSwitch()">Démarrer « ${phaseName(nxt)} »</button>
     <button class="btn ghost" style="margin-top:8px;width:100%" onclick="closeSheet()">Annuler</button>
   `);
   ['nh_round','nh_setup'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.addEventListener('live',updatePhaseSchedPreview); el.addEventListener('change',updatePhaseSchedPreview); } });
@@ -2049,7 +2212,7 @@ window.updatePhaseSchedPreview=function(){
   const fmt=t=>`${String(Math.floor(t/60)%24).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;
   box.innerHTML=`Un tour toutes les ${per} min · Tour 1 à ${fmt(base)}, tour 2 à ${fmt(base+per)}, tour 3 à ${fmt(base+2*per)}…`;
 };
-window.confirmPhaseSwitch=()=>{
+window.confirmPhaseSwitch=async ()=>{
   const cur=state.livePhase, nxt=nextPhase(cur); if(!nxt) return;
   const g=id=>document.getElementById(id), base=rulesFor(nxt);
   const r={
@@ -2067,20 +2230,80 @@ window.confirmPhaseSwitch=()=>{
     setupMinutes: g('nh_setup')?+g('nh_setup').value:bh.setupMinutes,
   });
   if(nxt==='finales' && g('w_finalStart')) state.config.finalStart=g('w_finalStart').value;
+
+  // Si la phase 2 a déjà été persistée (ex: retour en arrière puis relance), on ne
+  // recalcule ni ne ré-insère rien — on ne fait que ré-avancer le curseur de phase.
+  let alreadyPersisted=false;
   if(nxt==='poules2'){
     if(g('sw_splitgym')) state.config.splitPhase2ByGym = g('sw_splitgym').classList.contains('on');
-    state.phasePrincipal=null; state.phaseConsolante=null; buildPhase2(); // applique la répartition choisie
+    alreadyPersisted = !!(state.phasePrincipal && state.phasePrincipal.schedule && state.phasePrincipal.schedule.length && state.phasePrincipal.schedule[0].id);
+    if(!alreadyPersisted){ state.phasePrincipal=null; state.phaseConsolante=null; buildPhase2(); } // applique la répartition choisie
   }
+  // Idem pour le bracket : si on l'a déjà généré (ex: retour en arrière puis relance),
+  // on ne recrée pas le 1er tour — sinon les scores déjà saisis seraient dupliqués.
+  let alreadyPersistedFinales=false;
+  if(nxt==='finales'){
+    alreadyPersistedFinales = !!(state.bracketPrincipal && state.bracketPrincipal.schedule && state.bracketPrincipal.schedule.length && state.bracketPrincipal.schedule[0].id);
+  }
+
+  const btn=document.getElementById('phaseSwitchBtn');
+  if(btn){ btn.disabled=true; btn.textContent='Enregistrement…'; }
+  const t=state.tournaments.find(x=>x.id===state.currentDraftId);
+  try{
+    if(window.vboDb && t && vboDb.isUuid(t.id)){
+      if(nxt==='poules2' && !alreadyPersisted){
+        const structure=buildPhaseStructure('principal', state.phasePrincipal);
+        if(state.config.phaseConsolante){
+          const c=buildPhaseStructure('consolante', state.phaseConsolante);
+          const names=new Set(structure.gyms.map(x=>x.name));
+          c.gyms.forEach(x=>{ if(!names.has(x.name)){ structure.gyms.push(x); names.add(x.name); } });
+          structure.pools.push(...c.pools);
+          structure.matches.push(...c.matches);
+        }
+        await vboDb.addPhase(t.id, structure);
+      }
+      if(nxt==='finales' && !alreadyPersistedFinales){
+        // Têtes de série du 1er tour, issues du classement réel de la phase précédente.
+        const prin=buildBracket(phaseData('principal'));
+        const structure=buildBracketMatches('finalesPrincipal', 1, prin.first);
+        if(state.config.phaseConsolante){
+          const cons=buildBracket(phaseData('consolante'));
+          structure.matches.push(...buildBracketMatches('finalesConsolante', 1, cons.first).matches);
+        }
+        await vboDb.addPhase(t.id, structure);
+      }
+      t.livePhase=nxt;
+      await vboDb.save(t, {});
+      const fresh=await vboDb.loadStructure(t.id);
+      applyLoadedStructure(fresh);
+    }
+  }catch(e){
+    console.warn('Passage de phase:', e);
+    toast("⚠️ Échec de l'enregistrement — réessayez");
+    if(btn){ btn.disabled=false; btn.textContent=`Démarrer « ${phaseName(nxt)} »`; }
+    return;
+  }
+
   state.livePhase=nxt;
-  const ct=state.tournaments.find(x=>x.id===state.currentDraftId); if(ct) ct.livePhase=nxt;
+  if(t) t.livePhase=nxt;
+  // Le Planning/Classements doivent basculer sur la nouvelle phase par défaut,
+  // sinon ils continuent d'afficher les matchs de la phase qui vient d'être clôturée.
+  schedPhase = nxt==='brassage' ? 'brassage' : 'principal'; schedGym='all';
+  standPhase = nxt==='brassage' ? 'brassage' : 'principal'; standPool=null;
   timerReset();
   closeSheet();
   toast(PHASE_ICON[nxt]+' '+phaseName(nxt)+(nxt==='finales'?' lancées':' lancée'));
   render('orgLive');
 };
-window.revertPhase=()=>{
+window.revertPhase=async ()=>{
   const o=phaseOrder(); const i=o.indexOf(state.livePhase);
-  if(i>0){ state.livePhase=o[i-1]; const ct=state.tournaments.find(x=>x.id===state.currentDraftId); if(ct) ct.livePhase=state.livePhase; timerReset(); toast('Retour : '+phaseName(state.livePhase)); render('orgLive'); }
+  if(i<=0) return;
+  state.livePhase=o[i-1];
+  schedPhase = state.livePhase==='brassage' ? 'brassage' : 'principal'; schedGym='all';
+  standPhase = state.livePhase==='brassage' ? 'brassage' : 'principal'; standPool=null;
+  const ct=state.tournaments.find(x=>x.id===state.currentDraftId);
+  if(ct){ ct.livePhase=state.livePhase; if(window.vboDb && vboDb.isUuid(ct.id)){ try{ await vboDb.save(ct,{}); }catch(e){ console.warn('Retour de phase:', e); } } }
+  timerReset(); toast('Retour : '+phaseName(state.livePhase)); render('orgLive');
 };
 function liveCourtRow(gym,label,a,b,st,m){
   return `<div class="match"><div class="meta"><span class="chip">${gym}</span><span>${label}</span><span class="badge warn" style="margin-left:auto">● ${st}</span></div>
@@ -2096,6 +2319,20 @@ const PHASE_ORDER=['brassage','poules2','finales'];
 // Déroulé réel : sans Consolante, on passe directement du brassage aux phases finales (2 phases)
 function phaseOrder(cfg){ const c=cfg||state.config; return c&&c.phaseConsolante===false ? ['brassage','finales'] : ['brassage','poules2','finales']; }
 const PHASE_ICON={brassage:'🔄', poules2:'🏐', finales:'🏆'};
+// Matchs de la phase EN COURS (pour vérifier qu'elle est bien terminée avant de clôturer).
+function currentPhaseMatches(){
+  if(state.livePhase==='brassage') return state.schedule||[];
+  if(state.livePhase==='poules2'){
+    ensurePhases();
+    return [...(state.phasePrincipal.schedule||[]), ...(state.config.phaseConsolante?(state.phaseConsolante.schedule||[]):[])];
+  }
+  if(state.livePhase==='finales'){
+    const sides=['principal', ...(state.config.phaseConsolante?['consolante']:[])];
+    return sides.flatMap(k=> [...(bracketData(k).schedule||[]), ...(bracketData3e(k).schedule||[])]);
+  }
+  return [];
+}
+function currentPhaseRemaining(){ return currentPhaseMatches().filter(m=>m.status!=='done').length; }
 function phaseName(p){
   if(p==='poules2') return state.config.phaseConsolante ? 'Principale & Consolante' : 'Principale';
   if(p==='finales') return 'Phases finales';
@@ -2259,21 +2496,31 @@ window.toggleSchedRound=(r)=>{
 function schedBadge(s){
   return s==='done'?`<span class="badge ok" style="margin-left:auto">Terminé</span>`
     : s==='live'?`<span class="badge warn" style="margin-left:auto">● En cours</span>`
-    : `<span class="badge brand" style="margin-left:auto">À venir</span>`;
+    : `<span class="badge wait" style="margin-left:auto">À venir</span>`;
 }
 function schedRow(m){
-  const sc = m.status==='upcoming' ? `<span class="vs">vs</span>` : scoreSC(m);
+  const played=matchSetsPlayed(m);
+  const sc = played.length ? scoreSC(m) : `<span class="vs">vs</span>`;
   // Saisie admin/référent : seuls les matchs persistés (phase de brassage,
   // avec un id réel renvoyé par le backend) peuvent recevoir un score ici.
   const canEnter = !!m.id;
-  return `<div class="match">
+  const btnLabel = m.status==='done' ? '✏️ Modifier le score' : played.length ? '📝 Continuer la saisie' : '📝 Saisir le score';
+  return `<div class="match ${m.status==='done'?'done':m.status==='live'?'live':'upcoming'}">
     <div class="meta"><span class="chip">${m.gym}</span><span>Terrain ${m.court} · Poule ${m.pool}</span>${schedBadge(m.status)}</div>
     <div class="teams"><span class="t">${m.a}</span><span class="sc">${sc}</span><span class="t right">${m.b}</span></div>${refLine(m)}
-    ${canEnter?`<button class="btn ghost sm" style="margin-top:8px;width:100%" onclick="openAdminScoreSheet('${m.id}')">${m.status==='done'?'✏️ Modifier le score':'📝 Saisir le score'}</button>`:''}</div>`;
+    ${canEnter?`<button class="btn ghost sm" style="margin-top:8px;width:100%" onclick="openAdminScoreSheet('${m.id}')">${btnLabel}</button>`:''}</div>`;
+}
+// Règles (nb de sets) applicables à un match selon SA phase réelle, pas la phase en
+// cours de l'écran — nécessaire pour la saisie (poules2/finales peuvent avoir plus de
+// sets que le brassage).
+function rulesForMatchPhase(phase){
+  if(phase==='principal'||phase==='consolante') return rulesFor('poules2');
+  if(phase==='finalesPrincipal'||phase==='finalesConsolante'||phase==='finalesPrincipal3e'||phase==='finalesConsolante3e') return rulesFor('finales');
+  return rulesFor('brassage');
 }
 window.openAdminScoreSheet=(id)=>{
-  const m=(state.schedule||[]).find(x=>x.id===id); if(!m) return;
-  const nSets=Math.max(1, state.config.sets||1);
+  const m=findMatchById(id); if(!m) return;
+  const nSets=Math.max(1, rulesForMatchPhase(m.phase).sets||1);
   const preSets=(m.sets&&m.sets.length)?m.sets : (m.sa!=null?[[m.sa,m.sb]]:[]);
   const rows=Array.from({length:nSets},(_,s)=>{
     const sa=preSets[s]?preSets[s][0]:''; const sb=preSets[s]?preSets[s][1]:'';
@@ -2284,31 +2531,47 @@ window.openAdminScoreSheet=(id)=>{
       <div><div class="tlab">${m.b}</div><input class="num" id="bsc${s}" inputmode="numeric" value="${sb}" placeholder="0"></div>
     </div>`;
   }).join('');
+  // Les matchs de bracket n'ont ni poule ni vrai terrain : on affiche le nom du tour.
+  const isThird = m.phase==='finalesPrincipal3e' || m.phase==='finalesConsolante3e';
+  const isFinals = isThird || m.phase==='finalesPrincipal' || m.phase==='finalesConsolante';
+  const subtitle = isFinals ? `${isThird?'🥉':'🏆'} ${bracketRoundLabel(m)}` : `Poule ${m.pool} · Terrain ${m.court} · ${m.gym}`;
   openSheet(`<h3 style="font-size:18px;margin:2px 0 4px;font-family:var(--font-display)">Saisir le score</h3>
-    <p class="muted" style="font-size:13px;margin:0 0 14px">Poule ${m.pool} · Terrain ${m.court} · ${m.gym}</p>
+    <p class="muted" style="font-size:13px;margin:0 0 14px">${subtitle}</p>
     ${rows}
+    ${nSets>1?`<p class="muted" style="font-size:12px;margin:10px 0 0">💡 Vous pouvez valider un set à la fois : revenez sur ce match une fois le set suivant terminé.</p>`:''}
     <button class="btn" style="margin-top:16px;width:100%" id="admScoreBtn" onclick="submitAdminScore('${id}')">Valider le score</button>`);
 };
 window.submitAdminScore=async (id)=>{
-  const nSets=Math.max(1, state.config.sets||1);
+  const mFor=findMatchById(id);
+  const nSets=Math.max(1, rulesForMatchPhase(mFor&&mFor.phase).sets||1);
   const sets=[];
+  let sawEmpty=false;
   for(let s=0;s<nSets;s++){
-    const a=parseInt((document.getElementById('asc'+s)||{}).value);
-    const b=parseInt((document.getElementById('bsc'+s)||{}).value);
-    if(isNaN(a)||isNaN(b)){ toast(nSets>1?'Entrez les scores de chaque set':'Entrez les deux scores'); return; }
+    const aVal=((document.getElementById('asc'+s)||{}).value||'').trim();
+    const bVal=((document.getElementById('bsc'+s)||{}).value||'').trim();
+    if(aVal===''&&bVal===''){ sawEmpty=true; continue; }
+    // Saisie set par set : les sets doivent être remplis dans l'ordre, pas de trou.
+    if(sawEmpty){ toast(`Set ${s} manquant avant le set ${s+1}`); return; }
+    const a=parseInt(aVal), b=parseInt(bVal);
+    if(isNaN(a)||isNaN(b)){ toast(`Entrez les deux scores du set ${s+1}`); return; }
     if(a===b){ toast(nSets>1?`Set ${s+1} : un set ne peut pas être à égalité`:'Un set ne peut pas finir à égalité'); return; }
     sets.push([a,b]);
   }
+  if(!sets.length){ toast(nSets>1?'Entrez le score d\'au moins un set':'Entrez les deux scores'); return; }
+  const complete=sets.length===nSets;
   const btn=document.getElementById('admScoreBtn');
   if(btn){ btn.disabled=true; btn.textContent='Enregistrement…'; }
   try{
-    if(window.vboDb) await vboDb.setMatchScore(id, sets);
-    const m=(state.schedule||[]).find(x=>x.id===id);
-    if(m) Object.assign(m, {sa:sets[0][0], sb:sets[0][1], sets, status:'done'});
+    if(window.vboDb) await vboDb.setMatchScore(id, sets, complete);
+    const m=findMatchById(id);
+    if(m) Object.assign(m, {sa:sets[0][0], sb:sets[0][1], sets, status: complete?'done':'upcoming'});
+    if(m && complete && (m.phase==='finalesPrincipal'||m.phase==='finalesConsolante')) await advanceBracketIfRoundDone(m.phase);
     closeSheet();
-    toast('✓ Score enregistré');
+    toast(complete?'✓ Score enregistré':'✓ Set enregistré — revenez après le prochain set');
     const cur=navStack[navStack.length-1];
-    if(cur) render(cur.screen, cur.opts);
+    // Simple rafraîchissement de l'écran (pas une vraie navigation) : on
+    // restaure la position de lecture au lieu de renvoyer en haut de la page.
+    if(cur){ const y=host.scrollTop; render(cur.screen, cur.opts); host.scrollTop=y; }
   }catch(e){
     console.warn('Saisie score:', e);
     toast('⚠️ Enregistrement échoué');
@@ -2327,23 +2590,44 @@ screens.schedule = ()=>{
   const phaseName = schedPhase==='brassage'?'Phase de brassage':`Phase 2 · ${PHASE_LABEL[schedPhase]}`;
   const vh = horaireFor(schedPhase==='brassage'?'brassage':'poules2');
   const vRound=(+vh.roundMinutes)||20, vSetup=vh.setupMinutes!=null?+vh.setupMinutes:10;
+  const schedPhaseIcon={brassage:'🔄',principal:'🥇',consolante:'🥈'};
+  const schedPhaseKeys=['brassage','principal',...(state.config.phaseConsolante?['consolante']:[])];
   let h=`<div style="padding:0">
     <h3 style="font-size:19px;margin-bottom:2px">Planning des matchs</h3>
     <p class="muted" style="margin:0 0 6px;font-size:13px">${phaseName} · ${nAvenir} match${nAvenir>1?'s':''} à venir</p>
-    <p class="muted" style="margin:0 0 10px;font-size:11.5px;line-height:1.4">🕐 Début ${vh.startTime||'09:00'} · un tour toutes les ${vRound+vSetup} min (${vRound} min de jeu + ${vSetup} min de mise en place)</p>
-    ${phaseSeg(schedPhase,'setSchedPhase')}
-    <div class="seg">${gyms.map(g=>`<button class="${schedGym===g?'on':''}" onclick="schedGym='${g}';render('schedule')">${lbl(g)}</button>`).join('')}</div>`;
+    <p class="muted" style="margin:0 0 14px;font-size:11.5px;line-height:1.4">🕐 Début ${vh.startTime||'09:00'} · un tour toutes les ${vRound+vSetup} min (${vRound} min de jeu + ${vSetup} min de mise en place)</p>
+    <p class="eyebrow" style="margin:0 0 6px">Phase</p>
+    <div class="seg seg-strong">${schedPhaseKeys.map(k=>`<button class="${schedPhase===k?'on':''}" onclick="setSchedPhase('${k}')">${schedPhaseIcon[k]} ${PHASE_LABEL[k]}</button>`).join('')}</div>
+    ${(()=>{
+      const realGyms=gyms.filter(g=>g!=='all');
+      // Une seule salle pour cette phase (ex. Principale/Consolante réparties une salle
+      // par catégorie) : le filtre Tous/Gymnase n'a rien à filtrer, on affiche juste le nom.
+      if(realGyms.length<=1) return `<p class="muted" style="margin:0 0 14px;font-size:13px">📍 Se joue à : <b style="color:var(--fg)">${realGyms[0]||'—'}</b></p>`;
+      return `<p class="eyebrow" style="margin:14px 0 6px">🏟️ Gymnase</p>
+    <div class="seg seg-strong">${gyms.map(g=>`<button class="${schedGym===g?'on':''}" onclick="schedGym='${g}';render('schedule')">${lbl(g)}</button>`).join('')}</div>`;
+    })()}`;
+  let prevRoundDone=false;
   rounds.forEach(r=>{
     const ms=schedule.filter(m=>m.r===r&&(schedGym==='all'||m.gym===schedGym));
     if(!ms.length) return;
-    const done=ms.every(m=>m.status==='done'), live=ms.some(m=>m.status==='live');
+    const done=ms.every(m=>m.status==='done');
+    // Un tour est "en cours" dès qu'un score (même un seul set) y a été saisi,
+    // ou s'il suit directement un tour entièrement terminé (pas de statut
+    // 'live' en base).
+    const live=!done&&(ms.some(m=>matchSetsPlayed(m).length)||prevRoundDone);
     const col=done?'var(--ok)':live?'var(--warn)':'var(--brand)';
+    const colSoft=done?'var(--ok-soft)':live?'var(--warn-soft)':'var(--brand-soft)';
     const collapsed=isSchedRoundCollapsed(r);
-    h+=`<div class="gymhead" style="cursor:pointer" onclick="toggleSchedRound(${r})">
-      <span class="dot" style="background:${col}"></span><h3>Tour ${r}</h3>
-      <span class="count" style="margin-left:auto;color:var(--muted);font-weight:600">${ms[0].time}</span>
-      <span class="btn ghost sm" style="padding:4px 9px;margin-left:8px;font-size:12px;line-height:1" aria-label="${collapsed?'Déplier':'Réduire'} le tour ${r}">${collapsed?'▸':'▾'}</span></div>`;
-    if(!collapsed) h+=`<div class="sched-grid">${ms.map(schedRow).join('')}</div>`;
+    // Badge de statut affiché seulement replié : déplié, les matchs du tour
+    // (et le cadre coloré) montrent déjà l'état en détail.
+    const roundBadge = collapsed ? `<span class="badge ${done?'ok':live?'warn':'wait'}">${done?'Terminé':live?'● En cours':'À venir'}</span>` : '';
+    h+=`<div class="round${collapsed?'':' open'}" style="--round-col:${col};--round-bg:${colSoft}">
+      <div class="gymhead" style="cursor:pointer" onclick="toggleSchedRound(${r})">
+        <span class="dot" style="background:${col}"></span><h3>Tour ${r}</h3>${roundBadge}
+        <span class="count" style="margin-left:auto;color:var(--muted);font-weight:600">${ms[0].time}</span>
+        <span class="btn ghost sm" style="padding:4px 9px;margin-left:8px;font-size:12px;line-height:1" aria-label="${collapsed?'Déplier':'Réduire'} le tour ${r}">${collapsed?'▸':'▾'}</span></div>
+      ${!collapsed?`<div class="sched-grid">${ms.map(schedRow).join('')}</div>`:''}</div>`;
+    prevRoundDone=done;
   });
   h+=`</div>`;
   host.innerHTML=h;
@@ -2425,6 +2709,24 @@ window.resolveConflict=(id,pick)=>{ const i=conflicts.findIndex(c=>c.id===id); i
 
 let bracketCat='principal';
 window.setBracketCat=k=>{ bracketCat=k; render('bracket'); };
+// Classement 1er/2e/3e d'une catégorie : vainqueur/perdant de la finale + vainqueur de la
+// petite finale. Tant que ces matchs ne sont pas (tous) joués, projection basée sur les
+// têtes de série (`real:false`) — même esprit que l'aperçu du tableau avant lancement.
+function podiumInfo(catKey){
+  const cat=phaseData(catKey);
+  const br=buildBracket(cat);
+  const names=roundNames(br.K);
+  const hasThird=br.K>=4;
+  const sched=bracketData(catKey).schedule||[];
+  const finalMatch=sched.find(m=>m.r===names.length);
+  const finalDone=finalMatch && finalMatch.status==='done';
+  const thirdMatch=hasThird ? (bracketData3e(catKey).schedule||[])[0] : null;
+  const thirdDone=thirdMatch && thirdMatch.status==='done';
+  let first=br.seeds[0], second=br.seeds[1], third=hasThird?br.seeds[2]:null;
+  if(finalDone){ const w=matchWinner(finalMatch); first=w==='a'?finalMatch.a:finalMatch.b; second=w==='a'?finalMatch.b:finalMatch.a; }
+  if(thirdDone){ const w=matchWinner(thirdMatch); third=w==='a'?thirdMatch.a:thirdMatch.b; }
+  return {first, second, third, hasThird, real: finalDone && (!hasThird||thirdDone)};
+}
 screens.bracket = ()=>{
   setTop(null); renderTabs('bracket');
   if(bracketCat==='consolante' && !state.config.phaseConsolante) bracketCat='principal';
@@ -2432,37 +2734,80 @@ screens.bracket = ()=>{
   const catLabel=PHASE_LABEL[bracketCat];
   const br=buildBracket(cat);
   const names=roundNames(br.K);
+  const hasThird=br.K>=4;
   const F=rulesFor('finales');
   const nSets=F.sets||1;
   const fmtNote=fmtRules(F);
   const rm=inner=>`<div class="rmatch">${inner}</div>`;
+  // Une fois le bracket lancé, ses VRAIS matchs (avec id, pour la saisie de score) sont
+  // dans bracketData() — tant qu'un tour n'y figure pas encore, on retombe sur l'aperçu
+  // spéculatif (projection depuis le classement, pas de saisie possible).
+  const persisted=bracketData(bracketCat).schedule||[];
+  const byRound=r=>persisted.filter(m=>m.r===r).sort((a,b)=>(a.court||0)-(b.court||0));
+  const started=persisted.length>0;
+  const catSeg=`<div class="seg">
+    <button class="${bracketCat==='principal'?'on':''}" onclick="setBracketCat('principal')">Principale</button>
+    ${state.config.phaseConsolante?`<button class="${bracketCat==='consolante'?'on':''}" onclick="setBracketCat('consolante')">Consolante</button>`:''}
+  </div>`;
+
+  // Podium : sur la même page que le tableau (pas un onglet/vue séparée).
+  const p=podiumInfo(bracketCat);
+  const medal=(name,rankLabel,cls,icon)=> name?`<div class="pcard ${cls}"><span class="medal">${icon}</span><b class="pname">${name}</b><span class="prank">${rankLabel}</span></div>`:'';
+  const podiumBlock = (p.first||p.second) ? `
+    <p class="eyebrow" style="margin:16px 0 8px">🏆 Podium</p>
+    <div class="podium">
+      ${medal(p.second,'2e','p2','🥈')}
+      ${medal(p.first,'1er','p1','🥇')}
+      ${hasThird?medal(p.third,'3e','p3','🥉'):''}
+    </div>
+    <p class="muted" style="text-align:center;font-size:12px;margin:2px 0 4px">${p.real?'✅ Podium final — tous les résultats sont joués.':"Classement de démonstration (les têtes de série l'emportent). Les vrais résultats s'afficheront au fil des matchs."}</p>` : '';
+
   let cols='';
-  // 1er tour : vraies têtes de série issues du classement réel, pas encore joué.
-  cols+=`<div class="round"><h4>${names[0]}</h4><div class="rmatches">${br.first.map(([a,b])=> rm(bm(a,b))).join('')}</div></div>`;
-  // Tours suivants : indéterminés tant que le tour précédent n'a pas de résultat saisi.
-  for(let ci=1; ci<names.length; ci++){
-    const nMatches=br.first.length/Math.pow(2,ci);
-    const ph=Array.from({length:nMatches}, ()=> rm(bm('À déterminer','À déterminer')));
-    cols+=`<div class="round"><h4>${names[ci]}</h4><div class="rmatches">${ph.join('')}</div></div>`;
+  for(let ci=0; ci<names.length; ci++){
+    const round=ci+1, real=byRound(round), nMatches=br.first.length/Math.pow(2,ci);
+    let inner;
+    if(real.length) inner=real.map(m=> rm(bm(m.a,m.b,m))).join('');
+    else if(round===1) inner=br.first.map(([a,b])=> rm(bm(a||'À déterminer', b||'À déterminer'))).join(''); // aperçu avant lancement
+    else inner=Array.from({length:nMatches}, ()=> rm(bm('À déterminer','À déterminer'))).join('');
+    cols+=`<div class="round"><h4>${names[ci]}</h4><div class="rmatches">${inner}</div></div>`;
   }
   const rw=132+nSets*20;
+  // Petite finale (3e place) : même habillage colonne que le tableau (.round/h4/.rmatch),
+  // mais dans son propre conteneur .bracket pour qu'elle reste seule :last-child et
+  // n'hérite pas des connecteurs visuels entre tours (qui supposent une colonne suivante).
+  let thirdCol='';
+  if(hasThird){
+    const m3=(bracketData3e(bracketCat).schedule||[])[0];
+    const inner=rm(m3 ? bm(m3.a, m3.b, m3) : bm('À déterminer','À déterminer'));
+    thirdCol=`<div class="bracket" style="--rw:${rw}px;margin-top:4px">
+      <div class="round"><h4>🥉 Petite finale</h4><div class="rmatches">${inner}</div></div>
+    </div>`;
+  }
   host.innerHTML=`<div style="padding:0">
     <h3 style="font-size:19px;margin-bottom:4px">Phase finale · ${catLabel}</h3>
     <p class="lead" style="margin-top:0">${br.K} équipes qualifiées · départ en ${names[0]==='Finale'?'finale directe':names[0]+' de finale'}.</p>
     <p class="muted" style="margin:-4px 0 10px;font-size:12px">🏆 Règles des finales : <b>${fmtNote}</b></p>
-    <div class="seg">
-      <button class="${bracketCat==='principal'?'on':''}" onclick="setBracketCat('principal')">Principale</button>
-      ${state.config.phaseConsolante?`<button class="${bracketCat==='consolante'?'on':''}" onclick="setBracketCat('consolante')">Consolante</button>`:''}
-    </div>
+    ${catSeg}
+    ${podiumBlock}
+    <p class="eyebrow" style="margin:16px 0 8px">📋 Tableau</p>
     <div class="bracket" style="--rw:${rw}px">${cols}</div>
+    ${thirdCol}
     <div class="card" style="margin-top:16px;text-align:center;background:var(--surface-2);border:none">
-      <small class="muted">Les résultats s'afficheront ici au fil des matchs de phase finale.</small>
+      <small class="muted">${started?'Appuyez sur un match pour saisir son score. Le tour suivant se génère automatiquement une fois le tour en cours terminé.':'Aperçu basé sur le classement actuel — les matchs seront créés au lancement des phases finales.'}</small>
     </div>
   </div>`;
 };
-function bm(a, b){
-  const row=(t)=>`<div class="r"><span class="nm">${t}</span><span class="sc"><b>–</b></span></div>`;
-  return `<div class="bm">${row(a)}${row(b)}</div>`;
+function bm(a, b, m){
+  const row=(name,val,win)=>`<div class="r${win?' win':''}"><span class="nm">${name}</span><span class="sc"><b>${val}</b></span></div>`;
+  if(!m || !m.id) return `<div class="bm">${row(a,'–')}${row(b,'–')}</div>`;
+  const played=matchSetsPlayed(m);
+  const last=played.length?played[played.length-1]:null;
+  const w=matchWinner(m);
+  const icon=m.status==='done' ? '✏️' : '📝';
+  return `<div class="bm tap" onclick="openAdminScoreSheet('${m.id}')">
+    ${row(a, last?last[0]:'–', w==='a')}${row(b, last?last[1]:'–', w==='b')}
+    <span class="bmEdit">${icon}</span>
+  </div>`;
 }
 
 /* ---------- Captain flow ---------- */

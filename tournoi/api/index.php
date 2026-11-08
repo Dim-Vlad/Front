@@ -12,7 +12,8 @@
 //    tournaments.setArchived POST {id,archived}          -> {ok}
 //    tournaments.setStatus POST {id,status,closed_at?}   -> {ok}
 //    tournaments.remove    POST {id}                     -> {ok}
-//    tournaments.saveStructure POST {tid,s}              -> {counts}
+//    tournaments.saveStructure POST {tid,s}              -> {counts} (remplace TOUT)
+//    tournaments.addPhase     POST {tid,s}              -> {counts} (ajoute une phase, sans toucher au reste)
 //    tournaments.loadStructure GET  ?tid=                -> {pools,schedule}|null
 //    matches.setScore      POST {id,sets}                -> {ok} (admin/référent)
 //    tournaments.publicByCode  GET  ?code= (public)       -> {name,pools,schedule}|null
@@ -59,7 +60,7 @@ function load_structure(string $tid): ?array {
         $teams[] = ['t' => $teamById[$m['team_id']]['name'], 'level' => $teamById[$m['team_id']]['level']];
       }
     }
-    return ['letter' => $p['letter'], 'gym' => $gymById[$p['gym_id']] ?? '',
+    return ['letter' => $p['letter'], 'phase' => $p['phase'] ?? 'brassage', 'gym' => $gymById[$p['gym_id']] ?? '',
             'court' => $p['court'] !== null ? (int)$p['court'] : null, 'teams' => $teams];
   }, $pools);
 
@@ -71,6 +72,7 @@ function load_structure(string $tid): ?array {
   $schedOut = array_map(function ($m) use ($gymById, $teamById, $poolById, $S) {
     return [
       'id' => $m['id'],
+      'phase' => $m['phase'] ?? 'brassage',
       'r' => $m['round'] !== null ? (int)$m['round'] : null,
       'time' => $m['scheduled_time'],
       'gym' => $gymById[$m['gym_id']] ?? '',
@@ -299,6 +301,88 @@ switch ($action) {
     break;
   }
 
+  // Ajoute les poules/matchs d'une NOUVELLE phase (ex: Principale/Consolante après le
+  // brassage) SANS toucher à l'existant — contrairement à tournaments.saveStructure qui
+  // efface tout. Réutilise les équipes/gymnases déjà créés au lancement (par nom).
+  case 'tournaments.addPhase': {
+    require_admin();
+    $tid = field('tid');
+    if (!is_uuid($tid)) fail(400, "Tournoi non encore enregistré.");
+    $s = (array)field('s', []);
+    $gyms = $s['gyms'] ?? []; $pools = $s['pools'] ?? []; $matches = $s['matches'] ?? [];
+    $pdo = db();
+    try {
+      $pdo->beginTransaction();
+
+      $teamNameToId = [];
+      $st = $pdo->prepare("SELECT id, name FROM vbo_teams WHERE tournament_id = ?");
+      $st->execute([$tid]);
+      foreach ($st->fetchAll() as $row) $teamNameToId[$row['name']] = $row['id'];
+
+      $nameToGymId = [];
+      $st = $pdo->prepare("SELECT id, name FROM vbo_gyms WHERE tournament_id = ?");
+      $st->execute([$tid]);
+      foreach ($st->fetchAll() as $row) $nameToGymId[$row['name']] = $row['id'];
+      $insGym = $pdo->prepare("INSERT INTO vbo_gyms (id, tournament_id, name, position) VALUES (?,?,?,?)");
+      foreach ($gyms as $g) {
+        $name = $g['name'] ?? '';
+        if ($name === '' || isset($nameToGymId[$name])) continue;
+        $gid = uuid4();
+        $insGym->execute([$gid, $tid, $name, (int)($g['position'] ?? 0)]);
+        $nameToGymId[$name] = $gid;
+      }
+
+      // Poules de cette phase (clé = phase|lettre, au cas où une lettre est réutilisée
+      // entre phases, ex. Principale ET Consolante ont chacune une poule "A").
+      $poolKeyToId = [];
+      $insPool = $pdo->prepare("INSERT INTO vbo_pools (id, tournament_id, letter, phase, gym_id, court) VALUES (?,?,?,?,?,?)");
+      foreach ($pools as $p) {
+        $pid = uuid4();
+        $phase = $p['phase'] ?? 'poules2';
+        $gymId = isset($p['gymName']) ? ($nameToGymId[$p['gymName']] ?? null) : null;
+        $court = array_key_exists('court', $p) && $p['court'] !== null ? (int)$p['court'] : null;
+        $insPool->execute([$pid, $tid, $p['letter'] ?? '', $phase, $gymId, $court]);
+        $poolKeyToId[$phase . '|' . ($p['letter'] ?? '')] = $pid;
+      }
+      $insPT = $pdo->prepare("INSERT INTO vbo_pool_teams (id, pool_id, team_id, seed) VALUES (?,?,?,?)");
+      foreach ($pools as $p) {
+        $phase = $p['phase'] ?? 'poules2';
+        $pid = $poolKeyToId[$phase . '|' . ($p['letter'] ?? '')] ?? null;
+        foreach (($p['teamKeys'] ?? []) as $seed => $nm) {
+          $teid = $teamNameToId[$nm] ?? null;
+          if ($pid && $teid) $insPT->execute([uuid4(), $pid, $teid, (int)$seed]);
+        }
+      }
+
+      $insMatch = $pdo->prepare(
+        "INSERT INTO vbo_matches (id, tournament_id, pool_id, phase, round, scheduled_time,
+                              gym_id, court, team_a, team_b, referee_team, status)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?, 'todo')");
+      $nMatches = 0;
+      foreach ($matches as $m) {
+        $phase  = $m['phase'] ?? 'poules2';
+        $poolId = isset($m['poolKey']) ? ($poolKeyToId[$phase . '|' . $m['poolKey']] ?? null) : null;
+        $gymId  = isset($m['gymName']) ? ($nameToGymId[$m['gymName']] ?? null) : null;
+        $court  = array_key_exists('court', $m) && $m['court'] !== null ? (int)$m['court'] : null;
+        $teamA  = isset($m['aKey'])   ? ($teamNameToId[$m['aKey']] ?? null) : null;
+        $teamB  = isset($m['bKey'])   ? ($teamNameToId[$m['bKey']] ?? null) : null;
+        $ref    = !empty($m['refKey']) ? ($teamNameToId[$m['refKey']] ?? null) : null;
+        $insMatch->execute([
+          uuid4(), $tid, $poolId, $phase,
+          isset($m['round']) ? (int)$m['round'] : null, $m['time'] ?? null,
+          $gymId, $court, $teamA, $teamB, $ref,
+        ]);
+        $nMatches++;
+      }
+      $pdo->commit();
+    } catch (Throwable $e) {
+      if ($pdo->inTransaction()) $pdo->rollBack();
+      fail(500, "Échec de l'enregistrement de la phase.");
+    }
+    ok(['pools' => count($pools), 'matches' => $nMatches]);
+    break;
+  }
+
   case 'tournaments.loadStructure': {
     require_login();
     $tid = $_GET['tid'] ?? '';
@@ -330,8 +414,13 @@ switch ($action) {
     $st = db()->prepare("SELECT id FROM vbo_matches WHERE id = ?");
     $st->execute([$id]);
     if (!$st->fetch()) fail(404, "Match introuvable.");
-    db()->prepare("UPDATE vbo_matches SET score_a = ?, score_b = ?, sets = ?, status = 'valid' WHERE id = ?")
-      ->execute([$clean[0][0], $clean[0][1], json_encode($clean), $id]);
+    // `complete` : le front envoie tous les sets joués d'un coup (set par set au
+    // fil du match), mais ne marque le match validé que lorsque tous les sets
+    // configurés ont été saisis — sinon il reste 'todo' (= upcoming côté front).
+    $complete = (bool) field('complete', true);
+    $status = $complete ? 'valid' : 'todo';
+    db()->prepare("UPDATE vbo_matches SET score_a = ?, score_b = ?, sets = ?, status = ? WHERE id = ?")
+      ->execute([$clean[0][0], $clean[0][1], json_encode($clean), $status, $id]);
     ok(['ok' => true]);
     break;
   }
