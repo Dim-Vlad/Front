@@ -14,11 +14,80 @@
 //    tournaments.remove    POST {id}                     -> {ok}
 //    tournaments.saveStructure POST {tid,s}              -> {counts}
 //    tournaments.loadStructure GET  ?tid=                -> {pools,schedule}|null
+//    matches.setScore      POST {id,sets}                -> {ok} (admin/référent)
+//    tournaments.publicByCode  GET  ?code= (public)       -> {name,pools,schedule}|null
 //    referents.list        GET                           -> [rows]
 //    referents.create      POST {name,email,password}    -> {ok,id,email,name}
 // =====================================================================
 
 require __DIR__ . '/_bootstrap.php';
+
+// Relit la structure persistée d'un tournoi (gymnases/équipes/poules/matchs)
+// et la met en forme pour l'app ({ pools, schedule }), ou null si rien n'est
+// persisté. Partagée par tournaments.loadStructure (organisateur/référent,
+// authentifiés) et tournaments.publicByCode (capitaines, via le QR code).
+function load_structure(string $tid): ?array {
+  $pdo = db();
+  $fetchAll = function (string $tbl) use ($pdo, $tid) {
+    $st = $pdo->prepare("SELECT * FROM $tbl WHERE tournament_id = ?");
+    $st->execute([$tid]);
+    return $st->fetchAll();
+  };
+  $gyms = $fetchAll('vbo_gyms'); $teams = $fetchAll('vbo_teams');
+  $pools = $fetchAll('vbo_pools'); $matches = $fetchAll('vbo_matches');
+  if (!$matches) return null;
+  $poolIds = array_map(fn($p) => $p['id'], $pools);
+  $pteams = [];
+  if ($poolIds) {
+    $ph = implode(',', array_fill(0, count($poolIds), '?'));
+    $st = $pdo->prepare("SELECT * FROM vbo_pool_teams WHERE pool_id IN ($ph)");
+    $st->execute($poolIds);
+    $pteams = $st->fetchAll();
+  }
+  $W2ID = [4 => 'nat', 3 => 'reg', 2 => 'dep', 1 => 'jeu'];
+  $gymById = []; foreach ($gyms as $g) $gymById[$g['id']] = $g['name'];
+  $teamById = []; foreach ($teams as $t) $teamById[$t['id']] = ['name' => $t['name'], 'level' => $W2ID[(int)$t['level']] ?? 'dep'];
+  $poolById = []; foreach ($pools as $p) $poolById[$p['id']] = $p;
+
+  usort($pools, fn($a, $b) => strcmp((string)$a['letter'], (string)$b['letter']));
+  $poolsOut = array_map(function ($p) use ($pteams, $gymById, $teamById) {
+    $members = array_values(array_filter($pteams, fn($x) => $x['pool_id'] === $p['id']));
+    usort($members, fn($a, $b) => ((int)($a['seed'] ?? 0)) <=> ((int)($b['seed'] ?? 0)));
+    $teams = [];
+    foreach ($members as $m) {
+      if (isset($teamById[$m['team_id']])) {
+        $teams[] = ['t' => $teamById[$m['team_id']]['name'], 'level' => $teamById[$m['team_id']]['level']];
+      }
+    }
+    return ['letter' => $p['letter'], 'gym' => $gymById[$p['gym_id']] ?? '',
+            'court' => $p['court'] !== null ? (int)$p['court'] : null, 'teams' => $teams];
+  }, $pools);
+
+  $S = ['valid' => 'done', 'live' => 'live', 'pending' => 'live', 'todo' => 'upcoming'];
+  usort($matches, function ($a, $b) {
+    $r = ((int)$a['round']) <=> ((int)$b['round']);
+    return $r !== 0 ? $r : strcmp((string)$a['scheduled_time'], (string)$b['scheduled_time']);
+  });
+  $schedOut = array_map(function ($m) use ($gymById, $teamById, $poolById, $S) {
+    return [
+      'id' => $m['id'],
+      'r' => $m['round'] !== null ? (int)$m['round'] : null,
+      'time' => $m['scheduled_time'],
+      'gym' => $gymById[$m['gym_id']] ?? '',
+      'court' => $m['court'] !== null ? (int)$m['court'] : null,
+      'pool' => isset($poolById[$m['pool_id']]) ? $poolById[$m['pool_id']]['letter'] : '',
+      'a' => isset($teamById[$m['team_a']]) ? $teamById[$m['team_a']]['name'] : '',
+      'b' => isset($teamById[$m['team_b']]) ? $teamById[$m['team_b']]['name'] : '',
+      'ref' => isset($teamById[$m['referee_team']]) ? $teamById[$m['referee_team']]['name'] : '',
+      'sa' => $m['score_a'] !== null ? (int)$m['score_a'] : null,
+      'sb' => $m['score_b'] !== null ? (int)$m['score_b'] : null,
+      'sets' => $m['sets'] !== null ? json_decode($m['sets']) : null,
+      'status' => $S[$m['status']] ?? 'upcoming',
+    ];
+  }, $matches);
+
+  return ['pools' => $poolsOut, 'schedule' => $schedOut];
+}
 
 $action = $_GET['action'] ?? '';
 
@@ -68,7 +137,7 @@ switch ($action) {
     $rows = db()->query(
       "SELECT id, created_by, name, event_date, place, status, archived,
               join_code, live_phase, config, created_at, launched_at, closed_at
-       FROM vbo_tournaments ORDER BY created_at DESC"
+      FROM vbo_tournaments ORDER BY created_at DESC"
     )->fetchAll();
     foreach ($rows as &$r) {
       $r['archived'] = (bool)$r['archived'];
@@ -205,7 +274,7 @@ switch ($action) {
       $insMatch = $pdo->prepare(
         "INSERT INTO vbo_matches (id, tournament_id, pool_id, phase, round, scheduled_time,
                               gym_id, court, team_a, team_b, referee_team, status)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?, 'todo')");
+        VALUES (?,?,?,?,?,?,?,?,?,?,?, 'todo')");
       $nMatches = 0;
       foreach ($matches as $m) {
         $poolId = isset($m['poolKey']) ? ($poolLetterToId[$m['poolKey']] ?? null) : null;
@@ -234,65 +303,54 @@ switch ($action) {
     require_login();
     $tid = $_GET['tid'] ?? '';
     if (!is_uuid($tid)) { ok(null); break; }
-    $pdo = db();
-    $fetchAll = function (string $tbl) use ($pdo, $tid) {
-      $st = $pdo->prepare("SELECT * FROM $tbl WHERE tournament_id = ?");
-      $st->execute([$tid]);
-      return $st->fetchAll();
-    };
-    $gyms = $fetchAll('vbo_gyms'); $teams = $fetchAll('vbo_teams');
-    $pools = $fetchAll('vbo_pools'); $matches = $fetchAll('vbo_matches');
-    if (!$matches) { ok(null); break; }
-    $poolIds = array_map(fn($p) => $p['id'], $pools);
-    $pteams = [];
-    if ($poolIds) {
-      $ph = implode(',', array_fill(0, count($poolIds), '?'));
-      $st = $pdo->prepare("SELECT * FROM vbo_pool_teams WHERE pool_id IN ($ph)");
-      $st->execute($poolIds);
-      $pteams = $st->fetchAll();
+    ok(load_structure($tid));
+    break;
+  }
+
+  // Saisie manuelle d'un score par un admin ou un référent (quand les
+  // capitaines ne saisissent pas eux-mêmes) : écrit directement le résultat
+  // validé sur le match, sans passer par la double-saisie croisée des
+  // capitaines (vbo_score_entries, flux distinct, pas encore branché).
+  case 'matches.setScore': {
+    require_login();
+    $id = (string)field('id', '');
+    if (!is_uuid($id)) fail(400, "Match invalide.");
+    $sets = field('sets', []);
+    if (!is_array($sets) || !count($sets)) fail(400, "Score manquant.");
+    $clean = [];
+    foreach ($sets as $s) {
+      if (!is_array($s) || count($s) !== 2) fail(400, "Score de set invalide.");
+      $a = $s[0]; $b = $s[1];
+      if (!is_numeric($a) || !is_numeric($b)) fail(400, "Score de set invalide.");
+      $a = (int)$a; $b = (int)$b;
+      if ($a < 0 || $b < 0) fail(400, "Un score ne peut pas être négatif.");
+      if ($a === $b) fail(400, "Un set ne peut pas finir à égalité.");
+      $clean[] = [$a, $b];
     }
-    $W2ID = [4 => 'nat', 3 => 'reg', 2 => 'dep', 1 => 'jeu'];
-    $gymById = []; foreach ($gyms as $g) $gymById[$g['id']] = $g['name'];
-    $teamById = []; foreach ($teams as $t) $teamById[$t['id']] = ['name' => $t['name'], 'level' => $W2ID[(int)$t['level']] ?? 'dep'];
-    $poolById = []; foreach ($pools as $p) $poolById[$p['id']] = $p;
+    $st = db()->prepare("SELECT id FROM vbo_matches WHERE id = ?");
+    $st->execute([$id]);
+    if (!$st->fetch()) fail(404, "Match introuvable.");
+    db()->prepare("UPDATE vbo_matches SET score_a = ?, score_b = ?, sets = ?, status = 'valid' WHERE id = ?")
+      ->execute([$clean[0][0], $clean[0][1], json_encode($clean), $id]);
+    ok(['ok' => true]);
+    break;
+  }
 
-    usort($pools, fn($a, $b) => strcmp((string)$a['letter'], (string)$b['letter']));
-    $poolsOut = array_map(function ($p) use ($pteams, $gymById, $teamById) {
-      $members = array_values(array_filter($pteams, fn($x) => $x['pool_id'] === $p['id']));
-      usort($members, fn($a, $b) => ((int)($a['seed'] ?? 0)) <=> ((int)($b['seed'] ?? 0)));
-      $teams = [];
-      foreach ($members as $m) {
-        if (isset($teamById[$m['team_id']])) {
-          $teams[] = ['t' => $teamById[$m['team_id']]['name'], 'level' => $teamById[$m['team_id']]['level']];
-        }
-      }
-      return ['letter' => $p['letter'], 'gym' => $gymById[$p['gym_id']] ?? '',
-              'court' => $p['court'] !== null ? (int)$p['court'] : null, 'teams' => $teams];
-    }, $pools);
-
-    $S = ['valid' => 'done', 'live' => 'live', 'pending' => 'live', 'todo' => 'upcoming'];
-    usort($matches, function ($a, $b) {
-      $r = ((int)$a['round']) <=> ((int)$b['round']);
-      return $r !== 0 ? $r : strcmp((string)$a['scheduled_time'], (string)$b['scheduled_time']);
-    });
-    $schedOut = array_map(function ($m) use ($gymById, $teamById, $poolById, $S) {
-      return [
-        'r' => $m['round'] !== null ? (int)$m['round'] : null,
-        'time' => $m['scheduled_time'],
-        'gym' => $gymById[$m['gym_id']] ?? '',
-        'court' => $m['court'] !== null ? (int)$m['court'] : null,
-        'pool' => isset($poolById[$m['pool_id']]) ? $poolById[$m['pool_id']]['letter'] : '',
-        'a' => isset($teamById[$m['team_a']]) ? $teamById[$m['team_a']]['name'] : '',
-        'b' => isset($teamById[$m['team_b']]) ? $teamById[$m['team_b']]['name'] : '',
-        'ref' => isset($teamById[$m['referee_team']]) ? $teamById[$m['referee_team']]['name'] : '',
-        'sa' => $m['score_a'] !== null ? (int)$m['score_a'] : null,
-        'sb' => $m['score_b'] !== null ? (int)$m['score_b'] : null,
-        'sets' => $m['sets'] !== null ? json_decode($m['sets']) : null,
-        'status' => $S[$m['status']] ?? 'upcoming',
-      ];
-    }, $matches);
-
-    ok(['pools' => $poolsOut, 'schedule' => $schedOut]);
+  // Accès public (sans authentification) pour un capitaine qui scanne le QR
+  // code / saisit le code du tournoi : retrouve le tournoi en cours par son
+  // join_code et renvoie juste de quoi afficher la liste des équipes et le
+  // planning (pas de données sensibles : c'est précisément ce que le QR est
+  // censé donner).
+  case 'tournaments.publicByCode': {
+    $code = strtoupper(trim((string)($_GET['code'] ?? '')));
+    if ($code === '') fail(400, "Code manquant.");
+    $st = db()->prepare("SELECT id, name, status FROM vbo_tournaments WHERE join_code = ?");
+    $st->execute([$code]);
+    $t = $st->fetch();
+    if (!$t || $t['status'] !== 'live') { ok(null); break; }
+    $s = load_structure($t['id']);
+    if ($s === null) { ok(null); break; }
+    ok(['name' => $t['name'], 'pools' => $s['pools'], 'schedule' => $s['schedule']]);
     break;
   }
 
@@ -322,7 +380,7 @@ switch ($action) {
     $id = uuid4();
     db()->prepare(
       "INSERT INTO vbo_users (id, email, password_hash, full_name, role, status)
-       VALUES (?,?,?,?, 'referent', 'active')"
+      VALUES (?,?,?,?, 'referent', 'active')"
     )->execute([$id, $email, password_hash($pass, PASSWORD_DEFAULT), $name]);
     ok(['ok' => true, 'id' => $id, 'email' => $email, 'name' => $name]);
     break;
