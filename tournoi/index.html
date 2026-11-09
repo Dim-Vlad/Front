@@ -479,11 +479,18 @@ window.api = (function(){
     addPhase:       (tid,s)=>          call('tournaments.addPhase',    {body:{tid,s}}),
     loadStructure:  (tid)=>            call('tournaments.loadStructure',{query:{tid}}),
     setMatchScore:  (id,sets,complete)=> call('matches.setScore',       {body:{id,sets,complete}}),
+    submitCaptainScore:(matchId,teamName,sets)=> call('matches.submitCaptainScore', {body:{matchId,teamName,sets}}),
+    listConflicts:  (tid)=>            call('matches.conflicts',       {query:{tid}}),
+    resolveConflict:(matchId,payload)=> call('matches.resolveConflict', {body:Object.assign({matchId},payload||{})}),
     publicByCode:   (code)=>           call('tournaments.publicByCode', {query:{code}}),
     listReferents:  ()=>               call('referents.list'),
     createReferent: (name,email,password)=> call('referents.create',   {body:{name,email,password}}),
     setReferentStatus:(id,status)=>    call('referents.setStatus',     {body:{id,status}}),
     removeReferent: (id)=>             call('referents.remove',        {body:{id}}),
+    listOrganizers: ()=>               call('organizers.list'),
+    createOrganizer:(name,email,password)=> call('organizers.create', {body:{name,email,password}}),
+    setOrganizerStatus:(id,status)=>   call('organizers.setStatus',    {body:{id,status}}),
+    removeOrganizer:(id)=>             call('organizers.remove',       {body:{id}}),
   };
 })();
 // Drapeau « backend présent » : le code existant teste window.sb un peu partout.
@@ -596,6 +603,17 @@ window.sb = { _ovh:true };
     async setMatchScore(matchId, sets, complete){
       if(!isUuid(matchId)) throw new Error('Match non synchronisé — rouvrez le tournoi.');
       return await api.setMatchScore(matchId, sets, complete);
+    },
+    // Matchs où les deux capitaines ont saisi des scores différents (écran Valider).
+    async listConflicts(tid){
+      if(!isUuid(tid)) return [];
+      return await api.listConflicts(tid);
+    },
+    // Tranche un conflit : {pick:'a'|'b'} reprend la saisie d'un capitaine,
+    // {sets:[[sa,sb],...]} impose un score saisi par l'organisation.
+    async resolveConflict(matchId, payload){
+      if(!isUuid(matchId)) throw new Error('Match non synchronisé — rouvrez le tournoi.');
+      return await api.resolveConflict(matchId, payload);
     },
   };
 })();
@@ -754,7 +772,10 @@ const state = {
   captainList:[],
   livePhase:'brassage',
   referents:[],
+  organizers:[],
   refSession:null,
+  conflicts:[],
+  _conflictsLoaded:false,
 };
 function fmtDate(iso,long){
   if(!iso) return '';
@@ -1178,8 +1199,21 @@ function buildBracket(cat){
   const first=[]; for(let i=0;i<K/2;i++){ first.push([seeds[order[2*i]], seeds[order[2*i+1]]]); }
   return {K, first, seeds};
 }
-// Organiser pending conflicts (saisies capitaines contradictoires à arbitrer)
-const conflicts = [];
+// Scores en conflit (saisies capitaines contradictoires à arbitrer) : voir state.conflicts,
+// chargé par refreshConflicts() et consommé par renderTabs / screens.orgLive / screens.validate.
+async function refreshConflicts(tid){
+  try{
+    state.conflicts = await vboDb.listConflicts(tid);
+  }catch(e){
+    state.conflicts = [];
+  }
+  state._conflictsLoaded = true;
+  const cur = navStack.length ? navStack[navStack.length-1].screen : null;
+  if(cur==='orgLive' || cur==='validate'){
+    renderTabs(cur);
+    screens[cur]();
+  }
+}
 
 /* ---------------- Router ---------------- */
 const host = document.getElementById('screenHost');
@@ -1245,7 +1279,8 @@ screens.home = ()=>{
         <span class="chev">›</span>
       </button>
     </div>
-    <button class="btn ghost" style="margin-top:18px" onclick="location.href='../'">← Retour au site du club</button>
+    <a class="btn ghost" style="margin-top:18px" href="https://claude.ai/artifact/T1JnRR66sFYYFZuhH4F6pz" target="_blank" rel="noopener">📖 Guide d'utilisation</a>
+    <button class="btn ghost" style="margin-top:10px" onclick="location.href='../'">← Retour au site du club</button>
     ${installBlock('full')}`;
 };
 
@@ -1285,7 +1320,7 @@ window.orgSignIn = async ()=>{
 window.vboSignOut = (which)=>{
   try { api.logout(); } catch(e){}
   if(which==='refSession'){ state.refSession=null; state.refProfile=null; }
-  else { state.authed=false; state.adminProfile=null; state._tournLoaded=false; state._refsLoaded=false; }
+  else { state.authed=false; state.adminProfile=null; state._tournLoaded=false; state._refsLoaded=false; state._orgsLoaded=false; }
 };
 
 const TOURN_ST={
@@ -1356,13 +1391,26 @@ async function refreshReferents(){
   }catch(e){ console.warn('Chargement référents:', e); state._refsLoaded=true; }
 }
 window.refreshReferents = refreshReferents;
+// Recharge la liste des organisateurs depuis l'API (users, role = admin).
+async function refreshOrganizers(){
+  try{
+    const data = await api.listOrganizers();
+    state.organizers = (data||[]).map(p=>({
+      id:p.id, name:p.full_name||'(sans nom)', email:p.email||'', password:null,
+      status:p.status||'active', createdAt:p.created_at?Date.parse(p.created_at):Date.now(), invited:true,
+    }));
+    state._orgsLoaded=true;
+  }catch(e){ console.warn('Chargement organisateurs:', e); state._orgsLoaded=true; }
+}
+window.refreshOrganizers = refreshOrganizers;
 screens.dashboard = ()=>{
   setTop(null); tabbar.hidden=true;
-  // Premier affichage avec l'API : on charge depuis la base (tournois + nombre de référents) puis on ré-affiche.
-  if(window.vboDb && (!state._tournLoaded || !state._refsLoaded)){
+  // Premier affichage avec l'API : on charge depuis la base (tournois + référents + organisateurs) puis on ré-affiche.
+  if(window.vboDb && (!state._tournLoaded || !state._refsLoaded || !state._orgsLoaded)){
     Promise.all([
       state._tournLoaded ? Promise.resolve() : refreshTournaments(),
       state._refsLoaded ? Promise.resolve() : refreshReferents(),
+      state._orgsLoaded ? Promise.resolve() : refreshOrganizers(),
     ]).then(()=>{ const cur=navStack[navStack.length-1]; if(cur && cur.screen==='dashboard') screens.dashboard(); });
     host.innerHTML = `<div class="screen" style="padding:0">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
@@ -1402,6 +1450,11 @@ screens.dashboard = ()=>{
       ${body}
       ${view==='active'?`<button class="btn accent" style="margin-top:20px" onclick="startWizard()">＋ Créer un tournoi</button>`:''}
       <p class="eyebrow" style="margin:22px 0 8px">Administration</p>
+      <button class="list-item" style="width:100%;text-align:left;background:var(--surface)" onclick="go('adminOrganizers')">
+        <span class="ic" style="background:var(--brand-soft);color:var(--brand)">${ICON.organizer}</span>
+        <span style="min-width:0"><b>Organisateurs</b><small>${state.organizers.length} compte${state.organizers.length>1?'s':''} · gestion des tournois</small></span>
+        <span class="chev">›</span>
+      </button>
       <button class="list-item" style="width:100%;text-align:left;background:var(--surface)" onclick="go('adminReferents')">
         <span class="ic" style="background:var(--brand-soft);color:var(--brand)">${ICON.referee}</span>
         <span style="min-width:0"><b>Référents gymnase</b><small>${state.referents.length} compte${state.referents.length>1?'s':''} · accès sur place</small></span>
@@ -1435,6 +1488,7 @@ window.openTournament=async (id)=>{
   if(t.joinCode) state.joinCode=t.joinCode;
   state.currentDraftId=t.id;
   state.livePhase=t.livePhase||'brassage';
+  state.conflicts=[]; state._conflictsLoaded=false;
   // Planning/Classements doivent s'ouvrir sur la phase réellement en cours, pas
   // rester bloqués sur le brassage si ce tournoi a déjà avancé.
   schedPhase = state.livePhase==='brassage' ? 'brassage' : 'principal'; schedGym='all';
@@ -1451,6 +1505,7 @@ window.openTournament=async (id)=>{
         if(cur && (cur.screen==='orgLive'||cur.screen==='myMatches')) render(cur.screen, cur.opts);
       }
     }catch(e){ console.warn('Lecture structure:', e); }
+    refreshConflicts(t.id);
   }
 };
 
@@ -2036,7 +2091,7 @@ function renderTabs(active){
     {id:'bracket',ic:'🏆',label:'Finale'},
   ];
   tabbar.innerHTML=tabs.map(t=>`<button class="${t.id===active?'on':''}" onclick="go('${t.id}')">
-    <span class="ti">${t.ic}</span>${t.label}${t.id==='validate'&&conflicts.length?`<span style="position:absolute;margin:-6px 0 0 16px;width:8px;height:8px;border-radius:50%;background:var(--danger)"></span>`:''}</button>`).join('');
+    <span class="ti">${t.ic}</span>${t.label}${t.id==='validate'&&state.conflicts.length?`<span style="position:absolute;margin:-6px 0 0 16px;width:8px;height:8px;border-radius:50%;background:var(--danger)"></span>`:''}</button>`).join('');
 }
 
 screens.orgLive = ()=>{
@@ -2084,8 +2139,8 @@ screens.orgLive = ()=>{
       <div style="height:8px;border-radius:5px;background:var(--surface-2);overflow:hidden;margin-top:4px"><div style="width:${pct}%;height:100%;background:var(--brand)"></div></div>
       <small class="muted" style="display:block;margin-top:6px">${pct} % des matchs saisis</small>
     </div>
-    ${conflicts.length?`<div class="card" style="margin-top:12px;background:var(--danger-soft);border:none">
-      <div style="display:flex;align-items:center;gap:8px"><span>⚠️</span><b style="font-size:14px;color:var(--danger)">${conflicts.length} score en conflit à valider</b>
+    ${state.conflicts.length?`<div class="card" style="margin-top:12px;background:var(--danger-soft);border:none">
+      <div style="display:flex;align-items:center;gap:8px"><span>⚠️</span><b style="font-size:14px;color:var(--danger)">${state.conflicts.length} score en conflit à valider</b>
       <button class="btn sm" style="margin-left:auto;background:var(--danger)" onclick="go('validate')">Voir</button></div></div>`:''}
     <div class="gymhead"><span class="dot" style="background:var(--brand)"></span><h3>Terrains en direct</h3></div>
     ${live.length?live.map(m=>liveCourtRow(m.gym,`Terrain ${m.court} · Poule ${m.pool}`,m.a,m.b,'en cours',m)).join(''):'<p class="muted" style="font-size:13px">Aucun match en cours pour le moment.</p>'}`;
@@ -2688,6 +2743,12 @@ screens.standings = ()=>{
 
 screens.validate = ()=>{
   setTop(null); renderTabs('validate');
+  if(!state._conflictsLoaded && state.currentDraftId){
+    refreshConflicts(state.currentDraftId);
+    host.innerHTML=`<div style="padding:0"><div class="empty">⏳<p>Chargement…</p></div></div>`;
+    return;
+  }
+  const conflicts=state.conflicts;
   if(!conflicts.length){ host.innerHTML=`<div style="padding:0;text-align:center;margin-top:40px"><div style="font-size:46px">✅</div><h3 style="margin-top:10px">Aucun conflit</h3><p class="lead">Tous les scores concordent.</p></div>`; return; }
   host.innerHTML=`<div style="padding:0">
     <h3 style="font-size:19px">Scores à valider</h3>
@@ -2696,16 +2757,68 @@ screens.validate = ()=>{
       <div class="meta" style="display:flex;gap:8px;font-size:11.5px;color:var(--muted);font-weight:700"><span class="chip">Poule ${c.pool}</span><span class="chip">Terrain ${c.court}</span></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px"><b>${c.a}</b><b>${c.b}</b></div>
       <div style="display:flex;gap:10px;margin-top:10px">
-        <button class="btn outline" style="flex-direction:column;gap:2px" onclick="resolveConflict('${c.id}','A')">
-          <small style="font-weight:600">Capitaine ${c.a}</small><span style="font-size:20px;font-weight:800">${c.capA.sa} – ${c.capA.sb}</span></button>
-        <button class="btn outline" style="flex-direction:column;gap:2px" onclick="resolveConflict('${c.id}','B')">
-          <small style="font-weight:600">Capitaine ${c.b}</small><span style="font-size:20px;font-weight:800">${c.capB.sa} – ${c.capB.sb}</span></button>
+        <button class="btn outline" style="flex-direction:column;gap:2px" onclick="resolveConflict('${c.matchId}','a')">
+          <small style="font-weight:600">Capitaine ${c.a}</small><span style="font-size:20px;font-weight:800">${scoreSC({sets:c.entryA.sets})}</span></button>
+        <button class="btn outline" style="flex-direction:column;gap:2px" onclick="resolveConflict('${c.matchId}','b')">
+          <small style="font-weight:600">Capitaine ${c.b}</small><span style="font-size:20px;font-weight:800">${scoreSC({sets:c.entryB.sets})}</span></button>
       </div>
-      <button class="btn ghost sm" style="width:100%;margin-top:10px" onclick="toast('Saisie manuelle ouverte (démo)')">Saisir un autre score</button>
+      <button class="btn ghost sm" style="width:100%;margin-top:10px" onclick="openResolveManual('${c.matchId}')">Saisir un autre score</button>
     </div>`).join('')}
   </div>`;
 };
-window.resolveConflict=(id,pick)=>{ const i=conflicts.findIndex(c=>c.id===id); if(i>-1)conflicts.splice(i,1); toast('Score validé — classement mis à jour'); renderTabs('validate'); screens.validate(); };
+async function applyConflictResolution(matchId){
+  const i=state.conflicts.findIndex(c=>c.matchId===matchId); if(i>-1) state.conflicts.splice(i,1);
+  if(state.currentDraftId && window.vboDb && vboDb.isUuid(state.currentDraftId)){
+    try{ applyLoadedStructure(await vboDb.loadStructure(state.currentDraftId)); }catch(e){ console.warn('Relecture structure:', e); }
+  }
+  toast('Score validé — classement mis à jour');
+  renderTabs('validate'); screens.validate();
+}
+window.resolveConflict=async (matchId,pick)=>{
+  try{ await vboDb.resolveConflict(matchId, {pick}); await applyConflictResolution(matchId); }
+  catch(e){ console.warn('Résolution conflit:', e); toast('⚠️ Validation échouée'); }
+};
+window.openResolveManual=(matchId)=>{
+  const c=state.conflicts.find(x=>x.matchId===matchId); if(!c) return;
+  const m=findMatchById(matchId);
+  const nSets=Math.max(1, rulesForMatchPhase(m&&m.phase).sets||1);
+  const rows=Array.from({length:nSets},(_,s)=>`<div class="scorebox"${s>0?' style="margin-top:12px"':''}>
+      ${nSets>1?`<div class="setlab">Set ${s+1}</div>`:''}
+      <div><div class="tlab">${c.a}</div><input class="num" id="rsc_a${s}" inputmode="numeric" placeholder="0"></div>
+      <div class="dash">–</div>
+      <div><div class="tlab">${c.b}</div><input class="num" id="rsc_b${s}" inputmode="numeric" placeholder="0"></div>
+    </div>`).join('');
+  openSheet(`<h3 style="font-size:18px;margin:2px 0 4px;font-family:var(--font-display)">Saisir un autre score</h3>
+    <p class="muted" style="font-size:13px;margin:0 0 14px">Poule ${c.pool} · Terrain ${c.court}</p>
+    ${rows}
+    <button class="btn" style="margin-top:16px;width:100%" id="resolveManualBtn" onclick="submitResolveManual('${matchId}')">Valider le score</button>`);
+};
+window.submitResolveManual=async (matchId)=>{
+  const m=findMatchById(matchId);
+  const nSets=Math.max(1, rulesForMatchPhase(m&&m.phase).sets||1);
+  const sets=[];
+  for(let s=0;s<nSets;s++){
+    const aVal=((document.getElementById('rsc_a'+s)||{}).value||'').trim();
+    const bVal=((document.getElementById('rsc_b'+s)||{}).value||'').trim();
+    if(aVal===''&&bVal==='') continue;
+    const a=parseInt(aVal), b=parseInt(bVal);
+    if(isNaN(a)||isNaN(b)){ toast(`Entrez les deux scores du set ${s+1}`); return; }
+    if(a===b){ toast('Un set ne peut pas finir à égalité'); return; }
+    sets.push([a,b]);
+  }
+  if(!sets.length){ toast('Entrez au moins le score d\'un set'); return; }
+  const btn=document.getElementById('resolveManualBtn');
+  if(btn){ btn.disabled=true; btn.textContent='Enregistrement…'; }
+  try{
+    await vboDb.resolveConflict(matchId, {sets});
+    closeSheet();
+    await applyConflictResolution(matchId);
+  }catch(e){
+    console.warn('Résolution manuelle:', e);
+    toast('⚠️ Enregistrement échoué');
+    if(btn){ btn.disabled=false; btn.textContent='Valider le score'; }
+  }
+};
 
 let bracketCat='principal';
 window.setBracketCat=k=>{ bracketCat=k; render('bracket'); };
@@ -2892,8 +3005,8 @@ screens.refProfile = (opts)=>{
       <span style="display:inline-flex">${ICON.trash}</span>Supprimer le référent</button>
   </div>`;
 };
-window.toggleProfilePwd=(btn)=>{
-  const el=document.getElementById('rp_pwd'); if(!el) return;
+window.toggleProfilePwd=(btn,id)=>{
+  const el=document.getElementById(id||'rp_pwd'); if(!el) return;
   const hidden=el.textContent.indexOf('•')>=0;
   el.textContent=hidden?el.getAttribute('data-full'):'••••••••';
   btn.innerHTML=hidden?EYE_OFF:EYE_ON;
@@ -3043,6 +3156,223 @@ screens.refMail = ()=>{
 window.copyRefMsg=()=>{
   const el=document.getElementById('rf_msg');
   const txt = el ? el.value : (lastRef?refInviteMessage(lastRef):'');
+  const done=()=>toast('Message copié');
+  try{
+    navigator.clipboard.writeText(txt).then(done).catch(()=>{ if(el){ el.focus(); el.select(); document.execCommand&&document.execCommand('copy'); done(); } });
+  }catch(_){ if(el){ el.focus(); el.select(); try{ document.execCommand('copy'); done(); }catch(e){ toast('Copie impossible — sélectionnez le texte'); } } }
+};
+
+// =====================================================================
+//  Organisateurs (comptes admin) : mêmes écrans que les référents, mais
+//  role='admin' côté backend. Un admin ne peut pas se suspendre/supprimer
+//  lui-même (protégé aussi côté API) pour éviter de se couper l'accès.
+// =====================================================================
+let lastOrg=null;
+screens.adminOrganizers = ()=>{
+  if(!state.authed){ go(state.refSession?'refSpace':'home'); return; }
+  setTop('Organisateurs'); tabbar.hidden=true;
+  if(window.sb && !state._orgsLoaded){
+    refreshOrganizers().then(()=>{ const cur=navStack[navStack.length-1]; if(cur && cur.screen==='adminOrganizers') screens.adminOrganizers(); });
+    host.innerHTML=`<div style="padding:0"><p class="eyebrow">Organisateurs</p><div class="empty">⏳<p>Chargement…</p></div></div>`;
+    return;
+  }
+  const list=state.organizers;
+  const active=list.filter(r=>r.status!=='suspended').length;
+  const myId=state.adminProfile&&state.adminProfile.id;
+  host.innerHTML=`<div style="padding:0">
+    <div class="card" style="background:var(--brand-soft);border:none;margin-bottom:14px;display:flex;gap:12px;align-items:flex-start">
+      <span style="display:inline-flex;color:var(--brand);margin-top:1px;font-size:18px">${ICON.organizer}</span>
+      <small class="muted">Les organisateurs ont un accès complet : création et gestion des tournois, saisie des scores, administration. Vous créez chaque compte avec un mot de passe, à transmettre ensuite à la personne concernée.</small>
+    </div>
+    <p class="eyebrow" style="margin:4px 0 8px">${list.length} compte${list.length>1?'s':''}${active<list.length?` · ${active} actif${active>1?'s':''}`:''}</p>
+    ${list.length?`<div class="refs-grid">${list.map(r=>{
+      const susp=r.status==='suspended';
+      const me=r.id===myId;
+      return `<button class="list-item" style="width:100%;text-align:left;background:var(--surface);${susp?'opacity:.72':''}" onclick="go('organizerProfile',{id:'${r.id}'})">
+        <span class="ic" style="background:var(--brand-soft);color:var(--brand)">${ICON.organizer}</span>
+        <span style="min-width:0"><b>${r.name}${me?' (vous)':''}</b><small>${r.email}</small></span>
+        <span class="badge ${susp?'warn':'ok'}" style="margin-left:auto;flex:none">${susp?'Suspendu':'Actif'}</span>
+        <span class="chev">›</span>
+      </button>`;
+    }).join('')}</div>`:`<div class="empty">👑<p>Aucun organisateur pour l'instant.</p></div>`}
+    <button class="btn accent" style="margin-top:18px" onclick="go('createOrganizer')">＋ Créer un organisateur</button>
+  </div>`;
+};
+
+screens.organizerProfile = (opts)=>{
+  if(!state.authed){ go(state.refSession?'refSpace':'home'); return; }
+  setTop('Profil organisateur'); tabbar.hidden=true;
+  const r=state.organizers.find(x=>x.id===(opts&&opts.id));
+  if(!r){ host.innerHTML='<div class="empty">👑<p>Organisateur introuvable.</p></div>'; return; }
+  const susp=r.status==='suspended';
+  const me=state.adminProfile&&r.id===state.adminProfile.id;
+  host.innerHTML=`<div style="padding:0">
+    <div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+      <span style="width:48px;height:48px;border-radius:14px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;font-size:22px;flex:none">${ICON.organizer}</span>
+      <div style="min-width:0"><div style="font-family:var(--font-display);font-weight:800;font-size:17px">${r.name}${me?' (vous)':''}</div>
+        <span class="badge ${susp?'warn':'ok'}" style="margin-top:4px">${susp?'● Suspendu':'● Actif'}</span></div>
+    </div>
+    ${susp?`<div class="card" style="background:var(--warn-soft);border:none;margin-bottom:12px"><small class="muted">⏸️ Ce compte est suspendu : l'organisateur ne peut plus se connecter tant qu'il n'est pas réactivé.</small></div>`:''}
+    ${me?`<div class="card" style="background:var(--surface-2);border:none;margin-bottom:12px"><small class="muted">ℹ️ C'est votre propre compte : vous ne pouvez pas le suspendre ni le supprimer depuis cet écran.</small></div>`:''}
+    <p class="eyebrow" style="margin:4px 0 8px">Identifiants</p>
+    <div class="card" style="padding:2px 16px;overflow:hidden">
+      <div class="summary-row"><span class="muted">E-mail</span><b style="word-break:break-all">${r.email}</b></div>
+      ${r.password
+        ? `<div class="summary-row">
+        <span class="muted">Mot de passe</span>
+        <span style="display:flex;align-items:center;gap:8px;margin-left:auto">
+          <b id="op_pwd" data-full="${r.password}" style="letter-spacing:.04em;font-family:var(--font-display)">••••••••</b>
+          <button type="button" class="pwd-eye" style="position:static;transform:none" aria-label="Afficher le mot de passe" onclick="toggleProfilePwd(this,'op_pwd')">${EYE_ON}</button>
+        </span>
+      </div>`
+        : `<div class="summary-row"><span class="muted">Mot de passe</span><span class="muted" style="font-size:12.5px;text-align:right">Défini à la création<br>(non conservé par sécurité)</span></div>`}
+      <div class="summary-row" style="border-bottom:none"><span class="muted">Créé le</span><span>${refDateStr(r.createdAt)}</span></div>
+    </div>
+    <button class="btn ghost" style="margin-top:14px" onclick="showOrgMail('${r.id}')">✉️ Détails du compte</button>
+    ${me?'':`<p class="eyebrow" style="margin:20px 0 8px">Gestion du compte</p>
+    <button class="btn ghost" style="display:flex;align-items:center;justify-content:center;gap:8px" onclick="toggleOrgSuspend('${r.id}')">
+      <span style="display:inline-flex;color:${susp?'var(--ok)':'var(--warn)'}">${susp?ICON.organizer:ICON.pause}</span>${susp?'Réactiver le compte':'Suspendre le compte'}</button>
+    <button class="btn ghost" style="margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--danger)" onclick="confirmDeleteOrg('${r.id}')">
+      <span style="display:inline-flex">${ICON.trash}</span>Supprimer l'organisateur</button>`}
+  </div>`;
+};
+window.toggleOrgSuspend=async (id)=>{
+  const r=state.organizers.find(x=>x.id===id); if(!r) return;
+  const next = r.status==='suspended' ? 'active' : 'suspended';
+  try{ await api.setOrganizerStatus(id, next); }
+  catch(e){ toast(e.message||'Mise à jour impossible — réessayez'); console.error(e); return; }
+  r.status = next;
+  toast(next==='suspended'?'Compte suspendu':'Compte réactivé');
+  render('organizerProfile',{id});
+};
+window.confirmDeleteOrg=(id)=>{
+  const r=state.organizers.find(x=>x.id===id); if(!r) return;
+  openSheet(`<h3 style="font-size:18px;margin:2px 0 4px;font-family:var(--font-display)">Supprimer cet organisateur ?</h3>
+    <p class="muted" style="font-size:13px;line-height:1.55;margin:0 0 16px">Le compte de <b>${r.name}</b> (${r.email}) sera définitivement supprimé. Cette action est irréversible et son accès ne fonctionnera plus.</p>
+    <button class="btn" style="width:100%;background:var(--danger)" onclick="doDeleteOrg('${id}')">Supprimer définitivement</button>
+    <button class="btn ghost" style="width:100%;margin-top:10px" onclick="closeSheet()">Annuler</button>`);
+};
+window.doDeleteOrg=async (id)=>{
+  try{ await api.removeOrganizer(id); }
+  catch(e){ toast(e.message||'Suppression impossible — réessayez'); console.error(e); return; }
+  const i=state.organizers.findIndex(x=>x.id===id);
+  if(i>=0) state.organizers.splice(i,1);
+  closeSheet(); toast('Organisateur supprimé');
+  go('adminOrganizers');
+};
+
+screens.createOrganizer = ()=>{
+  if(!state.authed){ go(state.refSession?'refSpace':'home'); return; }
+  setTop('Nouvel organisateur'); tabbar.hidden=true;
+  host.innerHTML=`<div style="padding:0">
+    <div class="card">
+      <h3 style="font-size:18px;margin-bottom:2px">Créer un organisateur</h3>
+      <p class="lead">Renseignez ses coordonnées et un mot de passe. Le compte a un accès admin complet (création et gestion des tournois) et est actif immédiatement. Vous obtenez ensuite un <b>message prêt à copier-coller</b> à lui envoyer.</p>
+      <label class="field"><span>Prénom</span><input id="of_first" placeholder="Camille" autocomplete="off"></label>
+      <label class="field"><span>Nom</span><input id="of_last" placeholder="Durand" autocomplete="off"></label>
+      <label class="field"><span>Adresse e-mail</span><input id="of_mail" type="email" placeholder="nom@exemple.fr" autocomplete="off"></label>
+      <label class="field"><span>Mot de passe</span>
+        <span class="pwd-wrap">
+          <input id="of_pass" type="text" placeholder="8 caractères minimum" autocomplete="new-password">
+          <button type="button" class="pwd-eye" aria-label="Afficher ou masquer" onclick="togglePwd(this,'of_pass')">${EYE_OFF}</button>
+        </span>
+      </label>
+      <button type="button" class="btn ghost" style="margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px" onclick="genOrgPwd()">🎲 Générer un mot de passe</button>
+      <div class="card" style="background:var(--surface-2);border:none;margin:12px 0 0">
+        <small class="muted">📋 Après création, vous obtenez un message tout prêt (lien + identifiants) à copier et envoyer à l'organisateur par le moyen de votre choix.</small>
+      </div>
+      <button class="btn" id="of_submit" style="margin-top:18px" onclick="submitOrganizer()">Créer le compte</button>
+    </div>
+  </div>`;
+};
+window.genOrgPwd=()=>{
+  const inp=document.getElementById('of_pass'); if(!inp) return;
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  const n=12; let out='';
+  try{ const a=new Uint32Array(n); crypto.getRandomValues(a); for(let i=0;i<n;i++) out+=chars[a[i]%chars.length]; }
+  catch(_){ for(let i=0;i<n;i++) out+=chars[Math.floor(Math.random()*chars.length)]; }
+  inp.type='text'; inp.value=out; toast('Mot de passe généré');
+};
+window.submitOrganizer=async ()=>{
+  const first=(document.getElementById('of_first').value||'').trim();
+  const last=(document.getElementById('of_last').value||'').trim();
+  const email=(document.getElementById('of_mail').value||'').trim();
+  const pass=(document.getElementById('of_pass').value||'').trim();
+  const name=[first,last].filter(Boolean).join(' ').trim();
+  if(!name){ toast('Indiquez le prénom et le nom'); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ toast('Adresse e-mail invalide'); return; }
+  if(pass.length<8){ toast('Mot de passe : 8 caractères minimum'); return; }
+  if(state.organizers.some(x=>x.email.toLowerCase()===email.toLowerCase())){ toast('Un organisateur utilise déjà cet e-mail'); return; }
+  const btn=document.getElementById('of_submit');
+  const r={id:'o'+Date.now(), name, email, password:pass, createdAt:Date.now(), status:'active', demo:false, accountOk:false, accountError:''};
+  if(btn){ btn.disabled=true; btn.textContent='Création en cours…'; }
+  try{
+    const data = await api.createOrganizer(name, email, pass);
+    if(data && data.ok){
+      r.id = data.id||r.id; r.accountOk=true; state.organizers.push(r); state._orgsLoaded=false;
+    } else {
+      r.accountOk=false; r.accountError=(data&&data.error)||'';
+    }
+  }catch(e){
+    console.error(e); r.accountOk=false;
+    r.accountError = e.network ? 'Connexion au serveur impossible' : (e.message||'');
+  }
+  if(btn){ btn.disabled=false; btn.textContent='Créer le compte'; }
+  lastOrg=r; go('orgMail');
+};
+window.showOrgMail=(id)=>{ lastOrg=state.organizers.find(r=>r.id===id)||null; go('orgMail'); };
+
+// Construit le message prêt à envoyer au nouvel organisateur.
+function orgInviteMessage(r){
+  let appUrl;
+  try{ appUrl = location.origin + location.pathname.replace(/[^/]*$/,''); }catch(_){ appUrl=''; }
+  if(!appUrl || appUrl.indexOf('http')!==0) appUrl='https://dim-vlad.github.io/app-tournoi-vbo/';
+  return [
+    'Bonjour '+r.name+',',
+    '',
+    'Un accès organisateur (admin) a été créé pour toi sur l\'application Tournoi VBO (Volley-Ball Ollioulais).',
+    '',
+    '🔗 Application : '+appUrl,
+    '📧 E-mail : '+r.email,
+    '🔑 Mot de passe : '+(r.password||''),
+    '',
+    'Connecte-toi avec ces identifiants pour créer et gérer des tournois. Tu pourras changer ton mot de passe ensuite.',
+  ].join('\n');
+}
+screens.orgMail = ()=>{
+  const r=lastOrg;
+  const okAccount = r && r.accountOk;
+  setTop(okAccount ? 'Compte créé' : (r&&r.demo ? 'Aperçu' : 'Message prêt')); tabbar.hidden=true;
+  if(!r){ host.innerHTML='<div class="empty">👑<p>Aucun compte à afficher.</p></div>'; return; }
+  const msg = r.password ? orgInviteMessage(r) : null;
+  let banner;
+  if(okAccount){
+    banner = `<div class="card" style="background:var(--ok-soft);border:none;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:20px">✅</span><div><b style="font-size:14px">Compte créé pour ${r.name}</b><br><small class="muted">${r.email}</small></div></div>`;
+  } else if(r.demo){
+    banner = `<div class="card" style="background:var(--surface-2);border:none;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:20px">👁️</span><div><b style="font-size:14px">Aperçu — ${r.name}</b><br><small class="muted">Mode démo (hors ligne) : le compte n'est pas enregistré.</small></div></div>`;
+  } else {
+    banner = `<div class="card" style="background:var(--warn-soft,#fff3cd);border:none;margin-bottom:14px;display:flex;align-items:flex-start;gap:10px">
+      <span style="font-size:20px">⚠️</span><div><b style="font-size:14px">Compte non créé sur le serveur</b><br><small class="muted">L'organisateur ne pourra pas encore se connecter${r.accountError?' ('+r.accountError+')':''}. Le message ci-dessous reste copiable ; faites recréer le compte quand la création fonctionnera.</small></div></div>`;
+  }
+  const msgBlock = msg
+    ? `<p class="eyebrow" style="margin:4px 0 8px">Message à envoyer à l'organisateur</p>
+       <div class="card" style="padding:14px 16px">
+         <textarea id="of_msg" readonly rows="9" style="width:100%;border:none;background:var(--surface-2);border-radius:10px;padding:12px;font:inherit;font-size:13px;line-height:1.55;color:var(--fg);resize:vertical;box-sizing:border-box">${msg.replace(/</g,'&lt;')}</textarea>
+         <button type="button" class="btn" style="margin-top:12px;display:flex;align-items:center;justify-content:center;gap:8px" onclick="copyOrgMsg()"><span style="display:inline-flex">${COPY_ICON}</span>Copier le message</button>
+       </div>
+       <div class="card" style="background:var(--surface-2);border:none;margin-top:10px"><small class="muted">🔒 Le mot de passe n'apparaît qu'ici, maintenant. Copiez ce message et envoyez-le à l'organisateur (mail, SMS…) avant de quitter l'écran.</small></div>`
+    : `<div class="card" style="background:var(--surface-2);border:none"><small class="muted">Le mot de passe de ce compte n'est plus disponible (affiché une seule fois à la création). Vous pouvez recréer le compte si besoin.</small></div>`;
+  host.innerHTML=`<div style="padding:0">
+    ${banner}
+    ${msgBlock}
+    <button class="btn ghost" style="margin-top:14px;width:100%" onclick="go('adminOrganizers')">← Retour aux organisateurs</button>
+  </div>`;
+};
+window.copyOrgMsg=()=>{
+  const el=document.getElementById('of_msg');
+  const txt = el ? el.value : (lastOrg?orgInviteMessage(lastOrg):'');
   const done=()=>toast('Message copié');
   try{
     navigator.clipboard.writeText(txt).then(done).catch(()=>{ if(el){ el.focus(); el.select(); document.execCommand&&document.execCommand('copy'); done(); } });
@@ -3291,11 +3621,11 @@ screens.enterScore = (o)=>{
       <div style="margin-top:8px;font-size:13px" class="muted">${rules}</div>
     </div>
     <div style="margin-top:20px">${rows}</div>
-    <button class="btn" style="margin-top:16px" onclick="submitScore('${m.id}')">Valider mon score</button>
-    <p class="demo-note" style="margin-top:16px">Pour la démo : saisissez <b>25–22</b> ${nSets>1?'à chaque set ':''}pour valider automatiquement (l'autre capitaine a mis pareil), ou un autre score pour créer un conflit.</p>
+    <button class="btn" style="margin-top:16px" id="submitScoreBtn" onclick="submitScore('${m.id}')">Valider mon score</button>
+    <p class="demo-note" style="margin-top:16px">💡 Saisissez le score tel qu'il s'est joué. Le match est validé dès que l'autre capitaine a saisi le même score ; en cas d'écart, l'organisation tranche.</p>
   </div>`;
 };
-window.submitScore=(id)=>{
+window.submitScore=async (id)=>{
   const nSets=Math.max(1, state.config.sets||1);
   const sets=[];
   for(let s=0;s<nSets;s++){
@@ -3306,18 +3636,25 @@ window.submitScore=(id)=>{
     sets.push([a,b]);
   }
   const m=(state.captainList||[]).find(x=>x.id===id); if(!m){ go('myMatches',{replace:true}); return; }
-  const se=state.schedule[+id.replace('cm','')]; // entrée de planning sous-jacente
-  const sa=sets[0][0], sb=sets[0][1];
-  // Demo logic: other captain already entered 25-22 on every set
-  const allMatch=sets.every(([a,b])=>a===25&&b===22);
-  if(allMatch){
-    if(se) se.capState={status:'valid', sa, sb, sets, mine:null};
-    toast('✓ Scores identiques — match validé automatiquement !');
-  }else{
-    if(se) se.capState={status:'pending', mine:{sa,sb,sets}};
-    toast('Score enregistré — en attente de l\'autre capitaine');
+  const se=state.schedule[+id.replace('cm','')]; // entrée de planning sous-jacente (porte le vrai id back-end)
+  if(!se || !se.id){ toast('⚠️ Match non synchronisé — revenez à la liste'); return; }
+  const btn=document.getElementById('submitScoreBtn');
+  if(btn){ btn.disabled=true; btn.textContent='Enregistrement…'; }
+  try{
+    const res=await api.submitCaptainScore(se.id, state.captainTeam||m.a, sets);
+    if(res && res.status==='validated'){
+      Object.assign(se, {sa:res.sa, sb:res.sb, sets:res.sets, status:'done'});
+      toast('✓ Scores identiques — match validé automatiquement !');
+    }else{
+      se.capState={status:'pending', mine:{sa:sets[0][0], sb:sets[0][1], sets}};
+      toast('Score enregistré — en attente de l\'autre capitaine');
+    }
+    go('myMatches',{replace:true});
+  }catch(e){
+    console.warn('Saisie score capitaine:', e);
+    toast('⚠️ Enregistrement échoué — réessayez');
+    if(btn){ btn.disabled=false; btn.textContent='Valider mon score'; }
   }
-  go('myMatches',{replace:true});
 };
 
 /* ---------- Invitation référent : définir son mot de passe ---------- */

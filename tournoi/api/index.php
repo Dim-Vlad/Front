@@ -16,9 +16,14 @@
 //    tournaments.addPhase     POST {tid,s}              -> {counts} (ajoute une phase, sans toucher au reste)
 //    tournaments.loadStructure GET  ?tid=                -> {pools,schedule}|null
 //    matches.setScore      POST {id,sets}                -> {ok} (admin/référent)
+//    matches.submitCaptainScore POST {matchId,teamName,sets} (public) -> {status:pending|validated,...}
+//    matches.conflicts     GET  ?tid=                    -> [rows] (admin/référent)
+//    matches.resolveConflict POST {matchId,pick|sets}    -> {ok} (admin/référent)
 //    tournaments.publicByCode  GET  ?code= (public)       -> {name,pools,schedule}|null
 //    referents.list        GET                           -> [rows]
 //    referents.create      POST {name,email,password}    -> {ok,id,email,name}
+//    organizers.list       GET                           -> [rows]
+//    organizers.create     POST {name,email,password}    -> {ok,id,email,name}
 // =====================================================================
 
 require __DIR__ . '/_bootstrap.php';
@@ -89,6 +94,43 @@ function load_structure(string $tid): ?array {
   }, $matches);
 
   return ['pools' => $poolsOut, 'schedule' => $schedOut];
+}
+
+// Table de la double-saisie croisée des capitaines (une ligne par équipe par
+// match, le temps que les deux aient saisi). Pas de système de migration dans
+// ce projet : on la crée au premier besoin, aussi bien en local qu'en prod.
+function ensure_score_entries_table(PDO $pdo): void {
+  static $done = false;
+  if ($done) return;
+  $pdo->exec("CREATE TABLE IF NOT EXISTS vbo_score_entries (
+    id CHAR(36) NOT NULL PRIMARY KEY,
+    match_id CHAR(36) NOT NULL,
+    team_id CHAR(36) NOT NULL,
+    sets JSON NOT NULL,
+    score_a INT NOT NULL,
+    score_b INT NOT NULL,
+    created_at DATETIME NOT NULL,
+    UNIQUE KEY uniq_match_team (match_id, team_id),
+    KEY idx_match (match_id)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+  $done = true;
+}
+
+// Valide et normalise un tableau de sets envoyé par le client (même règles
+// pour la saisie admin, la saisie capitaine et la résolution de conflit).
+function clean_sets($sets): array {
+  if (!is_array($sets) || !count($sets)) fail(400, "Score manquant.");
+  $clean = [];
+  foreach ($sets as $s) {
+    if (!is_array($s) || count($s) !== 2) fail(400, "Score de set invalide.");
+    $a = $s[0]; $b = $s[1];
+    if (!is_numeric($a) || !is_numeric($b)) fail(400, "Score de set invalide.");
+    $a = (int)$a; $b = (int)$b;
+    if ($a < 0 || $b < 0) fail(400, "Un score ne peut pas être négatif.");
+    if ($a === $b) fail(400, "Un set ne peut pas finir à égalité.");
+    $clean[] = [$a, $b];
+  }
+  return $clean;
 }
 
 $action = $_GET['action'] ?? '';
@@ -399,18 +441,7 @@ switch ($action) {
     require_login();
     $id = (string)field('id', '');
     if (!is_uuid($id)) fail(400, "Match invalide.");
-    $sets = field('sets', []);
-    if (!is_array($sets) || !count($sets)) fail(400, "Score manquant.");
-    $clean = [];
-    foreach ($sets as $s) {
-      if (!is_array($s) || count($s) !== 2) fail(400, "Score de set invalide.");
-      $a = $s[0]; $b = $s[1];
-      if (!is_numeric($a) || !is_numeric($b)) fail(400, "Score de set invalide.");
-      $a = (int)$a; $b = (int)$b;
-      if ($a < 0 || $b < 0) fail(400, "Un score ne peut pas être négatif.");
-      if ($a === $b) fail(400, "Un set ne peut pas finir à égalité.");
-      $clean[] = [$a, $b];
-    }
+    $clean = clean_sets(field('sets', []));
     $st = db()->prepare("SELECT id FROM vbo_matches WHERE id = ?");
     $st->execute([$id]);
     if (!$st->fetch()) fail(404, "Match introuvable.");
@@ -421,6 +452,164 @@ switch ($action) {
     $status = $complete ? 'valid' : 'todo';
     db()->prepare("UPDATE vbo_matches SET score_a = ?, score_b = ?, sets = ?, status = ? WHERE id = ?")
       ->execute([$clean[0][0], $clean[0][1], json_encode($clean), $status, $id]);
+    ok(['ok' => true]);
+    break;
+  }
+
+  // Double-saisie croisée des capitaines (public, sans authentification —
+  // mêmes capitaines que tournaments.publicByCode, sans compte). Chaque
+  // capitaine envoie son score ; on l'oriente dans le sens team_a/team_b du
+  // match pour pouvoir comparer les deux saisies. Si les deux concordent, le
+  // match est validé automatiquement ; sinon il reste 'pending' (= affiché
+  // "en attente" côté capitaines) jusqu'à l'arbitrage de l'organisation.
+  case 'matches.submitCaptainScore': {
+    $matchId = (string)field('matchId', '');
+    if (!is_uuid($matchId)) fail(400, "Match invalide.");
+    $teamName = trim((string)field('teamName', ''));
+    if ($teamName === '') fail(400, "Équipe manquante.");
+    $clean = clean_sets(field('sets', []));
+
+    $pdo = db();
+    ensure_score_entries_table($pdo);
+
+    $st = $pdo->prepare("SELECT m.status, m.team_a, m.team_b, ta.name AS name_a, tb.name AS name_b
+                          FROM vbo_matches m
+                          LEFT JOIN vbo_teams ta ON ta.id = m.team_a
+                          LEFT JOIN vbo_teams tb ON tb.id = m.team_b
+                          WHERE m.id = ?");
+    $st->execute([$matchId]);
+    $m = $st->fetch();
+    if (!$m) fail(404, "Match introuvable.");
+    if ($m['status'] === 'valid') fail(409, "Ce match est déjà validé.");
+
+    $norm = fn($s) => mb_strtolower(trim((string)$s));
+    if ($norm($teamName) === $norm($m['name_a'])) { $teamId = $m['team_a']; $side = 'a'; }
+    elseif ($norm($teamName) === $norm($m['name_b'])) { $teamId = $m['team_b']; $side = 'b'; }
+    else fail(400, "Cette équipe ne joue pas ce match.");
+
+    // Toujours stocké dans le sens team_a/team_b du match, quel que soit le
+    // capitaine qui saisit, pour que les deux lignes soient comparables.
+    $canon = $side === 'a' ? $clean : array_map(fn($s) => [$s[1], $s[0]], $clean);
+
+    $pdo->prepare("INSERT INTO vbo_score_entries (id, match_id, team_id, sets, score_a, score_b, created_at)
+                    VALUES (?,?,?,?,?,?,NOW())
+                    ON DUPLICATE KEY UPDATE sets = VALUES(sets), score_a = VALUES(score_a), score_b = VALUES(score_b), created_at = NOW()")
+      ->execute([uuid4(), $matchId, $teamId, json_encode($canon), $canon[0][0], $canon[0][1]]);
+
+    $st = $pdo->prepare("SELECT sets FROM vbo_score_entries WHERE match_id = ?");
+    $st->execute([$matchId]);
+    $entries = $st->fetchAll();
+
+    if (count($entries) < 2) {
+      $pdo->prepare("UPDATE vbo_matches SET status = 'pending' WHERE id = ? AND status = 'todo'")->execute([$matchId]);
+      ok(['status' => 'pending']);
+      break;
+    }
+
+    if ($entries[0]['sets'] === $entries[1]['sets']) {
+      $agreed = json_decode($entries[0]['sets'], true);
+      try {
+        $pdo->beginTransaction();
+        $pdo->prepare("UPDATE vbo_matches SET score_a = ?, score_b = ?, sets = ?, status = 'valid' WHERE id = ?")
+          ->execute([$agreed[0][0], $agreed[0][1], json_encode($agreed), $matchId]);
+        $pdo->prepare("DELETE FROM vbo_score_entries WHERE match_id = ?")->execute([$matchId]);
+        $pdo->commit();
+      } catch (Throwable $e) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        fail(500, "Échec de la validation du score.");
+      }
+      ok(['status' => 'validated', 'sa' => $agreed[0][0], 'sb' => $agreed[0][1], 'sets' => $agreed]);
+    } else {
+      // Conflit : volontairement pas exposé au capitaine (saisie "à l'aveugle"),
+      // seule l'organisation le voit via matches.conflicts.
+      $pdo->prepare("UPDATE vbo_matches SET status = 'pending' WHERE id = ?")->execute([$matchId]);
+      ok(['status' => 'pending']);
+    }
+    break;
+  }
+
+  // Liste les matchs où les deux capitaines ont saisi des scores différents,
+  // pour l'écran "Valider" de l'organisation.
+  case 'matches.conflicts': {
+    require_login();
+    $tid = (string)($_GET['tid'] ?? '');
+    if (!is_uuid($tid)) { ok([]); break; }
+    $pdo = db();
+    ensure_score_entries_table($pdo);
+    $st = $pdo->prepare("SELECT se.match_id, se.team_id, se.sets, se.score_a, se.score_b,
+                                 m.round, m.scheduled_time, m.court, m.team_a, m.team_b,
+                                 g.name AS gym_name, p.letter AS pool_letter,
+                                 ta.name AS name_a, tb.name AS name_b
+                          FROM vbo_score_entries se
+                          JOIN vbo_matches m ON m.id = se.match_id
+                          LEFT JOIN vbo_gyms g ON g.id = m.gym_id
+                          LEFT JOIN vbo_pools p ON p.id = m.pool_id
+                          LEFT JOIN vbo_teams ta ON ta.id = m.team_a
+                          LEFT JOIN vbo_teams tb ON tb.id = m.team_b
+                          WHERE m.tournament_id = ?
+                          ORDER BY se.match_id");
+    $st->execute([$tid]);
+    $byMatch = [];
+    foreach ($st->fetchAll() as $r) { $byMatch[$r['match_id']][] = $r; }
+    $out = [];
+    foreach ($byMatch as $matchId => $pair) {
+      if (count($pair) !== 2) continue; // une seule saisie pour l'instant : en attente, pas un conflit
+      if ($pair[0]['sets'] === $pair[1]['sets']) continue; // filet de sécurité (devrait déjà être auto-validé)
+      $bySide = [];
+      foreach ($pair as $p) { $bySide[$p['team_id'] === $p['team_a'] ? 'a' : 'b'] = $p; }
+      if (!isset($bySide['a']) || !isset($bySide['b'])) continue;
+      $out[] = [
+        'matchId' => $matchId,
+        'round'   => $pair[0]['round'] !== null ? (int)$pair[0]['round'] : null,
+        'time'    => $pair[0]['scheduled_time'],
+        'gym'     => $pair[0]['gym_name'] ?? '',
+        'court'   => $pair[0]['court'] !== null ? (int)$pair[0]['court'] : null,
+        'pool'    => $pair[0]['pool_letter'] ?? '',
+        'a'       => $pair[0]['name_a'] ?? '',
+        'b'       => $pair[0]['name_b'] ?? '',
+        'entryA'  => ['sa' => (int)$bySide['a']['score_a'], 'sb' => (int)$bySide['a']['score_b'], 'sets' => json_decode($bySide['a']['sets'])],
+        'entryB'  => ['sa' => (int)$bySide['b']['score_a'], 'sb' => (int)$bySide['b']['score_b'], 'sets' => json_decode($bySide['b']['sets'])],
+      ];
+    }
+    ok($out);
+    break;
+  }
+
+  // Tranche un conflit de double-saisie : reprend la saisie d'un des deux
+  // capitaines (`pick`:'a'|'b') ou un score saisi par l'organisation (`sets`).
+  case 'matches.resolveConflict': {
+    require_login();
+    $matchId = (string)field('matchId', '');
+    if (!is_uuid($matchId)) fail(400, "Match invalide.");
+    $pdo = db();
+    ensure_score_entries_table($pdo);
+
+    $pick = field('pick', null);
+    $setsIn = field('sets', null);
+    if ($setsIn !== null) {
+      $clean = clean_sets($setsIn);
+    } elseif ($pick === 'a' || $pick === 'b') {
+      $st = $pdo->prepare("SELECT se.team_id, se.sets, m.team_a, m.team_b
+                            FROM vbo_score_entries se JOIN vbo_matches m ON m.id = se.match_id
+                            WHERE se.match_id = ?");
+      $st->execute([$matchId]);
+      $clean = null;
+      foreach ($st->fetchAll() as $r) {
+        $side = $r['team_id'] === $r['team_a'] ? 'a' : 'b';
+        if ($side === $pick) { $clean = json_decode($r['sets'], true); break; }
+      }
+      if ($clean === null) fail(404, "Saisie introuvable.");
+    } else {
+      fail(400, "Indiquez le score retenu (pick ou sets).");
+    }
+
+    $st = $pdo->prepare("SELECT id FROM vbo_matches WHERE id = ?");
+    $st->execute([$matchId]);
+    if (!$st->fetch()) fail(404, "Match introuvable.");
+
+    $pdo->prepare("UPDATE vbo_matches SET score_a = ?, score_b = ?, sets = ?, status = 'valid' WHERE id = ?")
+      ->execute([$clean[0][0], $clean[0][1], json_encode($clean), $matchId]);
+    $pdo->prepare("DELETE FROM vbo_score_entries WHERE match_id = ?")->execute([$matchId]);
     ok(['ok' => true]);
     break;
   }
@@ -492,6 +681,61 @@ switch ($action) {
     $id = field('id');
     if (is_uuid($id)) {
       db()->prepare("DELETE FROM vbo_users WHERE id = ? AND role = 'referent'")->execute([$id]);
+    }
+    ok();
+    break;
+  }
+
+  // =========================== ORGANIZERS ============================
+  case 'organizers.list': {
+    require_admin();
+    $rows = db()->query(
+      "SELECT id, full_name, email, status, created_at
+       FROM vbo_users WHERE role = 'admin' ORDER BY created_at ASC"
+    )->fetchAll();
+    ok($rows);
+    break;
+  }
+
+  case 'organizers.create': {
+    require_admin();
+    $name  = trim((string)field('name', ''));
+    $email = strtolower(trim((string)field('email', '')));
+    $pass  = (string)field('password', '');
+    if ($name === '') fail(400, "Le nom de l'organisateur est requis.");
+    if (!preg_match('/^[^\s@]+@[^\s@]+\.[^\s@]+$/', $email)) fail(400, "Adresse e-mail invalide.");
+    if (strlen($pass) < 8) fail(400, "Le mot de passe doit faire au moins 8 caractères.");
+    $st = db()->prepare("SELECT id FROM vbo_users WHERE email = ?");
+    $st->execute([$email]);
+    if ($st->fetch()) fail(409, "Un compte existe déjà pour cette adresse e-mail.");
+    $id = uuid4();
+    db()->prepare(
+      "INSERT INTO vbo_users (id, email, password_hash, full_name, role, status)
+      VALUES (?,?,?,?, 'admin', 'active')"
+    )->execute([$id, $email, password_hash($pass, PASSWORD_DEFAULT), $name]);
+    ok(['ok' => true, 'id' => $id, 'email' => $email, 'name' => $name]);
+    break;
+  }
+
+  case 'organizers.setStatus': {
+    $u = require_admin();
+    $id = field('id');
+    $status = (string)field('status', 'active');
+    if (!in_array($status, ['active','suspended'], true)) fail(400, "Statut invalide.");
+    if (!is_uuid($id)) fail(400, "Organisateur inconnu.");
+    if ($id === $u['id']) fail(400, "Vous ne pouvez pas modifier votre propre compte depuis cet écran.");
+    db()->prepare("UPDATE vbo_users SET status = ? WHERE id = ? AND role = 'admin'")
+        ->execute([$status, $id]);
+    ok();
+    break;
+  }
+
+  case 'organizers.remove': {
+    $u = require_admin();
+    $id = field('id');
+    if ($id === $u['id']) fail(400, "Vous ne pouvez pas supprimer votre propre compte.");
+    if (is_uuid($id)) {
+      db()->prepare("DELETE FROM vbo_users WHERE id = ? AND role = 'admin'")->execute([$id]);
     }
     ok();
     break;
