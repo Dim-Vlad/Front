@@ -17,9 +17,11 @@
 //    tournaments.loadStructure GET  ?tid=                -> {pools,schedule}|null
 //    matches.setScore      POST {id,sets}                -> {ok} (admin/référent)
 //    matches.submitCaptainScore POST {matchId,teamName,sets} (public) -> {status:pending|validated,...}
-//    matches.conflicts     GET  ?tid=                    -> [rows] (admin/référent)
+//    matches.startMatch    POST {matchId,teamName} (public) -> {ok} (équipe/arbitre du match)
+//    matches.adminStartMatch POST {matchId}               -> {ok} (admin/référent)
+//    matches.conflicts     GET  ?tid=                    -> [rows] (admin/référent, type:conflict|waiting)
 //    matches.resolveConflict POST {matchId,pick|sets}    -> {ok} (admin/référent)
-//    tournaments.publicByCode  GET  ?code= (public)       -> {name,pools,schedule}|null
+//    tournaments.publicByCode  GET  ?code=&team= (public) -> {name,pools,schedule,myEntries}|null
 //    referents.list        GET                           -> [rows]
 //    referents.create      POST {name,email,password}    -> {ok,id,email,name}
 //    organizers.list       GET                           -> [rows]
@@ -39,6 +41,7 @@ function load_structure(string $tid): ?array {
     $st->execute([$tid]);
     return $st->fetchAll();
   };
+  ensure_match_started_column($pdo);
   $gyms = $fetchAll('vbo_gyms'); $teams = $fetchAll('vbo_teams');
   $pools = $fetchAll('vbo_pools'); $matches = $fetchAll('vbo_matches');
   if (!$matches) return null;
@@ -69,12 +72,20 @@ function load_structure(string $tid): ?array {
             'court' => $p['court'] !== null ? (int)$p['court'] : null, 'teams' => $teams];
   }, $pools);
 
-  $S = ['valid' => 'done', 'live' => 'live', 'pending' => 'live', 'todo' => 'upcoming'];
+  // Un match n'est « en cours » que si l'arbitre (ou l'un des deux joueurs)
+  // l'a explicitement démarré (started_at, via matches.startMatch), ou si un
+  // capitaine a déjà saisi un score pour ce match (status 'pending' : il n'y
+  // a alors plus de doute, le match est bien en train de se jouer).
+  $livePhase = function (array $m): string {
+    if ($m['status'] === 'valid') return 'done';
+    if ($m['status'] === 'pending' || !empty($m['started_at'])) return 'live';
+    return 'upcoming';
+  };
   usort($matches, function ($a, $b) {
     $r = ((int)$a['round']) <=> ((int)$b['round']);
     return $r !== 0 ? $r : strcmp((string)$a['scheduled_time'], (string)$b['scheduled_time']);
   });
-  $schedOut = array_map(function ($m) use ($gymById, $teamById, $poolById, $S) {
+  $schedOut = array_map(function ($m) use ($gymById, $teamById, $poolById, $livePhase) {
     return [
       'id' => $m['id'],
       'phase' => $m['phase'] ?? 'brassage',
@@ -89,7 +100,7 @@ function load_structure(string $tid): ?array {
       'sa' => $m['score_a'] !== null ? (int)$m['score_a'] : null,
       'sb' => $m['score_b'] !== null ? (int)$m['score_b'] : null,
       'sets' => $m['sets'] !== null ? json_decode($m['sets']) : null,
-      'status' => $S[$m['status']] ?? 'upcoming',
+      'status' => $livePhase($m),
     ];
   }, $matches);
 
@@ -114,6 +125,54 @@ function ensure_score_entries_table(PDO $pdo): void {
     KEY idx_match (match_id)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
   $done = true;
+}
+
+// Ajoute (une fois) la colonne qui retient l'instant où un match a été
+// démarré (matches.startMatch) — pas de système de migration dans ce
+// projet, donc on l'ajoute à la volée si elle n'existe pas déjà, aussi bien
+// en local qu'en prod. On évite une ENUM pour ne pas risquer de casser la
+// colonne `status` existante : un simple NULL = « pas démarré ».
+function ensure_match_started_column(PDO $pdo): void {
+  static $done = false;
+  if ($done) return;
+  $st = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                      WHERE table_schema = DATABASE() AND table_name = 'vbo_matches'
+                        AND column_name = 'started_at'");
+  if ((int)$st->fetchColumn() === 0) {
+    $pdo->exec("ALTER TABLE vbo_matches ADD COLUMN started_at DATETIME NULL");
+  }
+  $done = true;
+}
+
+// Les scores déjà saisis par UNE équipe (capitaine) pour un tournoi, afin
+// que sa saisie survive à une perte de connexion / un rechargement de page
+// (vbo_score_entries est déjà persistée en base ; il ne manquait que ce
+// moyen de la relire côté capitaine, qui n'a pas de compte/session).
+function my_entries_for_team(PDO $pdo, string $tid, string $teamName): array {
+  ensure_score_entries_table($pdo);
+  $teamName = trim($teamName);
+  if ($teamName === '') return [];
+  $st = $pdo->prepare("SELECT se.match_id, se.team_id, se.sets, m.team_a, m.team_b,
+                               ta.name AS name_a, tb.name AS name_b
+                        FROM vbo_score_entries se
+                        JOIN vbo_matches m ON m.id = se.match_id
+                        LEFT JOIN vbo_teams ta ON ta.id = m.team_a
+                        LEFT JOIN vbo_teams tb ON tb.id = m.team_b
+                        WHERE m.tournament_id = ?");
+  $st->execute([$tid]);
+  $norm = fn($s) => mb_strtolower(trim((string)$s));
+  $out = [];
+  foreach ($st->fetchAll() as $r) {
+    $isA = $r['team_id'] === $r['team_a'];
+    $mine = $isA ? ($r['name_a'] ?? '') : ($r['name_b'] ?? '');
+    if ($norm($mine) !== $norm($teamName)) continue;
+    // Toujours stocké dans le sens team_a/team_b : on remet dans le sens de
+    // CE capitaine (a en premier) pour préremplir son formulaire.
+    $sets = json_decode($r['sets'], true);
+    if (!$isA) $sets = array_map(fn($s) => [$s[1], $s[0]], $sets);
+    $out[$r['match_id']] = ['sa' => $sets[0][0], 'sb' => $sets[0][1], 'sets' => $sets];
+  }
+  return $out;
 }
 
 // Valide et normalise un tableau de sets envoyé par le client (même règles
@@ -192,7 +251,9 @@ switch ($action) {
   }
 
   case 'tournaments.save': {
-    require_admin();
+    // admin + référent : un référent doit pouvoir clôturer/relancer une phase
+    // depuis l'accueil (confirmPhaseSwitch/revertPhase passent par ici).
+    require_login();
     $id  = field('id');
     $row = (array)field('row', []);
     // Colonnes autorisées (liste blanche).
@@ -347,7 +408,10 @@ switch ($action) {
   // brassage) SANS toucher à l'existant — contrairement à tournaments.saveStructure qui
   // efface tout. Réutilise les équipes/gymnases déjà créés au lancement (par nom).
   case 'tournaments.addPhase': {
-    require_admin();
+    // admin + référent : déclenché par la même action de clôture de phase que
+    // tournaments.save ci-dessus (confirmPhaseSwitch génère les poules/matchs
+    // de la phase suivante et les persiste via cette route).
+    require_login();
     $tid = field('tid');
     if (!is_uuid($tid)) fail(400, "Tournoi non encore enregistré.");
     $s = (array)field('s', []);
@@ -528,8 +592,63 @@ switch ($action) {
     break;
   }
 
-  // Liste les matchs où les deux capitaines ont saisi des scores différents,
-  // pour l'écran "Valider" de l'organisation.
+  // Démarre un match (public, sans authentification — même modèle de
+  // confiance que submitCaptainScore : il faut connaître l'id du match ET
+  // le nom d'une équipe qui y est partie prenante, comme capitaine ou comme
+  // arbitre). C'est ce qui bascule le match en "live" côté API : avant ça,
+  // même un match 'todo' ne peut pas recevoir de score (cf. live_phase()).
+  case 'matches.startMatch': {
+    $matchId = (string)field('matchId', '');
+    if (!is_uuid($matchId)) fail(400, "Match invalide.");
+    $teamName = trim((string)field('teamName', ''));
+    if ($teamName === '') fail(400, "Équipe manquante.");
+
+    $pdo = db();
+    ensure_match_started_column($pdo);
+    $st = $pdo->prepare("SELECT m.status, ta.name AS name_a, tb.name AS name_b, tr.name AS name_ref
+                          FROM vbo_matches m
+                          LEFT JOIN vbo_teams ta ON ta.id = m.team_a
+                          LEFT JOIN vbo_teams tb ON tb.id = m.team_b
+                          LEFT JOIN vbo_teams tr ON tr.id = m.referee_team
+                          WHERE m.id = ?");
+    $st->execute([$matchId]);
+    $m = $st->fetch();
+    if (!$m) fail(404, "Match introuvable.");
+    if ($m['status'] === 'valid') fail(409, "Ce match est déjà validé.");
+
+    $norm = fn($s) => mb_strtolower(trim((string)$s));
+    $allowed = array_filter([$norm($m['name_a'] ?? ''), $norm($m['name_b'] ?? ''), $norm($m['name_ref'] ?? '')]);
+    if (!in_array($norm($teamName), $allowed, true)) fail(403, "Cette équipe n'est pas partie prenante de ce match.");
+
+    $pdo->prepare("UPDATE vbo_matches SET started_at = COALESCE(started_at, NOW()) WHERE id = ?")->execute([$matchId]);
+    ok(['ok' => true]);
+    break;
+  }
+
+  // Même bascule en "live", déclenchée par l'organisation (admin/référent)
+  // depuis le planning, plutôt que par une équipe sur le terrain.
+  case 'matches.adminStartMatch': {
+    require_login();
+    $matchId = (string)field('matchId', '');
+    if (!is_uuid($matchId)) fail(400, "Match invalide.");
+
+    $pdo = db();
+    ensure_match_started_column($pdo);
+    $st = $pdo->prepare("SELECT status FROM vbo_matches WHERE id = ?");
+    $st->execute([$matchId]);
+    $m = $st->fetch();
+    if (!$m) fail(404, "Match introuvable.");
+    if ($m['status'] === 'valid') fail(409, "Ce match est déjà validé.");
+
+    $pdo->prepare("UPDATE vbo_matches SET started_at = COALESCE(started_at, NOW()) WHERE id = ?")->execute([$matchId]);
+    ok(['ok' => true]);
+    break;
+  }
+
+  // Liste les matchs à traiter par l'organisation sur l'écran "Valider" :
+  // soit un vrai conflit (deux saisies différentes), soit une saisie seule
+  // qui attend l'autre capitaine depuis un moment — l'organisation peut
+  // choisir de valider ce score sans attendre.
   case 'matches.conflicts': {
     require_login();
     $tid = (string)($_GET['tid'] ?? '');
@@ -553,13 +672,15 @@ switch ($action) {
     foreach ($st->fetchAll() as $r) { $byMatch[$r['match_id']][] = $r; }
     $out = [];
     foreach ($byMatch as $matchId => $pair) {
-      if (count($pair) !== 2) continue; // une seule saisie pour l'instant : en attente, pas un conflit
-      if ($pair[0]['sets'] === $pair[1]['sets']) continue; // filet de sécurité (devrait déjà être auto-validé)
+      if (count($pair) === 2 && $pair[0]['sets'] === $pair[1]['sets']) continue; // filet de sécurité (devrait déjà être auto-validé)
       $bySide = [];
       foreach ($pair as $p) { $bySide[$p['team_id'] === $p['team_a'] ? 'a' : 'b'] = $p; }
-      if (!isset($bySide['a']) || !isset($bySide['b'])) continue;
+      $entry = fn($s) => isset($bySide[$s])
+        ? ['sa' => (int)$bySide[$s]['score_a'], 'sb' => (int)$bySide[$s]['score_b'], 'sets' => json_decode($bySide[$s]['sets'])]
+        : null;
       $out[] = [
         'matchId' => $matchId,
+        'type'    => count($pair) === 2 ? 'conflict' : 'waiting',
         'round'   => $pair[0]['round'] !== null ? (int)$pair[0]['round'] : null,
         'time'    => $pair[0]['scheduled_time'],
         'gym'     => $pair[0]['gym_name'] ?? '',
@@ -567,8 +688,8 @@ switch ($action) {
         'pool'    => $pair[0]['pool_letter'] ?? '',
         'a'       => $pair[0]['name_a'] ?? '',
         'b'       => $pair[0]['name_b'] ?? '',
-        'entryA'  => ['sa' => (int)$bySide['a']['score_a'], 'sb' => (int)$bySide['a']['score_b'], 'sets' => json_decode($bySide['a']['sets'])],
-        'entryB'  => ['sa' => (int)$bySide['b']['score_a'], 'sb' => (int)$bySide['b']['score_b'], 'sets' => json_decode($bySide['b']['sets'])],
+        'entryA'  => $entry('a'),
+        'entryB'  => $entry('b'),
       ];
     }
     ok($out);
@@ -628,7 +749,9 @@ switch ($action) {
     if (!$t || $t['status'] !== 'live') { ok(null); break; }
     $s = load_structure($t['id']);
     if ($s === null) { ok(null); break; }
-    ok(['name' => $t['name'], 'pools' => $s['pools'], 'schedule' => $s['schedule']]);
+    $team = trim((string)($_GET['team'] ?? ''));
+    $myEntries = $team !== '' ? my_entries_for_team(db(), $t['id'], $team) : [];
+    ok(['name' => $t['name'], 'pools' => $s['pools'], 'schedule' => $s['schedule'], 'myEntries' => $myEntries]);
     break;
   }
 
