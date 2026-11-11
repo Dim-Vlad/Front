@@ -2,7 +2,7 @@
  * App shell en cache pour un démarrage instantané et un usage hors connexion.
  * Incrémenter CACHE à chaque déploiement pour forcer la mise à jour.
  */
-const CACHE = 'vbo-tournoi-v8';
+const CACHE = 'vbo-tournoi-v10';
 
 const APP_SHELL = [
   './',
@@ -49,8 +49,12 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.includes('/api/')) return;
 
   if (req.mode === 'navigate') {
+    // cache: 'no-store' indispensable : sans ça, fetch() peut être servi par le
+    // cache HTTP du navigateur (si le serveur n'envoie pas d'en-têtes anti-cache
+    // sur index.html) et on re-cache alors une version déjà périmée — d'où le
+    // besoin de Ctrl+Maj+R pour voir les mises à jour.
     event.respondWith(
-      fetch(req)
+      fetch(req, { cache: 'no-store' })
         .then((res) => {
           const copy = res.clone();
           caches.open(CACHE).then((c) => c.put('./index.html', copy)).catch(() => {});

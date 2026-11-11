@@ -93,6 +93,14 @@ input,select{font-family:inherit;font-size:15px}
 .topbar h2{font-size:17px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .topbar .step{font-size:12px;color:var(--muted);font-weight:600;flex:none}
 
+/* En-tête figé affiché pendant la gestion d'un tournoi (Accueil/Planning/Poules/Valider/Finale) */
+.orgheader{background:var(--surface);border-bottom:1px solid var(--line);flex:none;
+  padding:12px max(16px,env(safe-area-inset-left,0)) 10px max(16px,env(safe-area-inset-right,0));
+  display:flex;flex-direction:column;gap:8px}
+.orgheader .row1{display:flex;align-items:center;gap:8px;min-width:0}
+.orgheader .row2{display:flex;align-items:center;gap:8px;min-width:0}
+.orgheader .row2 b{font-family:var(--font-display);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+
 /* Screen scroll area */
 .screen{flex:1;overflow-y:auto;overflow-x:hidden;
   --pad-y:18px;--pad-x:max(16px,env(safe-area-inset-left,0));
@@ -112,6 +120,7 @@ input,select{font-family:inherit;font-size:15px}
 .btn.accent{background:var(--accent)}
 .btn.ghost{background:var(--surface-2);color:var(--fg)}
 .btn.ok{background:var(--ok)}
+.btn.warn{background:var(--warn);color:#fff}
 .btn.sm{padding:10px 14px;font-size:13.5px;width:auto;border-radius:11px}
 .btn.outline{background:transparent;color:var(--brand);box-shadow:inset 0 0 0 1.5px var(--brand)}
 .btn:disabled{opacity:.45}
@@ -234,6 +243,20 @@ input,select{font-family:inherit;font-size:15px}
 .pool li .seed{width:22px;height:22px;border-radius:7px;background:var(--brand-soft);color:var(--brand);
   font-size:11px;font-weight:800;display:grid;place-items:center;flex:none}
 
+/* Carte équipe (éditeur de répartition phase 2) */
+.p2card{border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin:8px 0;background:var(--surface);
+  display:flex;align-items:flex-start;gap:10px}
+.p2card .seed{min-width:22px;height:22px;padding:0 5px;border-radius:7px;background:var(--brand-soft);color:var(--brand);
+  font-size:11px;font-weight:800;display:grid;place-items:center;flex:none;margin-top:2px}
+.p2card .p2info{min-width:0;flex:1}
+.p2card .p2name{font-weight:700;line-height:1.3;word-break:break-word}
+.p2card .p2meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.p2card .p2moveto{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;padding-top:9px;border-top:1px dashed var(--line)}
+.p2card .p2moveto .p2movelbl{font-size:11px;color:var(--muted);margin-right:2px}
+.p2card .p2moveto .p2pool{height:30px;padding:0 10px;border-radius:8px;border:1.5px solid var(--brand-soft);
+  background:var(--brand-soft);color:var(--brand);font-weight:700;font-size:12.5px;font-family:var(--font-display)}
+.p2card .p2moveto .p2pool:active{opacity:.75}
+
 /* Standings table */
 .tbl{width:100%;border-collapse:collapse;font-size:13.5px}
 .tbl th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);text-align:center;padding:8px 4px;font-weight:700}
@@ -289,13 +312,16 @@ input,select{font-family:inherit;font-size:15px}
   background:var(--surface-2);padding:10px 18px;border-radius:12px}
 
 /* Bottom tab bar */
-.tabbar{position:sticky;bottom:0;z-index:20;display:flex;background:var(--surface);
+.tabbar{position:sticky;bottom:0;z-index:20;display:flex;gap:4px;background:var(--surface);
   border-top:1px solid var(--line);
   padding:8px max(10px,env(safe-area-inset-left,0)) calc(8px + env(safe-area-inset-bottom,0)) max(10px,env(safe-area-inset-right,0))}
 .tabbar button{flex:1;border:none;background:none;color:var(--muted);display:flex;flex-direction:column;
-  align-items:center;gap:3px;font-size:10.5px;font-weight:700;padding:5px 2px;border-radius:12px}
-.tabbar button .ti{font-size:20px;line-height:1}
-.tabbar button.on{color:var(--brand)}
+  align-items:center;gap:3px;font-size:10.5px;font-weight:700;padding:6px 2px;border-radius:14px;
+  position:relative;transition:color .18s ease,background .18s ease;-webkit-tap-highlight-color:transparent}
+.tabbar button:active{background:var(--surface-2)}
+.tabbar button .ti{font-size:20px;line-height:1;transition:transform .18s ease}
+.tabbar button.on{color:var(--brand);background:var(--brand-soft)}
+.tabbar button.on .ti{transform:translateY(-1px) scale(1.1)}
 
 /* Bracket */
 .bracket{--bgap:22px;display:flex;align-items:stretch;overflow-x:auto;padding:4px 2px 12px}
@@ -669,6 +695,9 @@ window.sb = { _ovh:true };
   </div>
   <div class="wiz-prog" id="wizProg" hidden></div>
 
+  <!-- EN-TÊTE FIGÉ (gestion d'un tournoi) -->
+  <div class="orgheader" id="orgHeader" hidden></div>
+
   <!-- SCREENS -->
   <div class="screen" id="screenHost"></div>
 
@@ -790,6 +819,7 @@ const LEVELS=[
   {id:'jeu',label:'Jeunes (U18)',short:'U18',color:'#2e4be0',w:1},
 ];
 function levelMeta(id){return LEVELS.find(l=>l.id===id)||LEVELS[2];}
+function ordinalFr(n){return n===1?'1er':n+'e';}
 const LEVEL_BADGE_LABEL={nat:'Natio',reg:'Régio',dep:'Départ',jeu:'M18'};
 function isStaff(){ return !!(state.authed || state.refSession); }
 function teamLevel(name){ const t=(state.teams||[]).find(x=>x.name===name); return t?t.level:null; }
@@ -1161,31 +1191,54 @@ function splitQualifiers(pools, schedule){
 // invaincue (1ère de sa poule) sont traitées en priorité à nombre de
 // qualifiés égal, pour répartir ces têtes de série le plus uniformément
 // possible entre les nouvelles poules.
-function seedPhase2Pools(teams, P){
-  const pools=[]; for(let i=0;i<P;i++) pools.push({letter:POOL_LETTERS[i]||('P'+(i+1)),gym:null,court:1,teams:[]});
-  const byOrigin=new Map();
-  teams.forEach(t=>{ if(!byOrigin.has(t.from)) byOrigin.set(t.from, []); byOrigin.get(t.from).push(t); });
-  const origins=[...byOrigin.keys()].sort((a,b)=>{
-    const am=byOrigin.get(a).length, bm=byOrigin.get(b).length;
-    if(bm!==am) return bm-am;
-    const aSeed=byOrigin.get(a).some(x=>x.isSeed && x.seed===0)?0:1;
-    const bSeed=byOrigin.get(b).some(x=>x.isSeed && x.seed===0)?0:1;
-    return aSeed-bSeed;
+function seedPhase2Pools(teams, P, letters){
+  const L=letters||POOL_LETTERS;
+  const pools=[]; for(let i=0;i<P;i++) pools.push({letter:L[i]||('P'+(i+1)),gym:null,court:1,teams:[]});
+  // Traite les qualifiés NIVEAU DE CLASSEMENT par niveau de classement (tous les
+  // 1ers de poule d'abord, puis tous les 2es, puis les éventuels repêchés) plutôt
+  // que poule d'origine par poule d'origine : chaque équipe prend alors la poule
+  // la moins chargée parmi celles ne contenant pas déjà une équipe de sa poule
+  // de brassage d'origine (jamais deux équipes de la même poule d'origine dans
+  // la même poule de phase 2, sauf si vraiment impossible à éviter). Un
+  // regroupement poule d'origine par poule d'origine pouvait, à charge égale,
+  // empiler plusieurs 1ers de poule dans la même poule de phase 2 pendant
+  // qu'une autre n'héritait que de 3es — ce tri par niveau l'évite.
+  const bySeed=new Map();
+  teams.forEach(t=>{ if(!bySeed.has(t.seed)) bySeed.set(t.seed, []); bySeed.get(t.seed).push(t); });
+  [...bySeed.keys()].sort((a,b)=>a-b).forEach(seed=>{
+    const members=bySeed.get(seed).slice().sort((a,b)=>(b.isSeed?1:0)-(a.isSeed?1:0));
+    members.forEach(team=>{
+      const eligible=pools.filter(p=>!p.teams.some(x=>x.from===team.from));
+      const candidates=(eligible.length?eligible:pools).slice().sort((a,b)=>a.teams.length-b.teams.length);
+      candidates[0].teams.push(team);
+    });
   });
-  let ptr=0;
-  origins.forEach(o=>{
-    const members=byOrigin.get(o).slice().sort((a,b)=>a.seed-b.seed);
-    const order=Array.from({length:P},(_,k)=>(ptr+k)%P)
-      .sort((x,y)=>pools[x].teams.length-pools[y].teams.length);
-    members.forEach((team,m)=>{ pools[m<P?order[m]:order[m%P]].teams.push(team); });
-    ptr=(ptr+1)%P;
-  });
+  // Passe de rééquilibrage : la contrainte d'anti-collision (ci-dessus) peut,
+  // sur certaines compositions de poules d'origine, forcer plusieurs équipes
+  // d'une même poule d'origine vers la seule poule de phase 2 qui leur reste
+  // éligible, créant un écart de taille supérieur au minimum possible (ex. une
+  // poule à 5 pendant qu'une autre reste à 2). On déplace alors une équipe de
+  // la poule la plus chargée vers la moins chargée (sans jamais créer de
+  // collision), en retirant en priorité l'équipe la moins bien classée pour
+  // ne pas défaire la répartition des 1ers/2es déjà obtenue.
+  let guard=teams.length*P;
+  while(guard-->0){
+    const fullest=pools.slice().sort((a,b)=>b.teams.length-a.teams.length)[0];
+    const emptiest=pools.slice().sort((a,b)=>a.teams.length-b.teams.length)[0];
+    if(fullest.teams.length-emptiest.teams.length<=1) break;
+    const movable=fullest.teams.filter(x=>!emptiest.teams.some(y=>y.from===x.from));
+    if(!movable.length) break;
+    movable.sort((a,b)=> b.seed-a.seed || (a.isSeed?1:0)-(b.isSeed?1:0));
+    const team=movable[0];
+    fullest.teams.splice(fullest.teams.indexOf(team),1);
+    emptiest.teams.push(team);
+  }
   return pools;
 }
-function makeCategory(teams, forceGym, forceP){
+function makeCategory(teams, forceGym, forceP, letters){
   const T=state.config.teamsPerPool||4;
   const P=forceP || Math.max(1, Math.round(teams.length/T)||1);
-  const pools=seedPhase2Pools(teams, P);
+  const pools=seedPhase2Pools(teams, P, letters);
   distributeCourts(pools, forceGym);
   return {pools, schedule:makeSchedule(pools, horaireFor('poules2'))};
 }
@@ -1193,10 +1246,21 @@ function buildPhase2(){
   const q=splitQualifiers(state.pools, state.schedule);
   // Option : Principale dans le gymnase 1, Consolante dans le gymnase 2 (un organisateur par gymnase)
   const split = !!state.config.splitPhase2ByGym && state.config.gyms>=2 && state.config.phaseConsolante;
+  const T=state.config.teamsPerPool||4;
+  const nPrinc=state.config.principalPools||4;
+  const nConso=state.config.phaseConsolante ? Math.max(1, Math.round(q.consolante.length/T)||1) : 0;
+  // Lettres de phase 2 en ordre alphabétique INVERSE (Z, Y, X…) par rapport au
+  // brassage (A, B, C… croissant) : on évite ainsi qu'une « Poule A » de
+  // brassage et une « Poule A » de phase 2 se retrouvent affichées côte à côte
+  // en même temps. La Consolante démarre cette séquence descendante (hérite
+  // des lettres les plus proches de Z), puis la Principale l'enchaîne.
+  const REV=POOL_LETTERS.slice().reverse();
+  const consoLetters=REV.slice(0, nConso);
+  const princLetters=REV.slice(nConso, nConso+nPrinc);
   // Principale : nombre de poules fixé par réglage (après repêchage des meilleurs 3es).
-  state.phasePrincipal=makeCategory(q.principal, split?0:undefined, state.config.principalPools||4);
+  state.phasePrincipal=makeCategory(q.principal, split?0:undefined, nPrinc, princLetters);
   // Consolante désactivée : les 3es–4es sont éliminés, pas de second tableau
-  state.phaseConsolante = state.config.phaseConsolante ? makeCategory(q.consolante, split?1:undefined) : {pools:[], schedule:[]};
+  state.phaseConsolante = state.config.phaseConsolante ? makeCategory(q.consolante, split?1:undefined, nConso, consoLetters) : {pools:[], schedule:[]};
 }
 function ensurePhases(){ if(!state.phasePrincipal||!state.phaseConsolante) buildPhase2(); }
 // Prépare la proposition de poules phase 2 affichée dans la fiche « Fin de phase » :
@@ -1207,6 +1271,16 @@ function ensurePhase2Proposal(){
   if(!persisted && !state._phase2Edited){ state.phasePrincipal=null; state.phaseConsolante=null; buildPhase2(); }
 }
 function phaseData(key){ ensurePhases(); return key==='principal'?state.phasePrincipal : key==='consolante'?state.phaseConsolante : {pools:state.pools, schedule:state.schedule}; }
+// Poule de BRASSAGE d'origine d'une équipe, à partir de state.pools (source fiable,
+// toujours disponible) plutôt que du champ `.from` des objets équipe de phase 2 :
+// ce dernier n'existe que tant que la proposition est calculée en mémoire (splitQualifiers) —
+// une fois la phase 2 enregistrée puis rechargée depuis le serveur, les poules ne
+// renvoient plus que {t, level} (cf. load_structure côté API), donc `.from` devient
+// undefined et le badge affichait « Vient de poule undefined ».
+function brassageOriginOf(teamName){
+  const p=(state.pools||[]).find(p=>(p.teams||[]).some(x=>x.t===teamName));
+  return p ? p.letter : null;
+}
 // Bracket (phase finale) persisté pour une catégorie — vide tant que le 1er tour
 // n'a pas été généré par confirmPhaseSwitch().
 function bracketData(key){ return key==='consolante' ? (state.bracketConsolante||{pools:[],schedule:[]}) : (state.bracketPrincipal||{pools:[],schedule:[]}); }
@@ -1247,24 +1321,40 @@ function applyLoadedStructure(fresh){
   const bra=byPhase('brassage');
   if(bra.pools.length) state.pools=bra.pools;
   if(bra.schedule.length) state.schedule=bra.schedule;
-  state.phasePrincipal=byPhase('principal');
-  state.phaseConsolante=byPhase('consolante');
-  state.bracketPrincipal=byPhase('finalesPrincipal');
-  state.bracketConsolante=byPhase('finalesConsolante');
-  state.bracketPrincipal3e=byPhase('finalesPrincipal3e');
-  state.bracketConsolante3e=byPhase('finalesConsolante3e');
+  // Tant qu'une phase n'est pas réellement démarrée (bouton « Démarrer »), le
+  // serveur n'a aucun match pour elle : ne jamais écraser avec un {pools:[],
+  // schedule:[]} vide, sinon le rafraîchissement auto (toutes les 20s, cf.
+  // liveRefreshTick) efface la proposition de répartition en cours d'édition
+  // (ou déjà « Enregistrée » mais pas encore démarrée).
+  const princ=byPhase('principal'); if(princ.schedule.length) state.phasePrincipal=princ;
+  const conso=byPhase('consolante'); if(conso.schedule.length) state.phaseConsolante=conso;
+  const brP=byPhase('finalesPrincipal'); if(brP.schedule.length) state.bracketPrincipal=brP;
+  const brC=byPhase('finalesConsolante'); if(brC.schedule.length) state.bracketConsolante=brC;
+  const brP3=byPhase('finalesPrincipal3e'); if(brP3.schedule.length) state.bracketPrincipal3e=brP3;
+  const brC3=byPhase('finalesConsolante3e'); if(brC3.schedule.length) state.bracketConsolante3e=brC3;
   return true;
 }
 // Construit le payload {gyms,pools,matches} d'UN tour du bracket (phase finale) pour
 // tournaments.addPhase. Pas de poule ici (duels directs) ; `court` est réutilisé comme
 // simple position dans le tour (et non un vrai terrain) pour pouvoir réassembler les
 // vainqueurs dans le bon ordre au tour suivant — l'ordre renvoyé par SQL n'est pas fiable.
+// Horaire d'un tour du bracket, dérivé de horaireFor('finales') (même formule que
+// slotTime, mais sans dépendre du global schedHoraire utilisé par makeSchedule).
+function bracketSlotTime(round){
+  const c=horaireFor('finales');
+  const parts=String(c.startTime||'09:00').split(':');
+  const sh=(+parts[0])||9, sm=(+parts[1])||0;
+  const per=((+c.roundMinutes)||20)+((+c.setupMinutes)||10);
+  const t=(sh*60+sm)+((round||1)-1)*per, h=Math.floor(t/60)%24, m=t%60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
 function buildBracketMatches(phaseKey, round, pairs){
   // Filtre les paires incomplètes : buildBracket() impose un minimum de 2 têtes de
   // série même quand le classement n'en fournit pas assez (ex: Consolante avec trop
   // peu de qualifiés) — on ne veut pas persister un match fantôme sans équipes.
   const valid=(pairs||[]).filter(([a,b])=>a&&b);
-  return { gyms:[], pools:[], matches: valid.map(([a,b],i)=>({ round, time:null, phase:phaseKey, poolKey:null, gymName:null, court:i+1, aKey:a, bKey:b, refKey:null })) };
+  const time=bracketSlotTime(round);
+  return { gyms:[], pools:[], matches: valid.map(([a,b],i)=>({ round, time, phase:phaseKey, poolKey:null, gymName:null, court:i+1, aKey:a, bKey:b, refKey:null })) };
 }
 // Nom du tour affiché pour un match de bracket (ex: "1/4", "Finale"), déduit du nombre
 // de matchs du 1er tour déjà persisté pour cette catégorie.
@@ -1373,6 +1463,7 @@ const host = document.getElementById('screenHost');
 const topbar = document.getElementById('topbar');
 const tabbar = document.getElementById('tabbar');
 const wizProg = document.getElementById('wizProg');
+const orgHeader = document.getElementById('orgHeader');
 let navStack = [];
 
 // Historique navigateur : sans ça, le bouton « retour » du téléphone quitte
@@ -1411,6 +1502,42 @@ document.getElementById('backBtn').onclick = back;
 const TAB_SCREENS=new Set(['orgLive','schedule','standings','validate','bracket']);
 const RESUMABLE_ADMIN=new Set(['dashboard', ...TAB_SCREENS]);
 const RESUMABLE_REF=new Set(['refSpace', ...TAB_SCREENS]);
+
+// Navigation au doigt entre les 5 onglets de gestion d'un tournoi : glisser à
+// droite avance dans l'ordre des onglets, glisser à gauche recule (et quitte
+// vers « Mes tournois » depuis le premier onglet). Désactivé si le geste
+// démarre dans une zone qui défile elle-même horizontalement (tableau de
+// classement, bracket des finales) pour ne pas interférer avec ce défilement.
+(function initTabSwipe(){
+  const ORDER=[...TAB_SCREENS];
+  const THRESH=60, RATIO=1.3;
+  let sx=0, sy=0, tracking=false;
+  function scrollsHorizontally(el){
+    while(el && el!==host){
+      if(el.scrollWidth > el.clientWidth + 2) return true;
+      el=el.parentElement;
+    }
+    return false;
+  }
+  host.addEventListener('touchstart', e=>{
+    tracking=false;
+    if(tabbar.hidden || e.touches.length!==1) return;
+    if(scrollsHorizontally(e.target)) return;
+    sx=e.touches[0].clientX; sy=e.touches[0].clientY; tracking=true;
+  }, {passive:true});
+  host.addEventListener('touchend', e=>{
+    if(!tracking) return; tracking=false;
+    const t=e.changedTouches[0];
+    const dx=t.clientX-sx, dy=t.clientY-sy;
+    if(Math.abs(dx)<THRESH || Math.abs(dx)<Math.abs(dy)*RATIO) return;
+    const cur=navStack[navStack.length-1];
+    if(!cur || !TAB_SCREENS.has(cur.screen)) return;
+    const idx=ORDER.indexOf(cur.screen);
+    if(dx>0){ if(idx<ORDER.length-1) go(ORDER[idx+1]); }
+    else{ if(idx>0) go(ORDER[idx-1]); else go(state.refSession?'refSpace':'dashboard'); }
+  }, {passive:true});
+})();
+
 function saveLastRoute(screen, opts){
   try{
     if(state.authed && RESUMABLE_ADMIN.has(screen)){
@@ -2325,8 +2452,24 @@ window.shareJoin=async(code,url)=>{
 };
 
 /* ---------- Organiser live (tabbed) ---------- */
+function renderOrgHeader(){
+  orgHeader.innerHTML=`
+    <div class="row1">
+      <span class="badge ok" style="flex:none">● En direct</span>
+      ${roleBadge(false)}
+      <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        ${themeToggleBtn()}
+        <button class="btn ghost sm" style="flex:none" onclick="go(state.refSession?'refSpace':'dashboard')">← Mes tournois</button>
+      </span>
+    </div>
+    <div class="row2">
+      <b>${C.name}</b>
+    </div>`;
+  syncThemeIcon();
+}
 function renderTabs(active){
   tabbar.hidden=false;
+  renderOrgHeader();
   const tabs=[
     {id:'orgLive',ic:'📊',label:'Accueil'},
     {id:'schedule',ic:'📅',label:'Planning'},
@@ -2341,16 +2484,6 @@ function renderTabs(active){
 screens.orgLive = ()=>{
   setTop(null); renderTabs('orgLive');
   host.innerHTML=`<div style="padding:0">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <span class="badge ok">● En direct</span><b style="font-family:var(--font-display);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${C.name}</b>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-      ${roleBadge(false)}
-      <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
-        ${themeToggleBtn()}
-        <button class="btn ghost sm" style="flex:none" onclick="go(state.refSession?'refSpace':'dashboard')">← Mes tournois</button>
-      </span>
-    </div>
     <div class="card" style="margin-bottom:12px;display:flex;align-items:center;gap:12px;cursor:pointer;background:var(--brand-soft);border:none" onclick="go('qr')">
       <span style="width:42px;height:42px;border-radius:12px;background:var(--surface);display:grid;place-items:center;font-size:20px;flex:none">📱</span>
       <div style="flex:1;min-width:0">
@@ -2475,7 +2608,7 @@ window.openPhaseSwitch=()=>{
   if(nxt==='finales'){
     ensureFinalesProposal();
     const multi=Object.values(state._finalesProposal||{}).some(c=>c && c.pairs && c.pairs.length>1);
-    if(multi) adjustFinalesBlock = `<button class="btn ghost sm" style="margin:0 0 14px;width:100%" onclick="openFinalesPairingEditor()">📋 Ajuster les appariements du 1er tour</button>`;
+    if(multi) adjustFinalesBlock = `<button class="btn warn" style="margin:0 0 14px" onclick="openFinalesPairingEditor()">📋 Ajuster les appariements du 1er tour</button>`;
   }
   let gymSplitBlock='';
   if(nxt==='poules2' && C.phaseConsolante && C.gyms>=2){
@@ -2493,7 +2626,7 @@ window.openPhaseSwitch=()=>{
   if(nxt==='poules2'){
     ensurePhase2Proposal();
     const multi=(state.phasePrincipal.pools||[]).length>1 || (C.phaseConsolante && (state.phaseConsolante.pools||[]).length>1);
-    if(multi) adjustPoolsBlock = `<button class="btn ghost sm" style="margin:0 0 14px;width:100%" onclick="openPhase2PoolsEditor()">📋 Ajuster la répartition des poules</button>`;
+    if(multi) adjustPoolsBlock = `<button class="btn warn" style="margin:0 0 14px" onclick="openPhase2PoolsEditor()">📋 Voir/Ajuster la répartition des poules</button>`;
   }
   openSheet(`
     <h3 class="sheet-title">Fin de phase</h3>
@@ -2541,30 +2674,54 @@ window.updatePhaseSchedPreview=function(){
 // Permet à l'admin de corriger à la main la répartition automatique des qualifiés
 // en poules de Principale/Consolante, avant de démarrer la phase (bouton dans la
 // fiche « Fin de phase »). Un déplacement reste cantonné à sa catégorie d'origine.
-window.openPhase2PoolsEditor=()=>{
+window.openPhase2PoolsEditor=(fresh=true)=>{
+  if(fresh){
+    // Instantané pris à l'ouverture pour permettre un « Annuler » fiable : les
+    // déplacements sont appliqués immédiatement en mémoire (movePhase2Team),
+    // donc sans copie de départ on ne pourrait pas revenir en arrière.
+    state._phase2EditSnapshot = JSON.parse(JSON.stringify({
+      phasePrincipal: state.phasePrincipal,
+      phaseConsolante: state.phaseConsolante,
+      edited: state._phase2Edited
+    }));
+  }
   const catBlock=(key,label)=>{
     const cat=phaseData(key); if(!cat.pools || !cat.pools.length) return '';
     const allLetters=cat.pools.map(p=>p.letter);
     let h=`<p class="eyebrow" style="margin:14px 0 4px">${label}</p>`;
     cat.pools.forEach(p=>{
-      h+=`<div class="pool"><div class="ph">Poule ${p.letter}</div><ul>`;
+      h+=`<div class="pool"><div class="ph">Poule ${p.letter}</div><div style="padding:4px 10px 10px">`;
       p.teams.forEach(x=>{
         const lm=levelMeta(x.level); const esc=x.t.replace(/'/g,"\\'");
-        h+=`<li><span class="lvdot" style="background:${lm.color}"></span><div class="tinfo"><span class="tname">${x.t}</span>
-          <select class="movepool" onchange="movePhase2Team('${key}','${p.letter}','${esc}',this.value)">
-            ${allLetters.map(l=>`<option value="${l}"${l===p.letter?' selected':''}>Poule ${l}</option>`).join('')}
-          </select></div></li>`;
+        h+=`<div class="p2card">
+          <span class="seed">${ordinalFr(x.seed+1)}</span>
+          <div class="p2info">
+            <div class="p2name">${x.t}</div>
+            <div class="p2meta">
+              <span class="chip" style="color:${lm.color}">${lm.label}</span>
+              <span class="chip">Vient de poule ${x.from||brassageOriginOf(x.t)||'?'}</span>
+              ${x.wildcard?'<span class="chip" style="color:var(--brand)">🎖️ Meilleur 3e</span>':''}
+            </div>
+            <div class="p2moveto">
+              <span class="p2movelbl">Déplacer vers</span>
+              ${allLetters.filter(l=>l!==p.letter).map(l=>`<button class="p2pool" onclick="movePhase2Team('${key}','${p.letter}','${esc}','${l}')">Poule ${l}</button>`).join('')}
+            </div>
+          </div>
+        </div>`;
       });
-      h+=`</ul></div>`;
+      h+=`</div></div>`;
     });
     return h;
   };
   openSheet(`
     <h3 class="sheet-title">Ajuster la répartition</h3>
-    <p style="font-size:12.5px;color:var(--muted);margin:0 0 10px;line-height:1.5">Déplacez une équipe vers une autre poule de la même catégorie si la répartition automatique ne vous convient pas.</p>
+    <p style="font-size:12.5px;color:var(--muted);margin:0 0 10px;line-height:1.5">Chaque carte indique la poule et le classement de l'équipe à l'issue de la phase précédente. Touchez la lettre d'une poule pour y déplacer l'équipe.</p>
     ${catBlock('principal','🏅 Principale')}
     ${state.config.phaseConsolante ? catBlock('consolante','🥈 Consolante') : ''}
-    <button class="btn" style="margin-top:16px;width:100%" onclick="openPhaseSwitch()">Retour</button>
+    <div class="btn-row" style="margin-top:16px">
+      <button class="btn ghost" style="flex:1" onclick="cancelPhase2PoolsEdit()">Annuler</button>
+      <button class="btn ok" style="flex:1" onclick="savePhase2PoolsEdit()">Enregistrer</button>
+    </div>
   `);
 };
 window.movePhase2Team=(catKey,from,name,to)=>{
@@ -2577,35 +2734,80 @@ window.movePhase2Team=(catKey,from,name,to)=>{
   const [tm]=pf.teams.splice(idx,1); pt.teams.push(tm);
   state._phase2Edited=true;
   cat.schedule = makeSchedule(cat.pools, horaireFor('poules2'));
-  openPhase2PoolsEditor(); toast(name+' → Poule '+to);
+  openPhase2PoolsEditor(false); toast(name+' → Poule '+to);
+};
+window.cancelPhase2PoolsEdit=()=>{
+  const snap=state._phase2EditSnapshot;
+  if(snap){
+    state.phasePrincipal=snap.phasePrincipal;
+    state.phaseConsolante=snap.phaseConsolante;
+    state._phase2Edited=snap.edited;
+  }
+  state._phase2EditSnapshot=null;
+  openPhaseSwitch(); toast('Modifications annulées');
+};
+window.savePhase2PoolsEdit=()=>{
+  state._phase2EditSnapshot=null;
+  openPhaseSwitch(); toast('Répartition enregistrée');
 };
 // Même principe pour le passage en phase finale : l'admin peut échanger deux
 // équipes du tableau pour changer les face-à-face du 1er tour, au lieu du seedage
 // automatique de buildBracket(). Un échange reste cantonné à sa catégorie.
-window.openFinalesPairingEditor=()=>{
+window.openFinalesPairingEditor=(fresh=true)=>{
+  if(fresh){
+    // Même principe que pour l'éditeur de poules : un instantané pris à l'ouverture,
+    // pour permettre un « Annuler » fiable (les échanges sont appliqués immédiatement
+    // en mémoire par swapFinalTeam).
+    state._finalesEditSnapshot = JSON.parse(JSON.stringify({
+      finalesProposal: state._finalesProposal,
+      edited: state._finalesEdited
+    }));
+  }
   const catBlock=(key,label)=>{
     const prop=(state._finalesProposal||{})[key]; if(!prop || !prop.pairs || prop.pairs.length<2) return '';
     const allTeams=prop.pairs.flat();
+    const esc=s=>s.replace(/'/g,"\\'");
+    // Provenance de chaque équipe : poule de phase 2 (Principale/Consolante) +
+    // poule de brassage d'origine (x.from), retrouvées dans phaseData(key).pools.
+    const origin={};
+    (phaseData(key).pools||[]).forEach(p=>{ p.teams.forEach(x=>{ origin[x.t]={level:x.level, from:x.from||brassageOriginOf(x.t), letter:p.letter}; }); });
     let h=`<p class="eyebrow" style="margin:14px 0 4px">${label}</p>`;
     prop.pairs.forEach((pair,mi)=>{
-      h+=`<div class="pool"><div class="ph">Match ${mi+1}</div><ul>`;
+      h+=`<div class="pool"><div class="ph">Match ${mi+1}</div><div style="padding:4px 10px 10px">`;
       [0,1].forEach(side=>{
-        const esc=s=>s.replace(/'/g,"\\'");
-        h+=`<li><div class="tinfo"><span class="tname">${pair[side]}</span>
-          <select class="movepool" onchange="swapFinalTeam('${key}',${mi},${side},this.value)">
-            ${allTeams.map(t=>`<option value="${esc(t)}"${t===pair[side]?' selected':''}>${t}</option>`).join('')}
-          </select></div></li>`;
+        const team=pair[side];
+        const others=allTeams.filter(t=>t!==team);
+        const o=origin[team];
+        const lm=o?levelMeta(o.level):null;
+        h+=`<div class="p2card">
+          <span class="seed">${side===0?'A':'B'}</span>
+          <div class="p2info">
+            <div class="p2name">${team}</div>
+            ${o?`<div class="p2meta">
+              <span class="chip" style="color:${lm.color}">${lm.label}</span>
+              <span class="chip">Poule ${o.letter} en ${label.replace(/^\S+\s/,'')}</span>
+              <span class="chip">Vient de poule ${o.from||'?'} (brassage)</span>
+            </div>`:''}
+            <div class="p2moveto">
+              <span class="p2movelbl">Échanger avec</span>
+              ${others.map(t=>`<button class="p2pool" onclick="swapFinalTeam('${key}',${mi},${side},'${esc(t)}')">${t}</button>`).join('')}
+            </div>
+          </div>
+        </div>`;
       });
-      h+=`</ul></div>`;
+      h+=`</div></div>`;
     });
     return h;
   };
   openSheet(`
     <h3 class="sheet-title">Ajuster les appariements</h3>
-    <p style="font-size:12.5px;color:var(--muted);margin:0 0 10px;line-height:1.5">Échangez deux équipes qualifiées si vous voulez changer les face-à-face du 1er tour.</p>
+    <p style="font-size:12.5px;color:var(--muted);margin:0 0 10px;line-height:1.5">Touchez le nom d'une équipe pour l'échanger avec celle sélectionnée, et changer ainsi les face-à-face du 1er tour.</p>
     ${catBlock('principal','🏅 Principale')}
     ${state.config.phaseConsolante ? catBlock('consolante','🥈 Consolante') : ''}
-    <button class="btn" style="margin-top:16px;width:100%" onclick="openPhaseSwitch()">Retour</button>
+    <div class="btn-row" style="margin-top:16px">
+      <button class="btn ghost" style="flex:1" onclick="cancelFinalesPairingEdit()">Annuler</button>
+      <button class="btn ok" style="flex:1" onclick="saveFinalesPairingEdit()">Enregistrer</button>
+    </div>
   `);
 };
 window.swapFinalTeam=(catKey,mi,side,newTeam)=>{
@@ -2618,7 +2820,20 @@ window.swapFinalTeam=(catKey,mi,side,newTeam)=>{
   prop.pairs[mi][side]=newTeam;
   prop.pairs[found[0]][found[1]]=oldTeam;
   state._finalesEdited=true;
-  openFinalesPairingEditor(); toast('Appariement modifié');
+  openFinalesPairingEditor(false); toast('Appariement modifié');
+};
+window.cancelFinalesPairingEdit=()=>{
+  const snap=state._finalesEditSnapshot;
+  if(snap){
+    state._finalesProposal=snap.finalesProposal;
+    state._finalesEdited=snap.edited;
+  }
+  state._finalesEditSnapshot=null;
+  openPhaseSwitch(); toast('Modifications annulées');
+};
+window.saveFinalesPairingEdit=()=>{
+  state._finalesEditSnapshot=null;
+  openPhaseSwitch(); toast('Appariements enregistrés');
 };
 window.confirmPhaseSwitch=async ()=>{
   const cur=state.livePhase, nxt=nextPhase(cur); if(!nxt) return;
@@ -2645,7 +2860,18 @@ window.confirmPhaseSwitch=async ()=>{
   if(nxt==='poules2'){
     if(g('sw_splitgym')) state.config.splitPhase2ByGym = g('sw_splitgym').classList.contains('on');
     alreadyPersisted = !!(state.phasePrincipal && state.phasePrincipal.schedule && state.phasePrincipal.schedule.length && state.phasePrincipal.schedule[0].id);
-    if(!alreadyPersisted && !state._phase2Edited){ state.phasePrincipal=null; state.phaseConsolante=null; buildPhase2(); } // applique la répartition choisie
+    if(!alreadyPersisted){
+      if(!state._phase2Edited){ state.phasePrincipal=null; state.phaseConsolante=null; buildPhase2(); } // applique la répartition choisie
+      else{
+        // La répartition a été ajustée manuellement (movePhase2Team) avec l'horaire
+        // actif à ce moment-là : on ne refait pas buildPhase2() (perdrait l'ajustement),
+        // mais il faut tout de même régénérer les horaires du planning avec l'horaire
+        // qui vient d'être choisi/confirmé ci-dessus (setHoraire), sans toucher aux poules.
+        const hor2=horaireFor('poules2');
+        if(state.phasePrincipal) state.phasePrincipal.schedule=makeSchedule(state.phasePrincipal.pools, hor2);
+        if(state.config.phaseConsolante && state.phaseConsolante) state.phaseConsolante.schedule=makeSchedule(state.phaseConsolante.pools, hor2);
+      }
+    }
   }
   // Idem pour le bracket : si on l'a déjà généré (ex: retour en arrière puis relance),
   // on ne recrée pas le 1er tour — sinon les scores déjà saisis seraient dupliqués.
@@ -3318,6 +3544,11 @@ screens.bracket = ()=>{
   const cat=phaseData(bracketCat);
   const catLabel=PHASE_LABEL[bracketCat];
   const br=buildBracket(cat);
+  // Si l'admin a ajusté manuellement les face-à-face du 1er tour (fiche « Fin de
+  // phase »), l'aperçu doit refléter cet ajustement et non le seedage automatique.
+  ensureFinalesProposal();
+  const finalesProp=(state._finalesProposal||{})[bracketCat];
+  if(finalesProp && finalesProp.K===br.K) br.first=finalesProp.pairs.map(p=>p.slice());
   const names=roundNames(br.K);
   const hasThird=br.K>=4;
   const F=rulesFor('finales');
@@ -3350,13 +3581,22 @@ screens.bracket = ()=>{
   let cols='';
   for(let ci=0; ci<names.length; ci++){
     const round=ci+1, real=byRound(round), nMatches=br.first.length/Math.pow(2,ci);
+    // Tant qu'un tour n'est pas entièrement généré (ex: une seule des 2 demies est déjà
+    // jouable), il faut quand même réserver UNE case par match attendu — sinon le ou les
+    // matchs déjà réels se retrouvent seuls dans la colonne et ne s'alignent plus avec
+    // les 2 matchs du tour précédent dont ils dépendent (cf court = position dans le tour).
     let inner;
-    if(real.length) inner=real.map(m=> rm(bm(m.a,m.b,m))).join('');
-    else if(round===1) inner=br.first.map(([a,b])=> rm(bm(a||'À déterminer', b||'À déterminer'))).join(''); // aperçu avant lancement
-    else inner=Array.from({length:nMatches}, ()=> rm(bm('À déterminer','À déterminer'))).join('');
+    if(round===1) inner=br.first.map(([a,b],i)=>{
+      const m=real.find(x=>(x.court||i+1)===i+1);
+      return rm(m ? bm(m.a,m.b,m) : bm(a||'À déterminer', b||'À déterminer'));
+    }).join(''); // aperçu avant lancement
+    else inner=Array.from({length:nMatches}, (_,i)=>{
+      const m=real.find(x=>(x.court||i+1)===i+1);
+      return rm(m ? bm(m.a,m.b,m) : bm('À déterminer','À déterminer'));
+    }).join('');
     cols+=`<div class="round"><h4>${names[ci]}</h4><div class="rmatches">${inner}</div></div>`;
   }
-  const rw=132+nSets*20;
+  const rw=164+nSets*20;
   // Petite finale (3e place) : même habillage colonne que le tableau (.round/h4/.rmatch),
   // mais dans son propre conteneur .bracket pour qu'elle reste seule :last-child et
   // n'hérite pas des connecteurs visuels entre tours (qui supposent une colonne suivante).
@@ -4299,6 +4539,7 @@ window.submitNewPassword=async ()=>{
 const NARROW_SCREENS=new Set(['home','login','refLogin','createRef','setPassword','wizard','enterScore','scan','qr','teamsRegister','assignPools','summary','refProfile','refMail']);
 function render(screen,opts){
   (screens[screen]||screens.home)(opts||{});
+  orgHeader.hidden = tabbar.hidden;
   host.classList.toggle('narrow', NARROW_SCREENS.has(screen));
   // Retour tout en haut à chaque changement d'écran (y compris les .screen imbriqués).
   host.scrollTop=0;
