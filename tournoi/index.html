@@ -159,6 +159,11 @@ input,select{font-family:inherit;font-size:15px}
 .field input,.field select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;
   background:var(--surface);color:var(--fg)}
 .field input:focus,.field select:focus{outline:none;border-color:var(--brand)}
+.search-pill{display:flex;align-items:center;gap:10px;background:var(--surface-2);
+  border:2px solid var(--brand);border-radius:999px;padding:13px 18px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.search-pill .search-ic{font-size:18px;flex:none;color:var(--brand)}
+.search-pill input{flex:1;min-width:0;border:none;background:transparent;font-size:16px;font-weight:600;color:var(--fg);padding:0;outline:none}
+.search-pill input::placeholder{color:var(--muted);font-weight:500}
 .pwd-wrap{position:relative;display:block}
 .pwd-wrap input{padding-right:46px}
 .pwd-eye{position:absolute;top:50%;right:6px;transform:translateY(-50%);width:34px;height:34px;display:grid;place-items:center;border:none;background:transparent;color:var(--muted);cursor:pointer;border-radius:9px;padding:0}
@@ -500,9 +505,7 @@ input,select{font-family:inherit;font-size:15px}
 </style>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700;800&display=swap">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script>
-<script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script>
 /* ---------- API OVH (PHP + MySQL, même domaine) ----------
    Tout passe par ./api/ : authentification par cookie de session, aucune
    clé ni CORS. window.api est un petit client fetch ; window.sb reste un
@@ -1019,31 +1022,66 @@ function makeSchedule(poolsIn, hor){
 }
 // Arbitrage : à chaque tour, une équipe au repos arbitre un match.
 // Contraintes : un arbitre ne joue pas ce tour-là, arbitre au plus un match par tour,
-// et arbitre uniquement dans le gymnase où son équipe joue.
+// et arbitre uniquement un match de sa PROPRE poule (comme sur le fichier Excel de
+// référence) — jamais une équipe d'une autre poule, même si elle joue dans le même
+// gymnase.
 function assignReferees(sched, pools){
-  const teamGym={}; // chaque équipe est rattachée au gymnase où elle joue
-  sched.forEach(m=>{ if(m.a) teamGym[m.a]=m.gym; if(m.b) teamGym[m.b]=m.gym; });
+  const teamPool={}; // chaque équipe est rattachée à la poule où elle joue
+  sched.forEach(m=>{ if(m.a) teamPool[m.a]=m.pool; if(m.b) teamPool[m.b]=m.pool; });
   const refCount={}; // nb de matchs déjà arbitrés par équipe (pour l'équité)
-  Object.keys(teamGym).forEach(t=>{ refCount[t]=0; });
+  Object.keys(teamPool).forEach(t=>{ refCount[t]=0; });
   const byR={};
   sched.forEach(m=>{ (byR[m.r]=byR[m.r]||[]).push(m); });
   Object.keys(byR).sort((a,b)=>a-b).forEach(r=>{
     const matches=byR[r];
     const playing=new Set();
     matches.forEach(m=>{ playing.add(m.a); playing.add(m.b); });
-    // arbitres disponibles ce tour, regroupés par gymnase
-    const idleByGym={};
-    Object.keys(teamGym).forEach(t=>{ if(!playing.has(t)){ const g=teamGym[t]; (idleByGym[g]=idleByGym[g]||[]).push(t); } });
+    // arbitres disponibles ce tour, regroupés par poule
+    const idleByPool={};
+    Object.keys(teamPool).forEach(t=>{ if(!playing.has(t)){ const p=teamPool[t]; (idleByPool[p]=idleByPool[p]||[]).push(t); } });
     const usedThisRound=new Set();
     matches.forEach(m=>{
-      const pool=(idleByGym[m.gym]||[]).filter(t=>!usedThisRound.has(t));
+      const pool=(idleByPool[m.pool]||[]).filter(t=>!usedThisRound.has(t));
       // on choisit l'équipe au repos qui a le MOINS arbitré jusqu'ici (équité)
       pool.sort((a,b)=> (refCount[a]-refCount[b]) || a.localeCompare(b));
       const pick=pool[0]||null;
-      m.ref=pick; // même gymnase que le match, sinon pas d'arbitre
+      m.ref=pick; // même poule que le match, sinon pas d'arbitre
       if(pick){ refCount[pick]++; usedThisRound.add(pick); }
     });
   });
+}
+// Arbitrage en phase à élimination directe (1/4, 1/2, finale…) : contrairement aux
+// poules, on ne connaît pas à l'avance qui sera au repos à chaque tour, puisque ça
+// dépend des résultats. Règle retenue : une équipe qui a déjà gagné son propre
+// match et attend de connaître son prochain adversaire (le tableau avance paire
+// par paire — tant que l'autre moitié de la paire n'a pas terminé, le tour suivant
+// n'est pas encore généré pour elle) peut arbitrer un autre match encore en cours
+// de SA catégorie (Principale ou Consolante, bracket + petite finale ensemble).
+// Pas persisté en base (aucune avance possible) : recalculé à chaque chargement à
+// partir des résultats déjà connus.
+function assignBracketReferees(sched){
+  const lastMatch={}; // équipe -> son match le plus récent (round le plus élevé)
+  sched.forEach(m=>{
+    [m.a,m.b].forEach(t=>{
+      if(!t) return;
+      if(!lastMatch[t] || (m.r||1)>(lastMatch[t].r||1)) lastMatch[t]=m;
+    });
+  });
+  // au repos : a gagné son dernier match connu et n'apparaît dans aucun match plus
+  // récent (= adversaire suivant pas encore connu)
+  const idle=Object.keys(lastMatch).filter(t=>{ const m=lastMatch[t]; return m.status==='done' && wonBy(m,t); });
+  const refCount={}; idle.forEach(t=>{ refCount[t]=0; });
+  const used=new Set();
+  sched.filter(m=>m.status!=='done' && m.a && m.b)
+    .sort((a,b)=>(a.r||1)-(b.r||1))
+    .forEach(m=>{
+      const pool=idle.filter(t=>!used.has(t));
+      // on choisit l'équipe au repos qui a le MOINS arbitré jusqu'ici (équité)
+      pool.sort((a,b)=> (refCount[a]-refCount[b]) || a.localeCompare(b));
+      const pick=pool[0]||null;
+      m.ref=pick;
+      if(pick){ refCount[pick]++; used.add(pick); }
+    });
 }
 // Mode « rotation » : chaque tour remplit TOUS les terrains disponibles de chaque gymnase.
 // Les matchs d'une même poule (qui n'opposent jamais deux fois la même équipe dans un tour)
@@ -1332,6 +1370,10 @@ function applyLoadedStructure(fresh){
   const brC=byPhase('finalesConsolante'); if(brC.schedule.length) state.bracketConsolante=brC;
   const brP3=byPhase('finalesPrincipal3e'); if(brP3.schedule.length) state.bracketPrincipal3e=brP3;
   const brC3=byPhase('finalesConsolante3e'); if(brC3.schedule.length) state.bracketConsolante3e=brC3;
+  // Arbitrage du bracket : pas persisté en base (dépend des résultats, donc pas
+  // calculable à l'avance comme pour les poules) — recalculé à chaque chargement.
+  assignBracketReferees([...brP.schedule, ...brP3.schedule]);
+  assignBracketReferees([...brC.schedule, ...brC3.schedule]);
   return true;
 }
 // Construit le payload {gyms,pools,matches} d'UN tour du bracket (phase finale) pour
@@ -1503,15 +1545,23 @@ const TAB_SCREENS=new Set(['orgLive','schedule','standings','validate','bracket'
 const RESUMABLE_ADMIN=new Set(['dashboard', ...TAB_SCREENS]);
 const RESUMABLE_REF=new Set(['refSpace', ...TAB_SCREENS]);
 
-// Navigation au doigt entre les 5 onglets de gestion d'un tournoi : glisser à
-// droite avance dans l'ordre des onglets, glisser à gauche recule (et quitte
-// vers « Mes tournois » depuis le premier onglet). Désactivé si le geste
-// démarre dans une zone qui défile elle-même horizontalement (tableau de
-// classement, bracket des finales) pour ne pas interférer avec ce défilement.
+// Navigation au doigt entre les 5 onglets de gestion d'un tournoi (Accueil,
+// Planning, Poules, Valider, Finale), pour l'admin comme pour le référent
+// (tabbar identique pour les deux profils, cf. renderTabs). Convention
+// alignée sur les gestes standards des OS mobiles : glisser vers la GAUCHE
+// avance au prochain onglet (comme on fait défiler des pages), glisser vers
+// la DROITE recule (comme le geste « retour » d'iOS/Android) et quitte vers
+// « Mes tournois » depuis le premier onglet. Le contenu suit le doigt en
+// temps réel pendant le geste, puis termine sa course (glissement complet
+// avec l'écran suivant/précédent qui entre par le bord opposé, ou retour à
+// sa place si le geste n'est pas assez marqué) pour un rendu fluide plutôt
+// qu'un changement d'écran abrupt. Désactivé si le geste démarre dans une
+// zone qui défile elle-même horizontalement (tableau de classement, bracket
+// des finales) pour ne pas interférer avec ce défilement.
 (function initTabSwipe(){
   const ORDER=[...TAB_SCREENS];
-  const THRESH=60, RATIO=1.3;
-  let sx=0, sy=0, tracking=false;
+  const THRESH=55, RATIO=1.2, DUR=230;
+  let sx=0, sy=0, dx=0, tracking=false, dragging=false;
   function scrollsHorizontally(el){
     while(el && el!==host){
       if(el.scrollWidth > el.clientWidth + 2) return true;
@@ -1519,22 +1569,75 @@ const RESUMABLE_REF=new Set(['refSpace', ...TAB_SCREENS]);
     }
     return false;
   }
+  function currentTab(){
+    const cur=navStack[navStack.length-1];
+    return (cur && TAB_SCREENS.has(cur.screen)) ? cur.screen : null;
+  }
+  function setX(px, animate){
+    host.style.transition = animate ? `transform ${DUR}ms cubic-bezier(.2,.7,.3,1)` : 'none';
+    host.style.transform = px ? `translateX(${px}px)` : '';
+  }
+  function snapBack(){
+    setX(0, true);
+    setTimeout(()=>setX(0, false), DUR+30);
+  }
+  // dir=-1 : onglet suivant (sortie par la gauche, entrée par la droite).
+  // dir=+1 : onglet précédent, ou on quitte depuis le 1er (sortie par la
+  // droite, entrée par la gauche).
+  function completeSwipe(dir){
+    const scr=currentTab(); if(!scr){ snapBack(); return; }
+    const idx=ORDER.indexOf(scr);
+    let target=null, isQuit=false;
+    if(dir<0){ if(idx<ORDER.length-1) target=ORDER[idx+1]; }
+    else{ if(idx>0) target=ORDER[idx-1]; else isQuit=true; }
+    if(!target && !isQuit){ snapBack(); return; }
+    const w=host.clientWidth||320;
+    setX(dir*w, true); // termine la sortie jusqu'au bord
+    setTimeout(()=>{
+      go(target || (state.refSession?'refSpace':'dashboard'));
+      setX(-dir*w, false); // place le nouvel écran hors champ, du bord opposé
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        setX(0, true);
+        setTimeout(()=>setX(0, false), DUR+30);
+      }));
+    }, DUR);
+  }
   host.addEventListener('touchstart', e=>{
-    tracking=false;
+    tracking=false; dragging=false;
     if(tabbar.hidden || e.touches.length!==1) return;
     if(scrollsHorizontally(e.target)) return;
-    sx=e.touches[0].clientX; sy=e.touches[0].clientY; tracking=true;
+    if(!currentTab()) return;
+    sx=e.touches[0].clientX; sy=e.touches[0].clientY; dx=0; tracking=true;
   }, {passive:true});
-  host.addEventListener('touchend', e=>{
-    if(!tracking) return; tracking=false;
-    const t=e.changedTouches[0];
-    const dx=t.clientX-sx, dy=t.clientY-sy;
-    if(Math.abs(dx)<THRESH || Math.abs(dx)<Math.abs(dy)*RATIO) return;
-    const cur=navStack[navStack.length-1];
-    if(!cur || !TAB_SCREENS.has(cur.screen)) return;
-    const idx=ORDER.indexOf(cur.screen);
-    if(dx>0){ if(idx<ORDER.length-1) go(ORDER[idx+1]); }
-    else{ if(idx>0) go(ORDER[idx-1]); else go(state.refSession?'refSpace':'dashboard'); }
+  host.addEventListener('touchmove', e=>{
+    if(!tracking || e.touches.length!==1) return;
+    const t=e.touches[0], ndx=t.clientX-sx, ndy=t.clientY-sy;
+    if(!dragging){
+      if(Math.abs(ndx)<10 && Math.abs(ndy)<10) return; // zone morte avant de trancher l'intention
+      if(Math.abs(ndx)<Math.abs(ndy)*RATIO){ tracking=false; return; } // scroll vertical : on laisse faire
+      dragging=true;
+    }
+    const scr=currentTab(); if(!scr){ tracking=false; dragging=false; return; }
+    const idx=ORDER.indexOf(scr);
+    let d=ndx;
+    // Effet élastique en bout de course côté « suivant » (dernier onglet, pas
+    // de suite) ; côté « précédent », un retour/quitter est toujours possible.
+    if(d<0 && idx>=ORDER.length-1) d*=0.35;
+    dx=d;
+    setX(dx, false);
+    e.preventDefault();
+  }, {passive:false});
+  function endSwipe(){
+    if(!dragging){ tracking=false; return; }
+    tracking=false; dragging=false;
+    const scr=currentTab();
+    if(scr && Math.abs(dx)>=THRESH) completeSwipe(dx<0?-1:1);
+    else snapBack();
+  }
+  host.addEventListener('touchend', endSwipe, {passive:true});
+  host.addEventListener('touchcancel', ()=>{
+    const was=dragging; tracking=false; dragging=false;
+    if(was) snapBack();
   }, {passive:true});
 })();
 
@@ -1628,7 +1731,7 @@ screens.home = ()=>{
       </button>
       <button class="entry" onclick="go('scan')">
         <span class="ic" style="background:var(--accent-soft);color:var(--brand)">${ICON.captain}</span>
-        <span><b>Je suis capitaine</b><small>Scanner le QR &amp; saisir mes scores</small></span>
+        <span><b>Je suis capitaine</b><small>Avec le code du tournoi &amp; saisir mes scores</small></span>
         <span class="chev">›</span>
       </button>
       <button class="entry" onclick="go('refLogin')">
@@ -4160,70 +4263,19 @@ screens.refSpace = ()=>{
   </div>`;
 };
 
-// --- Scan QR réel (caméra + jsQR), avec repli sur le code manuel ---------
-let _scanStream=null;
-function stopCamScan(){
-  if(_scanStream){ try{ _scanStream.getTracks().forEach(t=>t.stop()); }catch(_){} _scanStream=null; }
-}
-function extractJoinCode(text){
-  try{
-    const m=(text||'').match(/join=([A-Za-z0-9-]+)/);
-    if(m&&m[1]) return decodeURIComponent(m[1]).toUpperCase();
-  }catch(_){}
-  const t=(text||'').trim().toUpperCase();
-  return /^[A-Z0-9-]{4,12}$/.test(t) ? t : null;
-}
-function handleScannedText(text){
-  const code=extractJoinCode(text);
-  if(!code){ toast('QR code non reconnu'); startCamScan(); return; }
-  loadJoinedTournament(code);
-  go('pickTeam');
-}
-async function startCamScan(){
-  const video=document.getElementById('scanVideo');
-  const canvas=document.getElementById('scanCanvas');
-  const statusEl=document.getElementById('scanStatus');
-  if(!video) return; // écran déjà quitté
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||typeof jsQR!=='function'){
-    if(statusEl) statusEl.textContent="Scan caméra indisponible sur cet appareil — utilisez le code ci-dessous.";
-    return;
-  }
-  try{ _scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}); }
-  catch(e){ if(statusEl) statusEl.textContent="Accès à la caméra refusé — utilisez le code ci-dessous."; return; }
-  if(!document.body.contains(video)){ stopCamScan(); return; } // écran quitté pendant la demande de permission
-  video.srcObject=_scanStream;
-  try{ await video.play(); }catch(_){}
-  const ctx=canvas.getContext('2d',{willReadFrequently:true});
-  function tick(){
-    if(!document.body.contains(video)){ stopCamScan(); return; } // écran quitté
-    if(video.readyState===video.HAVE_ENOUGH_DATA && video.videoWidth){
-      canvas.width=video.videoWidth; canvas.height=video.videoHeight;
-      ctx.drawImage(video,0,0,canvas.width,canvas.height);
-      const img=ctx.getImageData(0,0,canvas.width,canvas.height);
-      const res=jsQR(img.data,img.width,img.height);
-      if(res && res.data){ stopCamScan(); handleScannedText(res.data); return; }
-    }
-    requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
-}
+// --- Rejoindre un tournoi avec le code (le scan QR réel se fait via l'appareil
+// photo natif du téléphone, qui amène directement sur l'écran de choix d'équipe
+// via le lien du QR — cf. readJoinCodeFromUrl/boot). Un capitaine qui arrive ici
+// n'a donc qu'un code texte, pas de QR à viser : pas besoin de caméra in-app.
 screens.scan = ()=>{
   setTop('Rejoindre un tournoi'); tabbar.hidden=true;
   host.innerHTML=`<div style="padding:0;text-align:center">
-    <div style="margin:10px auto;width:220px;height:220px;border-radius:24px;background:var(--ink);position:relative;overflow:hidden;display:grid;place-items:center">
-      <video id="scanVideo" playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></video>
-      <canvas id="scanCanvas" style="display:none"></canvas>
-      <div style="position:absolute;inset:26px;border:3px solid rgba(255,255,255,.6);border-radius:16px;pointer-events:none"></div>
-      <div style="position:absolute;left:26px;right:26px;height:3px;background:var(--accent);box-shadow:0 0 14px var(--accent);animation:scan 2s ease-in-out infinite;pointer-events:none"></div>
-    </div>
-    <style>@keyframes scan{0%,100%{top:30px}50%{top:186px}}</style>
-    <p class="lead" id="scanStatus">Pointez la caméra vers le QR code affiché par l'organisateur.</p>
-    <div style="display:flex;align-items:center;gap:10px;margin:18px 0"><div style="flex:1;height:1px;background:var(--line)"></div><small class="muted">ou</small><div style="flex:1;height:1px;background:var(--line)"></div></div>
-    <label class="field" style="text-align:left"><span>Code du tournoi</span><input id="scan_code" value="${state.joinCode||''}" placeholder="VB-XXXX" style="text-align:center;letter-spacing:.15em;font-weight:800"></label>
-    <button class="btn ghost" style="margin-top:12px" onclick="joinWithCode()">Rejoindre avec le code</button>
+    <div style="margin:14px auto;width:72px;height:72px;border-radius:50%;background:var(--accent-soft);color:var(--brand);display:grid;place-items:center;font-size:30px">${ICON.captain}</div>
+    <p class="lead">Saisissez le code du tournoi donné par l'organisateur.</p>
+    <label class="field" style="text-align:left"><span>Code du tournoi</span><input id="scan_code" value="${state.joinCode||''}" placeholder="VB-XXXX" style="text-align:center;letter-spacing:.15em;font-weight:800" autofocus></label>
+    <button class="btn" style="margin-top:12px;width:100%" onclick="joinWithCode()">Rejoindre avec le code</button>
     ${installBlock('full')}
   </div>`;
-  startCamScan();
 };
 
 screens.pickTeam = ()=>{
@@ -4236,8 +4288,9 @@ screens.pickTeam = ()=>{
   host.innerHTML=`<div style="padding:0">
     <div class="card" style="background:var(--brand-soft);border:none;margin-bottom:14px">
       <b style="font-family:var(--font-display)">${C.name}</b><br><small class="muted">Vous rejoignez en tant que capitaine</small>
+      <p style="font-size:12.5px;color:var(--muted);margin:8px 0 0;line-height:1.5">Choisissez votre équipe dans la liste ci-dessous pour accéder à votre espace : votre planning de matchs, la saisie des scores et, si c'est votre tour, les matchs que vous devez arbitrer.</p>
     </div>
-    <label class="field" style="margin-top:0"><span>Rechercher</span><input placeholder="Nom de l'équipe…" oninput="filterTeams(this.value)"></label>
+    <div class="search-pill" style="margin-top:0"><span class="search-ic">🔍</span><input placeholder="Rechercher une équipe…" oninput="filterTeams(this.value)" autofocus></div>
     <div id="teamList" style="margin-top:12px"></div>
   </div>`;
   window._teams=all; filterTeams('');
@@ -4265,6 +4318,10 @@ window.loadJoinedTournament=async (code,team)=>{
     state.pools=data.pools||[];
     state.schedule=data.schedule||[];
     state.myEntries=data.myEntries||{};
+    // L'arbitrage des phases à élimination directe n'est pas persisté en base
+    // (voir assignBracketReferees) : on le recalcule ici aussi, par catégorie.
+    assignBracketReferees(state.schedule.filter(m=>m.phase==='finalesPrincipal'||m.phase==='finalesPrincipal3e'));
+    assignBracketReferees(state.schedule.filter(m=>m.phase==='finalesConsolante'||m.phase==='finalesConsolante3e'));
     const cur=navStack[navStack.length-1];
     if(cur && (cur.screen==='pickTeam'||cur.screen==='myMatches')) screens[cur.screen]();
   }catch(e){
@@ -4347,7 +4404,11 @@ screens.myMatches = ()=>{
   const team=state.captainTeam||(state.pools[0]&&state.pools[0].teams[0]&&state.pools[0].teams[0].t)||'—';
   const list=captainMatches(team); state.captainList=list;
   const myPool=state.pools.find(p=>p.teams.some(x=>x.t===team));
-  const loc=myPool?`Poule ${myPool.letter} · ${gymName(myPool.gym)} · Terrain ${myPool.court}`:'—';
+  // Pas de "Terrain X" ici : contrairement au gymnase (fixe pour toute la poule), le
+  // terrain peut changer d'un match à l'autre au sein d'une même poule (remplissage
+  // de tous les terrains disponibles du gymnase, cf. makeScheduleRotation/makeSchedulePool)
+  // — le terrain exact de chaque match est indiqué sur sa carte, pas ici.
+  const loc=myPool?`Poule ${myPool.letter} · ${gymName(myPool.gym)}`:'—';
   // 'pending' (j'ai déjà saisi, en attente de l'adversaire) est un cas "en
   // cours" du point de vue du capitaine : le match se joue, seule sa
   // validation est en attente. Seuls 'live'/'pending' peuvent recevoir un
