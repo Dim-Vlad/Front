@@ -202,6 +202,10 @@ input,select{font-family:inherit;font-size:15px}
 .badge.wait{background:var(--surface-2);color:var(--muted)}
 .badge.danger{background:var(--danger-soft);color:var(--danger)}
 .badge.brand{background:var(--brand-soft);color:var(--brand)}
+.fit-card{transition:background-color .2s ease,border-color .2s ease;border-left:3px solid var(--line)}
+.fit-card.ok{background:var(--ok-soft)!important;border-left-color:var(--ok)}
+.fit-card.warn{background:var(--warn-soft)!important;border-left-color:var(--warn)}
+.fit-card .fit-txt{font-size:13.5px;font-weight:700;line-height:1.5}
 .note-brand{display:block;background:var(--brand-soft);color:var(--brand);font-size:12.5px;font-weight:700;
   line-height:1.45;padding:9px 12px;border-radius:12px}
 
@@ -327,6 +331,10 @@ input,select{font-family:inherit;font-size:15px}
 .tabbar button .ti{font-size:20px;line-height:1;transition:transform .18s ease}
 .tabbar button.on{color:var(--brand);background:var(--brand-soft)}
 .tabbar button.on .ti{transform:translateY(-1px) scale(1.1)}
+
+/* Pied de page figé (boutons Précédent/Continuer/Enregistrer de l'assistant de création) */
+.wizfooter{flex:none;background:var(--surface);border-top:1px solid var(--line);
+  padding:12px max(16px,env(safe-area-inset-left,0)) calc(12px + env(safe-area-inset-bottom,0)) max(16px,env(safe-area-inset-right,0))}
 
 /* Bracket */
 .bracket{--bgap:22px;display:flex;align-items:stretch;overflow-x:auto;padding:4px 2px 12px}
@@ -729,6 +737,9 @@ window.sb = { _ovh:true };
   <!-- SCREENS -->
   <div class="screen" id="screenHost"></div>
 
+  <!-- PIED DE PAGE FIGÉ (assistant de création) -->
+  <div class="wizfooter" id="wizFooter" hidden></div>
+
   <!-- TAB BAR -->
   <div class="tabbar" id="tabbar" hidden></div>
 
@@ -873,7 +884,7 @@ const state = {
     teams:24, gyms:2, courts:6, courtsPerGym:[3,3], pools:6, teamsPerPool:4,
     sets:1, pointsPerSet:25, twoPointGap:true, timed:false, setMinutes:15,
     winPts:3, lossPts:0,
-    phaseConsolante:true, principalPools:4, finalStart:'auto', distribution:'snake',
+    phaseConsolante:true, principalPools:4, principalTeamsPerPool:4, finalStart:'auto', distribution:'snake',
     scheduleMode:'rotation', splitPhase2ByGym:false,
     startTime:'09:00', roundMinutes:20, setupMinutes:10,
   },
@@ -1292,22 +1303,25 @@ function poolSeedTeam(p){
 // `isSeed` marque la tête de série de la poule d'origine : utilisé en phase 2
 // pour éviter de regrouper deux têtes de série encore invaincues.
 function splitQualifiers(pools, schedule){
-  const principal=[], consolante=[], thirds=[];
+  const principal=[], consolante=[], rest=[];
   (pools||[]).forEach(p=>{
     const seedName=poolSeedTeam(p);
     poolStandingRows(p, schedule).forEach((r,i)=>{
       const lvl=(p.teams.find(x=>x.t===r.t)||{}).level||'dep';
       const team={t:r.t, level:lvl, seed:i, from:p.letter, isSeed:r.t===seedName};
       if(i<2) principal.push(team);
-      else if(i===2) thirds.push({team, pts:r.pts, diff:r.pf-r.pc});
-      else consolante.push(team);
+      else rest.push({team, pts:r.pts, diff:r.pf-r.pc});
     });
   });
-  const T=state.config.teamsPerPool||4;
+  const T=state.config.principalTeamsPerPool||state.config.teamsPerPool||4;
   const target=(state.config.principalPools||4)*T;
   const need=Math.max(0, target-principal.length);
-  thirds.sort((a,b)=> b.pts-a.pts || b.diff-a.diff || a.team.t.localeCompare(b.team.t));
-  thirds.forEach((x,i)=>{
+  // Repêchage toutes places confondues (3e, 4e, ...), classées ensemble par
+  // points puis différence de points, pour pouvoir viser un Principal qui
+  // absorbe tout le monde (Consolante vide) si l'admin configure un objectif
+  // assez grand.
+  rest.sort((a,b)=> b.pts-a.pts || b.diff-a.diff || a.team.t.localeCompare(b.team.t));
+  rest.forEach((x,i)=>{
     if(i<need){ x.team.wildcard=true; principal.push(x.team); }
     else consolante.push(x.team);
   });
@@ -1623,6 +1637,7 @@ async function refreshConflicts(tid){
 const host = document.getElementById('screenHost');
 const topbar = document.getElementById('topbar');
 const tabbar = document.getElementById('tabbar');
+const wizFooter = document.getElementById('wizFooter');
 const wizProg = document.getElementById('wizProg');
 const orgHeader = document.getElementById('orgHeader');
 let navStack = [];
@@ -2259,9 +2274,11 @@ screens.wizard = ()=>{
   setTop('Nouveau tournoi',{step:`${wizStep+1}/${CREATE_STEPS.length}`, prog:createProgArr(wizStep)});
   const steps=[wizInfos,wizFormat,wizRules];
   steps[wizStep]();
+  wizFooter.innerHTML=wizNav();
+  wizFooter.hidden=false;
 };
 function wizNav(){
-  return `<div class="btn-row" style="margin-top:22px">
+  return `<div class="btn-row">
     ${wizStep>0?`<button class="btn ghost" onclick="saveWizard();wizStep--;screens.wizard();host.scrollTop=0">Précédent</button>`:''}
     <button class="btn" onclick="wizNext()">${wizStep<2?'Continuer':'Valider le format'}</button>
   </div>
@@ -2291,6 +2308,7 @@ function saveWizard(){
   if(g('w_losspts')) state.config.lossPts=+g('w_losspts').value;
   if(g('sw_conso')) state.config.phaseConsolante=g('sw_conso').classList.contains('on');
   if(g('w_principalPools')) state.config.principalPools=+g('w_principalPools').value;
+  if(g('w_principalTpp')) state.config.principalTeamsPerPool=+g('w_principalTpp').value;
   if(g('w_finalStart')) state.config.finalStart=g('w_finalStart').value;
   // Noms + nombre de terrains par gymnase
   document.querySelectorAll('input[id^="w_gymname_"]').forEach(el=>{ const i=+el.id.replace('w_gymname_',''); if(GYMS[i]&&el.value.trim()) GYMS[i].name=el.value.trim(); });
@@ -2327,8 +2345,7 @@ function wizInfos(){
       </label>
       <input id="w_image" type="file" accept="image/*" hidden onchange="pickTournImage(this)">
       ${C.image?`<button class="btn ghost sm" style="margin-top:8px;width:100%" onclick="clearTournImage()">Retirer l'image</button>`:`<small class="muted" style="display:block;margin-top:6px;font-size:11.5px">Elle remplacera l'icône dans la liste de vos tournois.</small>`}
-    </div>
-    ${wizNav()}`;
+    </div>`;
 }
 window.pickTournImage=(input)=>{
   const f=input.files&&input.files[0]; if(!f) return;
@@ -2362,8 +2379,7 @@ function wizFormat(){
     <div id="schedHint" class="muted" style="font-size:12px;margin:8px 2px 0;line-height:1.45">${C.scheduleMode==='pool'?'Toute une poule joue en même temps, puis on alterne avec la poule suivante du gymnase.':'Les terrains tournent en continu, un match par terrain et par tour.'}</div>
     <div class="card" style="margin-top:14px;background:var(--surface-2);border:none">
       <div id="formatCheck" style="font-size:13px"></div>
-    </div>
-    ${wizNav()}`;
+    </div>`;
   ['w_gyms'].forEach(id=>{
     const el=document.getElementById(id);
     el.addEventListener('live',updateFormatCheck); el.addEventListener('change',updateFormatCheck);
@@ -2450,8 +2466,7 @@ function wizRules(){
         <label class="field" style="margin:0"><span>Points par victoire</span>${numCtl('w_winpts',C.winPts,0,10)}</label>
         <label class="field" style="margin:0"><span>Points par défaite</span>${numCtl('w_losspts',C.lossPts,0,10)}</label>
       </div>
-    </div>
-    ${wizNav()}`;
+    </div>`;
   ['w_roundmin','w_setupmin'].forEach(id=>{
     const el=document.getElementById(id); if(!el) return;
     el.addEventListener('live',()=>{saveWizard();updateSchedPreview();});
@@ -2485,15 +2500,24 @@ screens.wizPhases = ()=>{
       <button class="sw ${C.phaseConsolante?'on':''}" id="sw_conso" onclick="toggleSw('sw_conso');updateConsoHint()"></button>
     </div>
     <div id="consoHint" style="font-size:12px;color:var(--muted);margin:8px 2px 0;line-height:1.5"></div>
-    <label class="field" id="principalPoolsRow" style="margin-top:12px"><span>Nombre de poules en Principal</span>${numCtl('w_principalPools',C.principalPools||4,1,8)}
-      <small style="display:block;margin-top:4px;color:var(--muted)">Les 1ers &amp; 2es de poule y vont toujours. S'il manque des équipes pour remplir ces poules, les meilleurs 3es (classés par points puis différence) sont repêchés ; les autres partent en Consolante.</small>
-    </label>
-    <div id="wizPhaseList" style="margin-top:14px"></div>
-    <div class="btn-row" style="margin-top:22px">
+    <div id="principalSizeBlock" style="display:${C.phaseConsolante?'':'none'}">
+      <p class="eyebrow" style="margin:16px 0 6px">Format de la phase Principal</p>
+      <div class="grid2">
+        <label class="field" id="principalPoolsRow" style="margin:0"><span>Nombre de poules</span>${numCtl('w_principalPools',C.principalPools||4,1,16)}</label>
+        <label class="field" id="principalTppRow" style="margin:0"><span>Équipes / poule</span>${numCtl('w_principalTpp',C.principalTeamsPerPool||4,2,8)}</label>
+      </div>
+      <div class="card fit-card" id="principalFitCard" style="margin-top:10px">
+        <div id="principalFit" class="fit-txt"></div>
+      </div>
+    </div>
+    <div id="wizPhaseList" style="margin-top:14px"></div>`;
+  wizFooter.innerHTML=`<div class="btn-row">
       <button class="btn ghost" onclick="saveWizard();go('assignPools')">Précédent</button>
       <button class="btn" onclick="saveWizard();go('summary')">Continuer</button>
     </div>
     <button class="btn ghost sm" style="margin-top:10px;width:100%" onclick="saveDraft(true)">💾 Enregistrer et quitter</button>`;
+  wizFooter.hidden=false;
+  ['w_principalPools','w_principalTpp'].forEach(id=>{ const elc=document.getElementById(id); if(elc){ elc.addEventListener('live',updatePrincipalFit); elc.addEventListener('change',updatePrincipalFit); } });
   updateConsoHint();
 };
 function renderWizPhaseList(){
@@ -2511,16 +2535,31 @@ function renderWizPhaseList(){
 window.updateConsoHint=()=>{
   const el=document.getElementById('consoHint');
   const sw=document.getElementById('sw_conso');
-  const ppRow=document.getElementById('principalPoolsRow');
+  const sizeBlock=document.getElementById('principalSizeBlock');
   if(el&&sw){
     const on=sw.classList.contains('on');
-    if(ppRow) ppRow.style.display = on?'':'none';
+    if(sizeBlock) sizeBlock.style.display = on?'':'none';
     el.innerHTML = on
       ? "✅ <b>Activée</b> — tournoi en 3 phases. Deux tableaux en phase 2 : 1ers–2es en Principal (complété si besoin par repêchage des meilleurs 3es), les autres en Consolante. Chaque catégorie a sa propre phase finale."
       : "⛔ <b>Désactivée</b> — tournoi en 2 phases : brassage puis phases finales. Seuls les 1ers–2es de chaque poule continuent, directement en tableau à élimination ; les 3es–4es sont éliminés après le brassage.";
   }
+  updatePrincipalFit();
   renderWizPhaseList();
 };
+function updatePrincipalFit(){
+  const el=document.getElementById('principalFit'); if(!el) return;
+  const pEl=document.getElementById('w_principalPools'), tEl=document.getElementById('w_principalTpp');
+  const p=pEl?+pEl.value:(C.principalPools||4), t=tEl?+tEl.value:(C.principalTeamsPerPool||4);
+  const brassagePools=C.pools||1, min=Math.min(2*brassagePools, state.teams.length), max=state.teams.length, target=p*t;
+  let ok=true, icon, msg;
+  if(target<=min){ icon='✓'; msg=`Au moins ${min} équipes qualifiées directement (1ers &amp; 2es) — aucun repêchage nécessaire pour remplir ${p} × ${t}`; }
+  else if(target<max){ icon='✓'; msg=`${target} équipes visées : ${target-min} meilleure(s) 3e/4e place(s) repêchée(s) parmi ${max-min} possible(s) — les autres iront en Consolante`; }
+  else if(target===max){ icon='✓'; msg=`${target} équipes visées = toutes les équipes qualifiées (1ers, 2es, 3es, 4es…) — <b>Consolante restera vide</b>`; }
+  else { ok=false; icon='⚠'; msg=`${target} équipes visées mais ${max} maximum disponibles (toutes les équipes) — réduisez le nombre de poules ou d'équipes/poule en Principal`; }
+  el.innerHTML=`<b style="color:var(--${ok?'ok':'warn'})">${icon}</b> ${msg}`;
+  const card=document.getElementById('principalFitCard');
+  if(card){ card.classList.remove('ok','warn'); card.classList.add(ok?'ok':'warn'); }
+}
 window.updateFinalHint=()=>{
   const el=document.getElementById('finalHint'); if(!el) return;
   const sel=document.getElementById('w_finalStart'); const v=sel?sel.value:'auto';
@@ -2568,13 +2607,14 @@ screens.teamsRegister = ()=>{
   });
   h+=`</div>
     <button class="btn ghost" style="margin-top:14px" onclick="addTeam()">＋ Ajouter une équipe</button>
-    <div class="btn-row" style="margin-top:10px">
+  </div>`;
+  host.innerHTML=h;
+  wizFooter.innerHTML=`<div class="btn-row">
       <button class="btn ghost" onclick="wizStep=2;go('wizard')">Précédent</button>
       <button class="btn" onclick="rebuildPools();go('assignPools')">Continuer → Répartition</button>
     </div>
-    <button class="btn ghost sm" style="margin-top:10px;width:100%" onclick="saveDraft(true)">💾 Enregistrer et quitter</button>
-  </div>`;
-  host.innerHTML=h;
+    <button class="btn ghost sm" style="margin-top:10px;width:100%" onclick="saveDraft(true)">💾 Enregistrer et quitter</button>`;
+  wizFooter.hidden=false;
 };
 window.setLevel=(i,v)=>{ state.teams[i].level=v; };
 // Met une majuscule en début de chaque mot (espace, tiret, apostrophe) : "sc ollioules" -> "Sc Ollioules".
@@ -2683,8 +2723,8 @@ screens.assignPools = ()=>{
         ? `<label class="field" style="margin:0"><span>Équipes / poule</span><div class="stepper" style="opacity:.55;pointer-events:none"><button disabled>−</button><input value="${state.teams.length}" disabled style="text-align:center"><button disabled>＋</button></div></label>`
         : `<label class="field" style="margin:0"><span>Équipes / poule</span>${numCtl('ap_tpp',C.teamsPerPool,2,8)}</label>`}
     </div>
-    <div class="card" style="background:var(--surface-2);border:none;margin-top:10px">
-      <div id="poolFit" style="font-size:12.5px;line-height:1.5"></div>
+    <div class="card fit-card" id="poolFitCard" style="margin-top:10px">
+      <div id="poolFit" class="fit-txt"></div>
     </div>
     <p class="eyebrow" style="margin:16px 0 6px">Méthode de répartition</p>
     <div class="seg seg-strong" id="distSeg">${methods.map(m=>`<button class="${state.config.distribution===m[0]?'on':''}" onclick="setDist('${m[0]}')">${m[1]}</button>`).join('')}</div>
@@ -2711,12 +2751,14 @@ screens.assignPools = ()=>{
     });
     h+=`</div>`; // fin .gymblock
   });
-  h+=`<div class="btn-row" style="margin-top:20px">
+  h+=`</div>`;
+  host.innerHTML=h;
+  wizFooter.innerHTML=`<div class="btn-row">
       <button class="btn ghost" onclick="go('teamsRegister')">Précédent</button>
       <button class="btn" onclick="validateAssign()">Valider la répartition</button>
     </div>
-    <button class="btn ghost sm" style="margin-top:10px;width:100%" onclick="saveDraft(true)">💾 Enregistrer et quitter</button></div>`;
-  host.innerHTML=h;
+    <button class="btn ghost sm" style="margin-top:10px;width:100%" onclick="saveDraft(true)">💾 Enregistrer et quitter</button>`;
+  wizFooter.hidden=false;
   ['ap_pools','ap_tpp'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.addEventListener('live',setPoolFormat); el.addEventListener('change',setPoolFormat); } });
   updateDistHelp(); updatePoolFit();
 };
@@ -2756,12 +2798,14 @@ window.autoFitPools=()=>{
 function updatePoolFit(){
   const el=document.getElementById('poolFit'); if(!el) return;
   const n=state.teams.length, p=state.config.pools, t=state.config.teamsPerPool, cap=p*t;
-  let msg;
-  if(p===1) msg=`<span class="badge ok">🏆 Poule unique — championnat : les ${n} équipes se rencontrent toutes</span>`;
-  else if(cap===n) msg=`<span class="badge ok">✓ Les ${n} équipes rentrent parfaitement (${p} × ${t})</span>`;
-  else if(cap>n) msg=`<span class="badge warn">⚠ ${cap} places pour ${n} équipes — ${cap-n} place(s) vide(s), poules inégales</span>`;
-  else msg=`<span class="badge warn">⚠ ${cap} places pour ${n} équipes — ${n-cap} équipe(s) ne seront pas placées, augmentez le format</span>`;
-  el.innerHTML=msg;
+  let ok=true, icon, msg;
+  if(p===1){ icon='🏆'; msg=`Poule unique — championnat : les ${n} équipes se rencontrent toutes`; }
+  else if(cap===n){ icon='✓'; msg=`Les ${n} équipes rentrent parfaitement (${p} × ${t})`; }
+  else if(cap>n){ ok=false; icon='⚠'; msg=`${cap} places pour ${n} équipes — ${cap-n} place(s) vide(s), poules inégales`; }
+  else { ok=false; icon='⚠'; msg=`${cap} places pour ${n} équipes — ${n-cap} équipe(s) ne seront pas placées, augmentez le format`; }
+  el.innerHTML=`<b style="color:var(--${ok?'ok':'warn'})">${icon}</b> ${msg}`;
+  const card=document.getElementById('poolFitCard');
+  if(card){ card.classList.remove('ok','warn'); card.classList.add(ok?'ok':'warn'); }
 }
 window.setPoolCourt=(letter,v)=>{ const p=state.pools.find(x=>x.letter===letter); if(p) p.court=+v; };
 window.moveTeam=(from,name,to)=>{
@@ -2801,10 +2845,11 @@ screens.summary = ()=>{
       <div class="summary-row"><span class="muted">Format set</span><b>1 set à 25 pts · 2 d'écart</b></div>
       <div class="summary-row"><span class="muted">Phases</span><b>${C.phaseConsolante?'Brassage → Principal + Consolante → Finales':'Brassage → Phases finales'}</b></div>
     </div>
-    <button class="btn accent" style="margin-top:18px" onclick="launchTournament()">🚀 Lancer le tournoi &amp; générer le QR</button>
-    <button class="btn ghost" style="margin-top:10px" onclick="go('wizPhases')">Précédent</button>
-    <button class="btn ghost sm" style="margin-top:10px;width:100%" onclick="saveDraft(true)">💾 Enregistrer et quitter</button>
     </div>`;
+  wizFooter.innerHTML=`<button class="btn accent" onclick="launchTournament()">🚀 Lancer le tournoi &amp; générer le QR</button>
+    <button class="btn ghost" style="margin-top:10px" onclick="go('wizPhases')">Précédent</button>
+    <button class="btn ghost sm" style="margin-top:10px;width:100%" onclick="saveDraft(true)">💾 Enregistrer et quitter</button>`;
+  wizFooter.hidden=false;
 };
 
 screens.qr = ()=>{
@@ -3442,21 +3487,58 @@ window.revertPhase=async ()=>{
 // bien trop longue. Regroupe par gymnase (sous-titre) s'il y en a plus d'un.
 function renderLiveCourts(live){
   if(!live.length) return '<p class="muted" style="font-size:13px">Aucun match en cours pour le moment.</p>';
-  const gyms=[...new Set(live.map(m=>m.gym))];
+  // Les matchs des phases finales n'ont pas de vrai gymnase/terrain en base :
+  // `court` y sert de simple position dans le tableau (cf. buildBracketMatches),
+  // pas d'un terrain réel, pour pouvoir réassembler les vainqueurs au tour
+  // suivant. On leur attribue donc ici, à l'affichage seulement, un gymnase +
+  // terrain réels selon la capacité réelle du tournoi (en répartissant
+  // équitablement Principal/Consolante si les deux tournent en même temps), et
+  // on ne montre au total que ce que cette capacité permet de jouer en même
+  // temps : le reste attend son tour et réapparaîtra dès qu'un terrain se libère.
+  const withCourt = live.filter(m=>m.gym);
+  const placed = placeOnRealCourts(interleaveByPhase(live.filter(m=>!m.gym)));
+  const all=[...withCourt, ...placed];
+  const gyms=[...new Set(all.map(m=>m.gym))];
   return gyms.map(g=>{
-    const ms=live.filter(m=>m.gym===g);
+    const ms=all.filter(m=>m.gym===g).sort((a,b)=>(a.court||0)-(b.court||0));
     const head = gyms.length>1
       ? `<div style="display:flex;align-items:center;gap:6px;margin:12px 0 6px"><span style="font-size:12px">🏟️</span><b style="font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted)">${g}</b></div>`
       : '';
     return head + ms.map(liveCourtRowCompact).join('');
   }).join('');
 }
+// Alterne les matchs de chaque phase (ex. finalesPrincipal / finalesConsolante)
+// plutôt que de les concaténer tels quels, pour qu'aucune des deux ne soit
+// totalement invisible une fois tronqué à la capacité réelle des terrains.
+function interleaveByPhase(matches){
+  const groups={};
+  matches.forEach(m=>{ (groups[m.phase]=groups[m.phase]||[]).push(m); });
+  const keys=Object.keys(groups);
+  const out=[]; let i=0;
+  while(keys.some(k=>groups[k].length>i)){
+    keys.forEach(k=>{ if(groups[k][i]) out.push(groups[k][i]); });
+    i++;
+  }
+  return out;
+}
+// Place des matchs sans gymnase/terrain réel (phases finales) sur les terrains
+// réellement disponibles, dans l'ordre reçu ; au-delà de la capacité totale
+// (nb de gymnases × terrains/gymnase), les matchs excédentaires ne sont
+// simplement pas affichés ici (ils patientent, cf. planning/tableau).
+function placeOnRealCourts(matches){
+  if(!matches.length) return [];
+  const G=state.config.gyms||1, cpg=state.config.courtsPerGym||[];
+  const slots=[];
+  for(let gi=0; gi<G; gi++){ const c=Math.max(1,cpg[gi]||3); for(let k=1;k<=c;k++) slots.push({gym:GYMS[gi].name, court:k}); }
+  return matches.slice(0, slots.length).map((m,i)=>({...m, gym:slots[i].gym, court:slots[i].court}));
+}
 function liveCourtRowCompact(m){
+  const tag = m.pool ? `Poule ${m.pool}` : bracketRoundLabel(m);
   return `<div class="live-row">
     <span class="court">T${m.court}</span>
     <span class="live-dot"></span>
     <span class="teams"><b>${m.a}</b> <span class="muted" style="font-weight:600">vs</span> <b>${m.b}</b></span>
-    <span class="pool">Poule ${m.pool}</span>
+    <span class="pool">${tag}</span>
   </div>`;
 }
 // Ligne « Arbitre » affichée dans une cellule de match (Accueil, planning, Mes matchs)
@@ -4035,28 +4117,40 @@ window.openTieBreakEditor=(tieKey)=>{
   `);
 };
 let standPhase='brassage';
+let standGym='all';
 const PHASE_LABEL={brassage:'Brassage',principal:'Principal',consolante:'Consolante'};
 function phaseSeg(current,fn){
-  const keys=['brassage','principal',...(state.config.phaseConsolante?['consolante']:[])];
+  // Principal/Consolante n'ont de sens qu'une fois le Brassage terminé
+  // (phase 2 construite) — sinon ces onglets n'affichent rien et laissent
+  // croire que la phase 2 a déjà démarré.
+  const phase2Reached = state.livePhase!=='brassage';
+  const keys=['brassage',...(phase2Reached?['principal',...(state.config.phaseConsolante?['consolante']:[])]:[])];
   return `<div class="seg seg-strong" style="margin-bottom:8px">${keys.map(k=>`<button class="${current===k?'on':''}" onclick="${fn}('${k}')">${PHASE_LABEL[k]}</button>`).join('')}</div>`;
 }
 window.setStandPhase=k=>{ standPhase=k; standPool=null; render('standings'); };
 screens.standings = ()=>{
   setTop(null); renderTabs('standings');
+  if(standPhase!=='brassage' && state.livePhase==='brassage') standPhase='brassage';
   const phase=phaseData(standPhase);
-  const pools=phase.pools||[];
+  const allPools=phase.pools||[];
+  const realGyms=[...new Set(allPools.map(x=>gymName(x.gym)))];
+  if(realGyms.length<=1 || !realGyms.includes(standGym)) standGym='all';
+  const pools = standGym==='all' ? allPools : allPools.filter(x=>gymName(x.gym)===standGym);
   if(!standPool || !pools.find(p=>p.letter===standPool)) standPool = pools[0]?pools[0].letter:null;
   const p=pools.find(x=>x.letter===standPool);
   const qualNote = standPhase==='brassage'
     ? `<span class="rk top" style="margin:0 4px 0 0">1</span>1ers &amp; 2es → Principal (+ meilleurs 3es repêchés si besoin) · le reste → Consolante.`
     : `<span class="rk top" style="margin:0 4px 0 0">1</span>Les mieux classés sont têtes de série pour les phases finales.`;
-  if(!p){ host.innerHTML=`<div style="padding:0"><h3 style="font-size:19px;margin-bottom:var(--pad-y)">Classements par poule</h3><div class="filter-sticky">${phaseSeg(standPhase,'setStandPhase')}</div><p class="muted" style="margin-top:10px">Aucune poule pour cette phase.</p></div>`; return; }
+  const gymSeg = realGyms.length<=1 ? '' : `<p class="eyebrow" style="margin:14px 0 6px">🏟️ Gymnase</p>
+    <div class="seg seg-strong">${['all',...realGyms].map(g=>`<button class="${standGym===g?'on':''}" onclick="standGym='${g}';standPool=null;render('standings')">${g!=='all'?`<span class="dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${gymColor(g)};margin-right:5px;vertical-align:middle"></span>`:''}${g==='all'?'Tous':g}</button>`).join('')}</div>`;
+  if(!p){ host.innerHTML=`<div style="padding:0"><h3 style="font-size:19px;margin-bottom:var(--pad-y)">Classements par poule</h3><div class="filter-sticky">${phaseSeg(standPhase,'setStandPhase')}${gymSeg}</div><p class="muted" style="margin-top:10px">Aucune poule pour cette phase.</p></div>`; return; }
   const rows=poolStandingRows(p, phase.schedule);
   const courtLabel=`${gymName(p.gym)} · T${p.court}`;
   host.innerHTML=`<div style="padding:0">
     <h3 style="font-size:19px;margin-bottom:var(--pad-y)">Classements · ${PHASE_LABEL[standPhase]}</h3>
     <div class="filter-sticky">
     ${phaseSeg(standPhase,'setStandPhase')}
+    ${gymSeg}
     <div class="seg seg-strong" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));">${pools.map(x=>`<button class="${x.letter===standPool?'on':''}" onclick="standPool='${x.letter}';render('standings')">${x.letter}</button>`).join('')}</div>
     </div>
     <div class="pool"><div class="ph">Poule ${p.letter}<span class="tn">${courtLabel}</span></div>
@@ -5242,6 +5336,7 @@ window.submitNewPassword=async ()=>{
 // au lieu de s'étirer sur toute la largeur du conteneur élargi.
 const NARROW_SCREENS=new Set(['home','login','refLogin','createRef','setPassword','wizard','enterScore','scan','qr','teamsRegister','assignPools','wizPhases','summary','refProfile','refMail','phoneGate']);
 function render(screen,opts){
+  wizFooter.hidden=true; wizFooter.innerHTML='';
   (screens[screen]||screens.home)(opts||{});
   orgHeader.hidden = tabbar.hidden;
   host.classList.toggle('narrow', NARROW_SCREENS.has(screen));
