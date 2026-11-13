@@ -1224,33 +1224,55 @@ function distributeCourts(pools, forceGym, courtMap){
   }
   pools.forEach((p,i)=>{ const gi=Math.min(G-1,Math.floor(i/perGym)); p.gym=GYMS[gi].id; const k=i-gi*perGym; const gc=gymCourts[gi]; p.court=gc.start+(k%gc.count); });
 }
-// Répartit les terrains d'un gymnase partagé entre Principale et Consolante quand
-// les deux jouent SANS split par gymnase (sinon chaque catégorie, numérotant ses
-// terrains depuis 1 indépendamment de l'autre, se retrouve avec un même terrain
-// utilisé en même temps par un match de chaque catégorie — cf. planning
-// "Principale et Consolante" divisé en deux plannings non coordonnés). Le
-// gymnase est coupé en deux tranches contiguës de terrains, au prorata du
-// nombre de poules de chaque catégorie qui y tombent (ex. Principale sur les
-// terrains 1-2, Consolante sur le terrain 3, comme sur le planning Excel de
-// référence), chacune gardant au moins un terrain.
-function gymCourtSplit(nPrinc, nConso){
-  const G=state.config.gyms, cpg=state.config.courtsPerGym||[];
-  const perGymP=nPrinc?Math.ceil(nPrinc/Math.max(1,G)):0;
-  const perGymC=nConso?Math.ceil(nConso/Math.max(1,G)):0;
-  const princ=[], conso=[];
-  for(let gi=0;gi<G;gi++){
-    const total=Math.max(1,cpg[gi]||1);
-    const mineP=perGymP?Math.min(perGymP, Math.max(0,nPrinc-gi*perGymP)):0;
-    const mineC=perGymC?Math.min(perGymC, Math.max(0,nConso-gi*perGymC)):0;
-    if(mineP>0 && mineC>0 && total>1){
-      const cC=Math.min(total-1, Math.max(1, Math.round(total*mineC/(mineP+mineC))));
-      const cP=total-cC;
-      princ.push({start:1,count:cP}); conso.push({start:cP+1,count:cC});
-    } else {
-      princ.push({start:1,count:total}); conso.push({start:1,count:total});
-    }
+// Planning de la phase 2 (Principale + Consolante). Quand les deux catégories
+// partagent les mêmes gymnases (pas de split explicite par gymnase), on NE
+// répartit PLUS les terrains en deux tranches fixes (ex. terrains 1-2 pour la
+// Principale, terrain 3 pour la Consolante pendant toute la phase) : ça
+// laissait un terrain inoccupé dès que la Consolante — ayant moins de
+// matchs — terminait avant la Principale, alors que ce terrain restait
+// disponible. On fusionne à la place les poules des deux catégories en UNE
+// seule liste et on génère UN SEUL planning dessus avec tous les terrains du
+// gymnase : l'algorithme de remplissage (makeScheduleRotation, qui donne
+// toujours la priorité à la poule ayant le plus de matchs restants) libère
+// alors naturellement le terrain de la Consolante au profit de la Principale
+// une fois celle-ci achevée. Le planning combiné est ensuite reséparé par
+// lettre de poule pour conserver des plannings Principale/Consolante
+// indépendants à l'affichage (chaque match est tagué `m.phase`), tout en
+// gardant la possibilité d'un planning « Général » qui montre le combiné brut.
+function buildPhase2Schedules(princPools, consoPools, split){
+  const hor=horaireFor('poules2');
+  const tag=(sched,phase)=>{ sched.forEach(m=>m.phase=phase); return sched; };
+  if(!split && princPools.length && consoPools.length){
+    const merged=[...princPools, ...consoPools];
+    distributeCourts(merged, undefined, undefined);
+    const schedule=makeSchedule(merged, hor, courtsByGymFromPools(merged));
+    const princLetters=new Set(princPools.map(p=>p.letter));
+    schedule.forEach(m=>{ m.phase = princLetters.has(m.pool) ? 'principal' : 'consolante'; });
+    return {
+      principal:  {pools:princPools, schedule:schedule.filter(m=>m.phase==='principal')},
+      consolante: {pools:consoPools, schedule:schedule.filter(m=>m.phase==='consolante')},
+    };
   }
-  return {princ, conso};
+  // Gymnases séparés (split) ou une seule catégorie active : pas de terrain
+  // partagé entre les deux, chacune garde son propre planning indépendant.
+  distributeCourts(princPools, split?0:undefined, undefined);
+  const principal={pools:princPools, schedule:tag(makeSchedule(princPools, hor, courtsByGymFromPools(princPools)), 'principal')};
+  let consolante={pools:consoPools, schedule:[]};
+  if(consoPools.length){
+    distributeCourts(consoPools, split?1:undefined, undefined);
+    consolante={pools:consoPools, schedule:tag(makeSchedule(consoPools, hor, courtsByGymFromPools(consoPools)), 'consolante')};
+  }
+  return {principal, consolante};
+}
+// Régénère les plannings Principale/Consolante sur les poules déjà en mémoire
+// (sans retoucher la répartition des équipes) — utilisé après un ajustement
+// manuel (movePhase2Team) ou un changement d'horaire/règles, pour que le
+// planning combiné reste cohérent (cf. buildPhase2Schedules).
+function regeneratePhase2Schedules(){
+  const split = !!state.config.splitPhase2ByGym && state.config.gyms>=2 && state.config.phaseConsolante;
+  const built=buildPhase2Schedules(state.phasePrincipal.pools, state.config.phaseConsolante ? state.phaseConsolante.pools : [], split);
+  state.phasePrincipal.schedule=built.principal.schedule;
+  if(state.config.phaseConsolante) state.phaseConsolante.schedule=built.consolante.schedule;
 }
 // Tête de série d'une poule de brassage = son équipe au niveau le plus fort
 // (recalculé à la demande plutôt que stocké, pour rester juste même après un
@@ -1351,13 +1373,6 @@ function seedPhase2Pools(teams, P, letters){
   }
   return pools;
 }
-function makeCategory(teams, forceGym, forceP, letters, courtMap){
-  const T=state.config.teamsPerPool||4;
-  const P=forceP || Math.max(1, Math.round(teams.length/T)||1);
-  const pools=seedPhase2Pools(teams, P, letters);
-  distributeCourts(pools, forceGym, courtMap);
-  return {pools, schedule:makeSchedule(pools, horaireFor('poules2'), courtsByGymFromPools(pools))};
-}
 function buildPhase2(){
   const q=splitQualifiers(state.pools, state.schedule);
   // Option : Principale dans le gymnase 1, Consolante dans le gymnase 2 (un organisateur par gymnase)
@@ -1373,14 +1388,12 @@ function buildPhase2(){
   const REV=POOL_LETTERS.slice().reverse();
   const consoLetters=REV.slice(0, nConso);
   const princLetters=REV.slice(nConso, nConso+nPrinc);
-  // Principale : nombre de poules fixé par réglage (après repêchage des meilleurs 3es).
-  // Si les deux catégories partagent les mêmes gymnases (pas de split), on répartit
-  // par avance les terrains de chaque gymnase entre elles pour éviter qu'un même
-  // terrain soit utilisé en même temps par un match de chacune (cf. gymCourtSplit).
-  const courtSplit = (!split && state.config.phaseConsolante) ? gymCourtSplit(nPrinc, nConso) : null;
-  state.phasePrincipal=makeCategory(q.principal, split?0:undefined, nPrinc, princLetters, courtSplit&&courtSplit.princ);
+  const princPools=seedPhase2Pools(q.principal, nPrinc, princLetters);
   // Consolante désactivée : les 3es–4es sont éliminés, pas de second tableau
-  state.phaseConsolante = state.config.phaseConsolante ? makeCategory(q.consolante, split?1:undefined, nConso, consoLetters, courtSplit&&courtSplit.conso) : {pools:[], schedule:[]};
+  const consoPools=state.config.phaseConsolante ? seedPhase2Pools(q.consolante, nConso, consoLetters) : [];
+  const built=buildPhase2Schedules(princPools, consoPools, split);
+  state.phasePrincipal=built.principal;
+  state.phaseConsolante = state.config.phaseConsolante ? built.consolante : {pools:[], schedule:[]};
 }
 function ensurePhases(){ if(!state.phasePrincipal||!state.phaseConsolante) buildPhase2(); }
 // Prépare la proposition de poules phase 2 affichée dans la fiche « Fin de phase » :
@@ -1390,7 +1403,24 @@ function ensurePhase2Proposal(){
   const persisted=!!(state.phasePrincipal && state.phasePrincipal.schedule && state.phasePrincipal.schedule.length && state.phasePrincipal.schedule[0].id);
   if(!persisted && !state._phase2Edited){ state.phasePrincipal=null; state.phaseConsolante=null; buildPhase2(); }
 }
-function phaseData(key){ ensurePhases(); return key==='principal'?state.phasePrincipal : key==='consolante'?state.phaseConsolante : {pools:state.pools, schedule:state.schedule}; }
+// Clé 'poules2' = planning "Général" de la phase 2 : Principale + Consolante
+// combinés et triés chronologiquement (même tri que les plannings générés par
+// makeSchedule), pour voir tous les terrains d'un coup d'œil — chaque match
+// garde son `m.phase` ('principal'/'consolante') posé par buildPhase2Schedules.
+function phaseData(key){
+  ensurePhases();
+  if(key==='principal') return state.phasePrincipal;
+  if(key==='consolante') return state.phaseConsolante;
+  if(key==='poules2'){
+    const conso = state.config.phaseConsolante ? (state.phaseConsolante||{pools:[],schedule:[]}) : {pools:[],schedule:[]};
+    return {
+      pools: [...(state.phasePrincipal.pools||[]), ...(conso.pools||[])],
+      schedule: [...(state.phasePrincipal.schedule||[]), ...(conso.schedule||[])]
+        .sort((a,b)=> a.r-b.r || (a.gym<b.gym?-1:a.gym>b.gym?1:0) || (a.court||0)-(b.court||0)),
+    };
+  }
+  return {pools:state.pools, schedule:state.schedule};
+}
 // Poule de BRASSAGE d'origine d'une équipe, à partir de state.pools (source fiable,
 // toujours disponible) plutôt que du champ `.from` des objets équipe de phase 2 :
 // ce dernier n'existe que tant que la proposition est calculée en mémoire (splitQualifiers) —
@@ -1951,7 +1981,7 @@ const TOURN_ST={
 };
 function tournPhaseInfo(t){
   const order=phaseOrder(t.config);
-  const names={brassage:'Brassage', poules2:'Principale & Consolante', finales:'Phases finales'};
+  const names={brassage:'Brassage', poules2:'Principal & Consolante', finales:'Phases finales'};
   let p=t.livePhase||'brassage';
   if(order.indexOf(p)<0) p=order[order.length-1]; // livePhase hors du déroulé (ex. poules2 sans consolante)
   const i=Math.max(0,order.indexOf(p));
@@ -2451,11 +2481,11 @@ screens.wizPhases = ()=>{
     <h3 style="font-size:19px">Déroulé du tournoi</h3>
     <p class="lead">Les phases s'enchaînent automatiquement.</p>
     <div class="toggle" style="margin-top:12px">
-      <div><b>Phase Principale &amp; Consolante</b><small>Deuxième tour de poules entre le brassage et les finales.</small></div>
+      <div><b>Phase Principal &amp; Consolante</b><small>Deuxième tour de poules entre le brassage et les finales.</small></div>
       <button class="sw ${C.phaseConsolante?'on':''}" id="sw_conso" onclick="toggleSw('sw_conso');updateConsoHint()"></button>
     </div>
     <div id="consoHint" style="font-size:12px;color:var(--muted);margin:8px 2px 0;line-height:1.5"></div>
-    <label class="field" id="principalPoolsRow" style="margin-top:12px"><span>Nombre de poules en Principale</span>${numCtl('w_principalPools',C.principalPools||4,1,8)}
+    <label class="field" id="principalPoolsRow" style="margin-top:12px"><span>Nombre de poules en Principal</span>${numCtl('w_principalPools',C.principalPools||4,1,8)}
       <small style="display:block;margin-top:4px;color:var(--muted)">Les 1ers &amp; 2es de poule y vont toujours. S'il manque des équipes pour remplir ces poules, les meilleurs 3es (classés par points puis différence) sont repêchés ; les autres partent en Consolante.</small>
     </label>
     <div id="wizPhaseList" style="margin-top:14px"></div>
@@ -2473,7 +2503,7 @@ function renderWizPhaseList(){
   const order = on ? ['brassage','poules2','finales'] : ['brassage','finales'];
   const defs={
     brassage:['Phase de brassage','Chaque équipe joue tous les adversaires de sa poule. Un classement se dégage par poule.'],
-    poules2:['Principale &amp; Consolante','Les 1ers–2es de poule vont en Principale (complétée si besoin par les meilleurs 3es repêchés), les autres en Consolante. Chaque catégorie rejoue en poules.'],
+    poules2:['Principal &amp; Consolante','Les 1ers–2es de poule vont en Principal (complété si besoin par les meilleurs 3es repêchés), les autres en Consolante. Chaque catégorie rejoue en poules.'],
     finales:['Phases finales', on?'Élimination directe pour chaque catégorie. Le tour de départ (1/8, 1/4, 1/2…) sera choisi au lancement.':'Les 1ers–2es de chaque poule de brassage basculent directement en tableau à élimination.'],
   };
   box.innerHTML = `<div class="card">${order.map((p,i)=>`<div class="phase"><div class="num">${i+1}</div><div><b>${defs[p][0]}</b><small>${defs[p][1]}</small></div></div>`).join('')}</div>`;
@@ -2486,7 +2516,7 @@ window.updateConsoHint=()=>{
     const on=sw.classList.contains('on');
     if(ppRow) ppRow.style.display = on?'':'none';
     el.innerHTML = on
-      ? "✅ <b>Activée</b> — tournoi en 3 phases. Deux tableaux en phase 2 : 1ers–2es en Principale (complétée si besoin par repêchage des meilleurs 3es), les autres en Consolante. Chaque catégorie a sa propre phase finale."
+      ? "✅ <b>Activée</b> — tournoi en 3 phases. Deux tableaux en phase 2 : 1ers–2es en Principal (complété si besoin par repêchage des meilleurs 3es), les autres en Consolante. Chaque catégorie a sa propre phase finale."
       : "⛔ <b>Désactivée</b> — tournoi en 2 phases : brassage puis phases finales. Seuls les 1ers–2es de chaque poule continuent, directement en tableau à élimination ; les 3es–4es sont éliminés après le brassage.";
   }
   renderWizPhaseList();
@@ -2497,9 +2527,9 @@ window.updateFinalHint=()=>{
   const af=autoFinalLabel(), n=af.qual;
   const K = v==='auto' ? af.K : Math.min(+v||af.K, af.K);
   const tour = K===2?'Finale directe':'1/'+(K/2)+' de finale';
-  const drop = n>K ? ` Les <b>${n-K}</b> équipes les moins bien classées ne disputent pas de tableau (elles restent au classement de la Principale).` : '';
+  const drop = n>K ? ` Les <b>${n-K}</b> équipes les moins bien classées ne disputent pas de tableau (elles restent au classement du Principal).` : '';
   const autoTxt = v==='auto' ? ' (automatique)' : '';
-  el.innerHTML = `🎯 <b>${n}</b> qualifiés en Principale → tableau <b>${tour}</b>${autoTxt}, les <b>${K}</b> mieux classés.${drop}`;
+  el.innerHTML = `🎯 <b>${n}</b> qualifiés en Principal → tableau <b>${tour}</b>${autoTxt}, les <b>${K}</b> mieux classés.${drop}`;
 };
 
 /* ---------- Inscription des équipes (niveau) ---------- */
@@ -2769,7 +2799,7 @@ screens.summary = ()=>{
       <div class="summary-row"><span class="muted">Terrains</span><b>${C.courts}</b></div>
       <div class="summary-row"><span class="muted">Répartition</span><b>${C.distribution==='snake'?'Serpentin par niveau':C.distribution==='random'?'Aléatoire':'Manuelle'}</b></div>
       <div class="summary-row"><span class="muted">Format set</span><b>1 set à 25 pts · 2 d'écart</b></div>
-      <div class="summary-row"><span class="muted">Phases</span><b>${C.phaseConsolante?'Brassage → Principale + Consolante → Finales':'Brassage → Phases finales'}</b></div>
+      <div class="summary-row"><span class="muted">Phases</span><b>${C.phaseConsolante?'Brassage → Principal + Consolante → Finales':'Brassage → Phases finales'}</b></div>
     </div>
     <button class="btn accent" style="margin-top:18px" onclick="launchTournament()">🚀 Lancer le tournoi &amp; générer le QR</button>
     <button class="btn ghost" style="margin-top:10px" onclick="go('wizPhases')">Précédent</button>
@@ -2924,7 +2954,7 @@ screens.orgLive = ()=>{
       const nxt=nextPhase(state.livePhase);
       const rowDefs={
         brassage:`<div class="phase"><div class="num">{N}</div><div style="flex:1"><b>Brassage</b><small>Poules de ${C.teamsPerPool} · ${fmtRules(rulesFor('brassage'))}</small></div>{B}</div>`,
-        poules2:`<div class="phase" style="cursor:pointer" onclick="setStandPhase('principal');go('standings')"><div class="num">{N}</div><div style="flex:1"><b>Principale &amp; Consolante</b><small>1ers–2es (+ meilleurs 3es repêchés) en Principale, les autres en Consolante · rejoué en poules${subRules('poules2')}</small></div>{B}</div>`,
+        poules2:`<div class="phase" style="cursor:pointer" onclick="setStandPhase('principal');go('standings')"><div class="num">{N}</div><div style="flex:1"><b>Principal &amp; Consolante</b><small>1ers–2es (+ meilleurs 3es repêchés) en Principal, les autres en Consolante · rejoué en poules${subRules('poules2')}</small></div>{B}</div>`,
         finales:`<div class="phase" style="cursor:pointer" onclick="go('bracket')"><div class="num">{N}</div><div style="flex:1"><b>Phases finales</b><small>${C.phaseConsolante?'Tableau à élimination':'Les 1ers–2es du brassage basculent directement en tableau à élimination'}${subRules('finales')}</small></div>{B}</div>`,
       };
       const rows=order.map((p,i)=> rowDefs[p].replace('{N}',i+1).replace('{B}',badge(i))).join('');
@@ -3018,7 +3048,7 @@ window.openPhaseSwitch=()=>{
   const hor=horaireFor(nxt); // horaire de la phase suivante (défaut = horaire du brassage)
   const intro = nxt==='finales'
     ? 'Les équipes qualifiées sont basculées dans les tableaux à élimination.'
-    : 'Les équipes sont redistribuées : 1ers–2es (+ meilleurs 3es repêchés si besoin) en Principale'+(C.phaseConsolante?', les autres en Consolante.':'.');
+    : 'Les équipes sont redistribuées : 1ers–2es (+ meilleurs 3es repêchés si besoin) en Principal'+(C.phaseConsolante?', les autres en Consolante.':'.');
   let finalStartBlock='';
   if(nxt==='finales'){
     const af=autoFinalLabel();
@@ -3053,7 +3083,7 @@ window.openPhaseSwitch=()=>{
       <p class="eyebrow" style="margin:0 0 2px">🏟️ Répartition des gymnases</p>
       <div class="card" style="margin-bottom:14px">
         <div class="toggle" style="margin:0">
-          <div><b>Une catégorie par gymnase</b><small>Principale au ${gymName(GYMS[0].id)}, Consolante au ${gymName(GYMS[1].id)} — un organisateur par gymnase.</small></div>
+          <div><b>Une catégorie par gymnase</b><small>Principal au ${gymName(GYMS[0].id)}, Consolante au ${gymName(GYMS[1].id)} — un organisateur par gymnase.</small></div>
           <button class="sw ${on?'on':''}" id="sw_splitgym" onclick="toggleSw('sw_splitgym')"></button>
         </div>
       </div>`;
@@ -3176,7 +3206,7 @@ window.openPhase2PoolsEditor=(fresh=true)=>{
   openSheet(`
     <h3 class="sheet-title">Ajuster la répartition</h3>
     <p style="font-size:12.5px;color:var(--muted);margin:0 0 10px;line-height:1.5">Chaque carte indique la poule et le classement de l'équipe à l'issue de la phase précédente. Touchez la lettre d'une poule pour y déplacer l'équipe.</p>
-    ${catBlock('principal','🏅 Principale')}
+    ${catBlock('principal','🏅 Principal')}
     ${state.config.phaseConsolante ? catBlock('consolante','🥈 Consolante') : ''}
     <div class="btn-row" style="margin-top:16px">
       <button class="btn ghost" style="flex:1" onclick="cancelPhase2PoolsEdit()">Annuler</button>
@@ -3193,7 +3223,7 @@ window.movePhase2Team=(catKey,from,name,to)=>{
   const idx=pf.teams.findIndex(x=>x.t===name); if(idx<0) return;
   const [tm]=pf.teams.splice(idx,1); pt.teams.push(tm);
   state._phase2Edited=true;
-  cat.schedule = makeSchedule(cat.pools, horaireFor('poules2'), courtsByGymFromPools(cat.pools));
+  regeneratePhase2Schedules();
   openPhase2PoolsEditor(false); toast(name+' → Poule '+to);
 };
 window.cancelPhase2PoolsEdit=()=>{
@@ -3262,7 +3292,7 @@ window.openFinalesPairingEditor=(fresh=true)=>{
   openSheet(`
     <h3 class="sheet-title">Ajuster les appariements</h3>
     <p style="font-size:12.5px;color:var(--muted);margin:0 0 10px;line-height:1.5">Touchez le nom d'une équipe pour l'échanger avec celle sélectionnée, et changer ainsi les face-à-face du 1er tour.</p>
-    ${catBlock('principal','🏅 Principale')}
+    ${catBlock('principal','🏅 Principal')}
     ${state.config.phaseConsolante ? catBlock('consolante','🥈 Consolante') : ''}
     <div class="btn-row" style="margin-top:16px">
       <button class="btn ghost" style="flex:1" onclick="cancelFinalesPairingEdit()">Annuler</button>
@@ -3327,9 +3357,7 @@ window.confirmPhaseSwitch=async ()=>{
         // actif à ce moment-là : on ne refait pas buildPhase2() (perdrait l'ajustement),
         // mais il faut tout de même régénérer les horaires du planning avec l'horaire
         // qui vient d'être choisi/confirmé ci-dessus (setHoraire), sans toucher aux poules.
-        const hor2=horaireFor('poules2');
-        if(state.phasePrincipal) state.phasePrincipal.schedule=makeSchedule(state.phasePrincipal.pools, hor2, courtsByGymFromPools(state.phasePrincipal.pools));
-        if(state.config.phaseConsolante && state.phaseConsolante) state.phaseConsolante.schedule=makeSchedule(state.phaseConsolante.pools, hor2, courtsByGymFromPools(state.phaseConsolante.pools));
+        regeneratePhase2Schedules();
       }
     }
   }
@@ -3494,7 +3522,7 @@ function liveNowMatches(){
   return [];
 }
 function phaseName(p){
-  if(p==='poules2') return state.config.phaseConsolante ? 'Principale & Consolante' : 'Principale';
+  if(p==='poules2') return state.config.phaseConsolante ? 'Principal & Consolante' : 'Principal';
   if(p==='finales') return 'Phases finales';
   return 'Brassage';
 }
@@ -3658,7 +3686,15 @@ function schedBadge(s){
     : s==='live'?`<span class="badge warn" style="margin-left:auto">● En cours</span>`
     : `<span class="badge wait" style="margin-left:auto">À venir</span>`;
 }
-function schedRow(m){
+// Mention Principale/Consolante sous "Terrain · Poule", affichée uniquement
+// sur le planning "Général" (showCat) où les deux catégories sont mêlées —
+// sur les plannings déjà filtrés par catégorie, le contexte suffit.
+function schedCatTag(m){
+  return m.phase==='consolante'
+    ? `<div class="meta" style="margin-top:-2px"><span class="chip">🥈 Consolante</span></div>`
+    : `<div class="meta" style="margin-top:-2px"><span class="chip">🥇 Principal</span></div>`;
+}
+function schedRow(m, showCat){
   const played=matchSetsPlayed(m);
   const sc = played.length ? scoreSC(m) : `<span class="vs">vs</span>`;
   // Saisie admin/référent : seuls les matchs persistés (phase de brassage,
@@ -3672,6 +3708,7 @@ function schedRow(m){
     ? `<button class="btn ghost sm" style="margin-top:8px;width:100%" onclick="adminStartMatch('${m.id}')">▶️ Démarrer ce match</button>` : '';
   return `<div class="match ${m.status==='done'?'done':m.status==='live'?'live':'upcoming'}">
     <div class="meta"><span class="chip" style="background:color-mix(in srgb, ${gymColor(m.gym)} 18%, var(--surface-2));color:${gymColor(m.gym)}">🏟️ ${m.gym}</span><span>Terrain ${m.court} · Poule ${m.pool}</span>${schedBadge(m.status)}</div>
+    ${showCat?schedCatTag(m):''}
     <div class="teams"><span class="t"><span>${m.a}</span>${levelBadge(m.a)}</span><span class="sc">${sc}</span><span class="t right"><span>${m.b}</span>${levelBadge(m.b)}</span></div>${refLine(m)}
     ${canEnter?`<button class="btn ghost sm" style="margin-top:8px;width:100%" onclick="openAdminScoreSheet('${m.id}')">${btnLabel}</button>`:''}
     ${startBtn}</div>`;
@@ -3785,17 +3822,27 @@ let schedPhase='brassage';
 window.setSchedPhase=k=>{ schedPhase=k; schedGym='all'; render('schedule'); };
 screens.schedule = ()=>{
   setTop(null); renderTabs('schedule');
+  // Les onglets Principale/Consolante/Général n'ont de sens qu'une fois le
+  // Brassage terminé (phase 2 construite) — sinon ils n'affichent rien et
+  // laissent croire que la phase 2 a déjà démarré.
+  const phase2Reached = state.livePhase!=='brassage';
+  const schedPhaseKeys=['brassage',...(phase2Reached?[...(state.config.phaseConsolante?['poules2']:[]),'principal',...(state.config.phaseConsolante?['consolante']:[])]:[])];
+  if(!schedPhaseKeys.includes(schedPhase)) schedPhase='brassage';
   const schedule=phaseData(schedPhase).schedule||[];
   const gyms=['all',...new Set(schedule.map(m=>m.gym))];
   const realGyms=gyms.filter(g=>g!=='all');
   const rounds=[...new Set(schedule.map(m=>m.r))].sort((a,b)=>a-b);
   const lbl=g=> g==='all'?'Tous':g;
   const nAvenir=schedule.filter(m=>m.status==='upcoming'&&(schedGym==='all'||m.gym===schedGym)).length;
-  const phaseName = schedPhase==='brassage'?'Phase de brassage':`Phase 2 · ${PHASE_LABEL[schedPhase]}`;
+  // Planning "Général" (poules2) : vue combinée Principale + Consolante — pas
+  // dans PHASE_LABEL (réutilisé ailleurs pour les classements/le bracket, où
+  // un "Général" n'aurait pas de sens), donc gérée ici localement.
+  const schedPhaseLabel=k=> k==='poules2' ? 'Général' : PHASE_LABEL[k];
+  const showCat = schedPhase==='poules2';
+  const phaseName = schedPhase==='brassage'?'Phase de brassage':`Phase 2 · ${schedPhaseLabel(schedPhase)}`;
   const vh = horaireFor(schedPhase==='brassage'?'brassage':'poules2');
   const vRound=(+vh.roundMinutes)||20, vSetup=vh.setupMinutes!=null?+vh.setupMinutes:10;
-  const schedPhaseIcon={brassage:'🔄',principal:'🥇',consolante:'🥈'};
-  const schedPhaseKeys=['brassage','principal',...(state.config.phaseConsolante?['consolante']:[])];
+  const schedPhaseIcon={brassage:'🔄',principal:'🥇',consolante:'🥈',poules2:'🏆'};
   // Petit point d'état sur chaque bouton de phase : vert si tous les matchs de
   // cette phase sont joués, orange si au moins un l'est (ou en cours), rien si
   // la phase n'a pas encore démarré — pour repérer l'avancement sans avoir à
@@ -3805,12 +3852,13 @@ screens.schedule = ()=>{
   // statut de chaque match individuellement — plus sûr pour signaler visuellement
   // qu'on ne reviendra plus sur cette phase.
   const orderKey=k=> k==='principal'||k==='consolante' ? 'poules2' : k;
-  const segDot=k=>{
+  const segDot=(k,block)=>{
     const ms=(phaseData(k).schedule)||[];
     if(!ms.length) return '';
     const order=phaseOrder(), iK=order.indexOf(orderKey(k)), iCur=order.indexOf(state.livePhase);
-    if((iK>=0&&iCur>=0&&iK<iCur) || ms.every(m=>m.status==='done')) return `<span class="segdot done" title="Terminé"></span>`;
-    if(ms.some(m=>m.status==='done'||m.status==='live'||matchSetsPlayed(m).length>0)) return `<span class="segdot live" title="En cours"></span>`;
+    const st=block?' style="margin:2px 0 0"':'';
+    if((iK>=0&&iCur>=0&&iK<iCur) || ms.every(m=>m.status==='done')) return `<span class="segdot done"${st} title="Terminé"></span>`;
+    if(ms.some(m=>m.status==='done'||m.status==='live'||matchSetsPlayed(m).length>0)) return `<span class="segdot live"${st} title="En cours"></span>`;
     return '';
   };
   let h=`<div style="padding:0">
@@ -3819,7 +3867,16 @@ screens.schedule = ()=>{
     <p class="muted" style="margin:0 0 var(--pad-y);font-size:11.5px;line-height:1.4">🕐 Début ${vh.startTime||'09:00'} · un tour toutes les ${vRound+vSetup} min (${vRound} min de jeu + ${vSetup} min de mise en place)</p>
     <div class="filter-sticky">
     <p class="eyebrow" style="margin:0 0 6px">Phase</p>
-    <div class="seg seg-strong">${schedPhaseKeys.map(k=>`<button class="${schedPhase===k?'on':''}" onclick="setSchedPhase('${k}')">${schedPhaseIcon[k]} ${PHASE_LABEL[k]}${segDot(k)}</button>`).join('')}</div>
+    <div class="seg seg-strong">${schedPhaseKeys.map((k,i)=>{
+      const icon=schedPhaseIcon[k], label=schedPhaseLabel(k);
+      const d=segDot(k,true);
+      const inner = `<span style="display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.15"><span style="font-size:15px">${icon}</span><span>${label}</span>${d?`<span style="margin-top:2px">${d}</span>`:''}</span>`;
+      // Séparateur visuel entre "Brassage" (phase 1) et le groupe phase 2
+      // (Général/Principale/Consolante), pour bien marquer qu'il s'agit de
+      // deux étapes distinctes du tournoi, pas d'onglets équivalents.
+      const sep = (i===1 && k!=='brassage') ? `<div style="width:1.5px;align-self:stretch;margin:2px 1px;background:var(--line);border-radius:1px"></div>` : '';
+      return `${sep}<button class="${schedPhase===k?'on':''}" onclick="setSchedPhase('${k}')">${inner}</button>`;
+    }).join('')}</div>
     ${realGyms.length<=1 ? '' : `<p class="eyebrow" style="margin:14px 0 6px">🏟️ Gymnase</p>
     <div class="seg seg-strong">${gyms.map(g=>`<button class="${schedGym===g?'on':''}" onclick="schedGym='${g}';render('schedule')">${g!=='all'?`<span class="dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${gymColor(g)};margin-right:5px;vertical-align:middle"></span>`:''}${lbl(g)}</button>`).join('')}</div>`}
     </div>
@@ -3834,9 +3891,9 @@ screens.schedule = ()=>{
       ? realGyms.map(g=>{
           const gm=ms.filter(m=>m.gym===g).sort((a,b)=>(a.court||0)-(b.court||0));
           if(!gm.length) return '';
-          return `<p class="eyebrow" style="margin:10px 0 4px;color:${gymColor(g)}">🏟️ ${g}</p><div class="sched-grid">${gm.map(schedRow).join('')}</div>`;
+          return `<p class="eyebrow" style="margin:10px 0 4px;color:${gymColor(g)}">🏟️ ${g}</p><div class="sched-grid">${gm.map(m=>schedRow(m,showCat)).join('')}</div>`;
         }).join('')
-      : `<div class="sched-grid">${[...ms].sort((a,b)=>(a.court||0)-(b.court||0)).map(schedRow).join('')}</div>`;
+      : `<div class="sched-grid">${[...ms].sort((a,b)=>(a.court||0)-(b.court||0)).map(m=>schedRow(m,showCat)).join('')}</div>`;
     const done=ms.every(m=>m.status==='done');
     // Un tour est "en cours" si un de ses matchs l'est réellement (démarré ou
     // déjà saisi côté capitaine) — PAS simplement parce que le tour précédent
@@ -3978,7 +4035,7 @@ window.openTieBreakEditor=(tieKey)=>{
   `);
 };
 let standPhase='brassage';
-const PHASE_LABEL={brassage:'Brassage',principal:'Principale',consolante:'Consolante'};
+const PHASE_LABEL={brassage:'Brassage',principal:'Principal',consolante:'Consolante'};
 function phaseSeg(current,fn){
   const keys=['brassage','principal',...(state.config.phaseConsolante?['consolante']:[])];
   return `<div class="seg seg-strong" style="margin-bottom:8px">${keys.map(k=>`<button class="${current===k?'on':''}" onclick="${fn}('${k}')">${PHASE_LABEL[k]}</button>`).join('')}</div>`;
@@ -3991,7 +4048,7 @@ screens.standings = ()=>{
   if(!standPool || !pools.find(p=>p.letter===standPool)) standPool = pools[0]?pools[0].letter:null;
   const p=pools.find(x=>x.letter===standPool);
   const qualNote = standPhase==='brassage'
-    ? `<span class="rk top" style="margin:0 4px 0 0">1</span>1ers &amp; 2es → Principale (+ meilleurs 3es repêchés si besoin) · le reste → Consolante.`
+    ? `<span class="rk top" style="margin:0 4px 0 0">1</span>1ers &amp; 2es → Principal (+ meilleurs 3es repêchés si besoin) · le reste → Consolante.`
     : `<span class="rk top" style="margin:0 4px 0 0">1</span>Les mieux classés sont têtes de série pour les phases finales.`;
   if(!p){ host.innerHTML=`<div style="padding:0"><h3 style="font-size:19px;margin-bottom:var(--pad-y)">Classements par poule</h3><div class="filter-sticky">${phaseSeg(standPhase,'setStandPhase')}</div><p class="muted" style="margin-top:10px">Aucune poule pour cette phase.</p></div>`; return; }
   const rows=poolStandingRows(p, phase.schedule);
@@ -4149,7 +4206,7 @@ screens.bracket = ()=>{
   const byRound=r=>persisted.filter(m=>m.r===r).sort((a,b)=>(a.court||0)-(b.court||0));
   const started=persisted.length>0;
   const catSeg=`<div class="filter-sticky"><div class="seg seg-strong">
-    <button class="${bracketCat==='principal'?'on':''}" onclick="setBracketCat('principal')">Principale</button>
+    <button class="${bracketCat==='principal'?'on':''}" onclick="setBracketCat('principal')">Principal</button>
     ${state.config.phaseConsolante?`<button class="${bracketCat==='consolante'?'on':''}" onclick="setBracketCat('consolante')">Consolante</button>`:''}
   </div></div>`;
 
