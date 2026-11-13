@@ -280,7 +280,7 @@ input,select{font-family:inherit;font-size:15px}
 /* Planning : distinguer d'un coup d'œil à venir / en cours / terminé (au-delà du badge,
    trop proche visuellement entre "brand" et "ok"). */
 .match.upcoming{border-left-color:var(--brand)}
-.match.live{border-left-color:var(--warn);background:var(--warn-soft)}
+.match.live{border-left-color:var(--warn);background:var(--surface);box-shadow:0 2px 12px -3px var(--warn)}
 .match.done{border-left-color:var(--ok);background:var(--surface-2);opacity:.74}
 /* Sections « Mes matchs » (capitaine) */
 .mm-sep{margin:24px 0 10px;padding-top:18px;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px;
@@ -332,7 +332,8 @@ input,select{font-family:inherit;font-size:15px}
 .bracket{--bgap:22px;display:flex;align-items:stretch;overflow-x:auto;padding:4px 2px 12px}
 .round{display:flex;flex-direction:column;flex:0 0 var(--rw,150px);min-width:var(--rw,150px)}
 .round:not(:last-child){padding-right:var(--bgap)}
-.round h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:center;margin:0 0 8px;height:14px}
+.round h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:center;margin:0;height:14px}
+.round .rtime{font-size:10.5px;color:var(--muted);text-align:center;margin:1px 0 8px;font-weight:600}
 .rmatches{flex:1;display:flex;flex-direction:column}
 .rmatch{flex:1;display:flex;flex-direction:column;justify-content:center;position:relative}
 .bm{border:1px solid var(--line);border-radius:11px;overflow:hidden;font-size:12.5px;background:var(--surface);margin:7px 0}
@@ -346,6 +347,7 @@ input,select{font-family:inherit;font-size:15px}
 .bm .r.win{background:var(--ok-soft)}
 .bm .r.win .nmtxt{font-weight:800}
 .bm .r.win .sc b{color:var(--fg)}
+.bm.live{border-color:var(--warn);box-shadow:0 2px 12px -3px var(--warn)}
 .bm.tap{cursor:pointer}
 .bm.tap .bmEdit{position:absolute;top:50%;right:9px;transform:translateY(-50%);font-size:13px;opacity:.55;pointer-events:none}
 .bm.tap .r{padding-right:28px}
@@ -443,6 +445,18 @@ input,select{font-family:inherit;font-size:15px}
 .sheet-close:hover{color:var(--fg)}
 .btn.theme-toggle{width:36px;height:36px;padding:0;border-radius:50%;font-size:15px;flex:none}
 .sheet h3.sheet-title{font-size:18px;margin:2px 0 12px}
+/* Fenêtre modale centrée (alerte bloquante) */
+.modal-backdrop{position:absolute;inset:0;z-index:90;background:rgba(10,13,30,.62);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .22s ease;padding:22px}
+.modal-backdrop.show{opacity:1}
+.modal{position:relative;width:100%;max-width:360px;max-height:85%;overflow-y:auto;background:var(--surface);
+  border-radius:20px;padding:22px 20px 20px;box-shadow:0 22px 60px rgba(0,0,0,.4);border-top:4px solid var(--warn,#9a6700);
+  transform:scale(.92);transition:transform .22s cubic-bezier(.22,1,.36,1)}
+.modal-backdrop.show .modal{transform:scale(1)}
+.modal-close{position:absolute;top:10px;right:12px;z-index:2;width:30px;height:30px;border:none;border-radius:50%;
+  background:var(--surface-2);color:var(--muted);font-size:18px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.modal-close:hover{color:var(--fg)}
+.modal h3.modal-title{font-size:17px;margin:2px 26px 10px 0}
 
 /* Petits écrans (< 392px) : on resserre pour éviter les débordements */
 @media (max-width:391px){
@@ -505,7 +519,9 @@ input,select{font-family:inherit;font-size:15px}
 </style>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700;800&display=swap">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
 /* ---------- API OVH (PHP + MySQL, même domaine) ----------
    Tout passe par ./api/ : authentification par cookie de session, aucune
    clé ni CORS. window.api est un petit client fetch ; window.sb reste un
@@ -535,6 +551,7 @@ window.api = (function(){
     listTournaments:()=>               call('tournaments.list'),
     saveTournament: (id,row)=>         call('tournaments.save',        {body:{id,row}}),
     setArchived:    (id,archived)=>    call('tournaments.setArchived', {body:{id,archived}}),
+    setFinished:    (id,finished)=>    call('tournaments.setFinished', {body:{id,finished}}),
     setStatus:      (id,status,extra)=> call('tournaments.setStatus',  {body:Object.assign({id,status},extra||{})}),
     removeTournament:(id)=>            call('tournaments.remove',      {body:{id}}),
     saveStructure:  (tid,s)=>          call('tournaments.saveStructure',{body:{tid,s}}),
@@ -547,6 +564,8 @@ window.api = (function(){
     listConflicts:  (tid)=>            call('matches.conflicts',       {query:{tid}}),
     resolveConflict:(matchId,payload)=> call('matches.resolveConflict', {body:Object.assign({matchId},payload||{})}),
     publicByCode:   (code,team)=>      call('tournaments.publicByCode', {query:{code, team:team||undefined}}),
+    verifyCaptainPhone:(code,team,phone)=> call('teams.verifyPhone', {body:{code,team,phone}}),
+    teamsDirectory: (tid)=>            call('teams.directory',       {query:{tid}}),
     listReferents:  ()=>               call('referents.list'),
     createReferent: (name,email,password)=> call('referents.create',   {body:{name,email,password}}),
     setReferentStatus:(id,status)=>    call('referents.setStatus',     {body:{id,status}}),
@@ -610,6 +629,8 @@ window.sb = { _ovh:true };
       livePhase: r.live_phase || 'brassage',
       launchedAt: r.launched_at ? Date.parse(r.launched_at) : undefined,
       closedAt:   r.closed_at   ? Date.parse(r.closed_at)   : undefined,
+      finished:   !!r.finished,
+      finishedAt: r.finished_at ? Date.parse(r.finished_at) : undefined,
       savedAt:    r.created_at  ? Date.parse(r.created_at)  : undefined,
       _sb: true,
     };
@@ -634,6 +655,10 @@ window.sb = { _ovh:true };
     async setStatus(id, status, extra){
       if(!isUuid(id)) return;
       await api.setStatus(id, status, extra||{});
+    },
+    async setFinished(id, finished){
+      if(!isUuid(id)) return;
+      await api.setFinished(id, !!finished);
     },
     async remove(id){
       if(!isUuid(id)) return;
@@ -709,6 +734,9 @@ window.sb = { _ovh:true };
 
   <!-- BOTTOM SHEET (pop-up) -->
   <div class="sheet-backdrop" id="sheet" hidden></div>
+
+  <!-- FENÊTRE MODALE CENTRÉE (alerte bloquante) -->
+  <div class="modal-backdrop" id="modal" hidden></div>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -813,6 +841,9 @@ const GYMS = [
   {id:'g3', name:'Gymnase Nord', color:'#2f7f8f'},
   {id:'g4', name:'Gymnase Sud', color:'#7a5bbf'},
 ];
+// Noms de démo d'origine : servent uniquement à détecter qu'un gymnase n'a
+// jamais été réellement nommé par l'organisateur (voir renderGymNames).
+const GYM_DEFAULT_NAMES = GYMS.map(g=>g.name);
 const POOL_LETTERS = Array.from({length:26},(_,i)=>String.fromCharCode(65+i));
 // w = poids pour les têtes de série : Nationale > Régionale > Départ./Loisirs > Jeunes.
 const LEVELS=[
@@ -973,6 +1004,19 @@ function roundRobin(list){
   return rounds;
 }
 var schedHoraire=null; // horaire actif pendant la construction d'un planning (null → brassage/config)
+var schedCourtsByGym=null; // restriction de terrains active pendant la construction d'un planning (null → tous les terrains du gymnase)
+// Terrains effectivement attribués aux poules passées, par gymnase — dérivé des
+// p.gym/p.court déjà posés par distributeCourts(). Permet à chaque catégorie
+// (Principale/Consolante) de ne générer ses horaires que sur SES terrains quand
+// elles partagent un gymnase, sans avoir à faire remonter forceGym/courtMap
+// jusqu'à chaque site d'appel de makeSchedule (ajustement manuel, ré-horaire...).
+function courtsByGymFromPools(pools){
+  const m={};
+  (pools||[]).forEach(p=>{ if(p.gym==null||p.court==null) return; (m[p.gym]=m[p.gym]||new Set()).add(p.court); });
+  const out={};
+  Object.keys(m).forEach(g=>{ out[g]=[...m[g]].sort((a,b)=>a-b); });
+  return out;
+}
 function slotTime(r){
   const c=schedHoraire||state.config||{};
   const parts=String(c.startTime||'09:00').split(':');
@@ -1007,17 +1051,20 @@ function matchWinner(m){
 }
 function wonBy(m, team){ const w=matchWinner(m); return w && ((w==='a'&&m.a===team)||(w==='b'&&m.b===team)); }
 function gymCourtList(gymId, pools){
+  if(schedCourtsByGym && schedCourtsByGym[gymId] && schedCourtsByGym[gymId].length) return schedCourtsByGym[gymId].slice();
   if(state.courtsByGym && state.courtsByGym[gymId] && state.courtsByGym[gymId].length) return state.courtsByGym[gymId].slice();
   const s=[...new Set((pools||[]).filter(p=>p.gym===gymId).map(p=>p.court))].sort((a,b)=>a-b);
   return s.length?s:[1];
 }
 function buildSchedule(){ state.schedule = makeSchedule(state.pools, horaireFor('brassage')); }
-function makeSchedule(poolsIn, hor){
+function makeSchedule(poolsIn, hor, courtsByGym){
   const pools=(poolsIn||[]).filter(p=>p.teams&&p.teams.length>=2);
   const prev=schedHoraire; schedHoraire=hor||null;
+  const prevCourts=schedCourtsByGym; schedCourtsByGym=courtsByGym||null;
   const sched = (state.config.scheduleMode==='pool') ? makeSchedulePool(pools) : makeScheduleRotation(pools);
   assignReferees(sched, pools);
   schedHoraire=prev;
+  schedCourtsByGym=prevCourts;
   return sched;
 }
 // Arbitrage : à chaque tour, une équipe au repos arbitre un match.
@@ -1162,7 +1209,7 @@ function makeSchedulePool(pools){
 }
 
 /* ---------- Phase 2 (Principale / Consolante) & phases finales ---------- */
-function distributeCourts(pools, forceGym){
+function distributeCourts(pools, forceGym, courtMap){
   const G=state.config.gyms, cpg=state.config.courtsPerGym||[];
   if(forceGym!=null){ // toute la catégorie dans un seul gymnase
     const gi=Math.min(G-1, forceGym), c=Math.max(1, cpg[gi]||1);
@@ -1171,8 +1218,39 @@ function distributeCourts(pools, forceGym){
   }
   const P=pools.length, perGym=Math.ceil(P/Math.max(1,G));
   const gymCourts=[];
-  for(let gi=0;gi<G;gi++) gymCourts.push(Math.max(1,cpg[gi]||1));
-  pools.forEach((p,i)=>{ const gi=Math.min(G-1,Math.floor(i/perGym)); p.gym=GYMS[gi].id; const k=i-gi*perGym; p.court=(k%gymCourts[gi])+1; });
+  for(let gi=0;gi<G;gi++){
+    const m=courtMap&&courtMap[gi];
+    gymCourts.push(m?{start:m.start, count:Math.max(1,m.count)}:{start:1, count:Math.max(1,cpg[gi]||1)});
+  }
+  pools.forEach((p,i)=>{ const gi=Math.min(G-1,Math.floor(i/perGym)); p.gym=GYMS[gi].id; const k=i-gi*perGym; const gc=gymCourts[gi]; p.court=gc.start+(k%gc.count); });
+}
+// Répartit les terrains d'un gymnase partagé entre Principale et Consolante quand
+// les deux jouent SANS split par gymnase (sinon chaque catégorie, numérotant ses
+// terrains depuis 1 indépendamment de l'autre, se retrouve avec un même terrain
+// utilisé en même temps par un match de chaque catégorie — cf. planning
+// "Principale et Consolante" divisé en deux plannings non coordonnés). Le
+// gymnase est coupé en deux tranches contiguës de terrains, au prorata du
+// nombre de poules de chaque catégorie qui y tombent (ex. Principale sur les
+// terrains 1-2, Consolante sur le terrain 3, comme sur le planning Excel de
+// référence), chacune gardant au moins un terrain.
+function gymCourtSplit(nPrinc, nConso){
+  const G=state.config.gyms, cpg=state.config.courtsPerGym||[];
+  const perGymP=nPrinc?Math.ceil(nPrinc/Math.max(1,G)):0;
+  const perGymC=nConso?Math.ceil(nConso/Math.max(1,G)):0;
+  const princ=[], conso=[];
+  for(let gi=0;gi<G;gi++){
+    const total=Math.max(1,cpg[gi]||1);
+    const mineP=perGymP?Math.min(perGymP, Math.max(0,nPrinc-gi*perGymP)):0;
+    const mineC=perGymC?Math.min(perGymC, Math.max(0,nConso-gi*perGymC)):0;
+    if(mineP>0 && mineC>0 && total>1){
+      const cC=Math.min(total-1, Math.max(1, Math.round(total*mineC/(mineP+mineC))));
+      const cP=total-cC;
+      princ.push({start:1,count:cP}); conso.push({start:cP+1,count:cC});
+    } else {
+      princ.push({start:1,count:total}); conso.push({start:1,count:total});
+    }
+  }
+  return {princ, conso};
 }
 // Tête de série d'une poule de brassage = son équipe au niveau le plus fort
 // (recalculé à la demande plutôt que stocké, pour rester juste même après un
@@ -1273,12 +1351,12 @@ function seedPhase2Pools(teams, P, letters){
   }
   return pools;
 }
-function makeCategory(teams, forceGym, forceP, letters){
+function makeCategory(teams, forceGym, forceP, letters, courtMap){
   const T=state.config.teamsPerPool||4;
   const P=forceP || Math.max(1, Math.round(teams.length/T)||1);
   const pools=seedPhase2Pools(teams, P, letters);
-  distributeCourts(pools, forceGym);
-  return {pools, schedule:makeSchedule(pools, horaireFor('poules2'))};
+  distributeCourts(pools, forceGym, courtMap);
+  return {pools, schedule:makeSchedule(pools, horaireFor('poules2'), courtsByGymFromPools(pools))};
 }
 function buildPhase2(){
   const q=splitQualifiers(state.pools, state.schedule);
@@ -1296,9 +1374,13 @@ function buildPhase2(){
   const consoLetters=REV.slice(0, nConso);
   const princLetters=REV.slice(nConso, nConso+nPrinc);
   // Principale : nombre de poules fixé par réglage (après repêchage des meilleurs 3es).
-  state.phasePrincipal=makeCategory(q.principal, split?0:undefined, nPrinc, princLetters);
+  // Si les deux catégories partagent les mêmes gymnases (pas de split), on répartit
+  // par avance les terrains de chaque gymnase entre elles pour éviter qu'un même
+  // terrain soit utilisé en même temps par un match de chacune (cf. gymCourtSplit).
+  const courtSplit = (!split && state.config.phaseConsolante) ? gymCourtSplit(nPrinc, nConso) : null;
+  state.phasePrincipal=makeCategory(q.principal, split?0:undefined, nPrinc, princLetters, courtSplit&&courtSplit.princ);
   // Consolante désactivée : les 3es–4es sont éliminés, pas de second tableau
-  state.phaseConsolante = state.config.phaseConsolante ? makeCategory(q.consolante, split?1:undefined, nConso, consoLetters) : {pools:[], schedule:[]};
+  state.phaseConsolante = state.config.phaseConsolante ? makeCategory(q.consolante, split?1:undefined, nConso, consoLetters, courtSplit&&courtSplit.conso) : {pools:[], schedule:[]};
 }
 function ensurePhases(){ if(!state.phasePrincipal||!state.phaseConsolante) buildPhase2(); }
 // Prépare la proposition de poules phase 2 affichée dans la fiche « Fin de phase » :
@@ -1420,27 +1502,34 @@ async function advanceBracketIfRoundDone(phaseKey){
   const catKey = phaseKey==='finalesConsolante' ? 'consolante' : 'principal';
   const sched=(bracketData(catKey).schedule||[]);
   if(!sched.length) return;
-  const maxR=Math.max(...sched.map(m=>m.r||1));
-  const cur=sched.filter(m=>m.r===maxR).sort((a,b)=>(a.court||0)-(b.court||0));
-  if(cur.length<=1) return; // pas de tour, ou déjà la finale : rien à générer après
-  const nextR=maxR+1;
-  const existingNext=sched.filter(m=>m.r===nextR);
+  // On examine CHAQUE tour déjà présent, pas seulement le plus avancé (maxR) :
+  // dès qu'une 1ère paire d'un tour est jouée, le tour suivant existe déjà
+  // partiellement (1 match sur 2) et devient alors le "maxR" — sans cette
+  // boucle, les paires encore en cours du tour précédent (ex: les 2 derniers
+  // matchs d'un 1/4 de finale) ne seraient plus jamais réexaminées.
+  const rounds=[...new Set(sched.map(m=>m.r||1))].sort((a,b)=>a-b);
   const newMatches=[];
-  for(let i=0;i*2+1<cur.length;i++){
-    const m1=cur[i*2], m2=cur[i*2+1];
-    if(!m1||!m2 || m1.status!=='done' || m2.status!=='done') continue; // paire pas encore complète
-    if(existingNext.some(m=>m.court===i+1)) continue; // déjà généré (ré-saisie d'un score)
-    const w1=matchWinner(m1)==='a'?m1.a:m1.b, w2=matchWinner(m2)==='a'?m2.a:m2.b;
-    newMatches.push(...buildBracketMatches(phaseKey, nextR, [[w1,w2]]).matches.map(mm=>({...mm, court:i+1})));
-    if(cur.length===2){
-      const phase3e = phaseKey==='finalesConsolante' ? 'finalesConsolante3e' : 'finalesPrincipal3e';
-      const already3e = (bracketData3e(catKey).schedule||[]).length>0;
-      if(!already3e){
-        const l1=matchWinner(m1)==='a'?m1.b:m1.a, l2=matchWinner(m2)==='a'?m2.b:m2.a;
-        newMatches.push(...buildBracketMatches(phase3e, 1, [[l1,l2]]).matches);
+  rounds.forEach(r=>{
+    const cur=sched.filter(m=>m.r===r).sort((a,b)=>(a.court||0)-(b.court||0));
+    if(cur.length<=1) return; // pas de tour, ou déjà la finale : rien à générer après
+    const nextR=r+1;
+    const existingNext=sched.filter(m=>m.r===nextR);
+    for(let i=0;i*2+1<cur.length;i++){
+      const m1=cur[i*2], m2=cur[i*2+1];
+      if(!m1||!m2 || m1.status!=='done' || m2.status!=='done') continue; // paire pas encore complète
+      if(existingNext.some(m=>m.court===i+1)) continue; // déjà généré (ré-saisie d'un score)
+      const w1=matchWinner(m1)==='a'?m1.a:m1.b, w2=matchWinner(m2)==='a'?m2.a:m2.b;
+      newMatches.push(...buildBracketMatches(phaseKey, nextR, [[w1,w2]]).matches.map(mm=>({...mm, court:i+1})));
+      if(cur.length===2){
+        const phase3e = phaseKey==='finalesConsolante' ? 'finalesConsolante3e' : 'finalesPrincipal3e';
+        const already3e = (bracketData3e(catKey).schedule||[]).length>0;
+        if(!already3e){
+          const l1=matchWinner(m1)==='a'?m1.b:m1.a, l2=matchWinner(m2)==='a'?m2.b:m2.a;
+          newMatches.push(...buildBracketMatches(phase3e, 1, [[l1,l2]]).matches);
+        }
       }
     }
-  }
+  });
   if(!newMatches.length) return;
   const t=state.tournaments.find(x=>x.id===state.currentDraftId);
   if(window.vboDb && t && vboDb.isUuid(t.id)){
@@ -1641,6 +1730,77 @@ const RESUMABLE_REF=new Set(['refSpace', ...TAB_SCREENS]);
   }, {passive:true});
 })();
 
+// Glisser vers la droite pour sortir, sur quelques écrans secondaires qui ne
+// font pas partie des 5 onglets (tabbar masquée) et n'ont donc, jusqu'ici,
+// qu'un bouton « ‹ » tactile pour revenir en arrière : répertoire des
+// capitaines et code/QR des capitaines. Même mécanique de suivi au doigt
+// qu'initTabSwipe, mais à sens unique (pas d'écran "suivant" ici : on
+// retourne juste à l'écran précédent via back()).
+const BACK_SWIPE_SCREENS = new Set(['teamsDirectory', 'qr', 'adminReferents']);
+(function initBackSwipe(){
+  const THRESH=55, RATIO=1.2, DUR=230;
+  let sx=0, sy=0, dx=0, tracking=false, dragging=false;
+  function scrollsHorizontally(el){
+    while(el && el!==host){
+      if(el.scrollWidth > el.clientWidth + 2) return true;
+      el=el.parentElement;
+    }
+    return false;
+  }
+  function currentScreen(){
+    const cur=navStack[navStack.length-1];
+    return cur ? cur.screen : null;
+  }
+  function setX(px, animate){
+    host.style.transition = animate ? `transform ${DUR}ms cubic-bezier(.2,.7,.3,1)` : 'none';
+    host.style.transform = px ? `translateX(${px}px)` : '';
+  }
+  function snapBack(){
+    setX(0, true);
+    setTimeout(()=>setX(0, false), DUR+30);
+  }
+  function completeBack(){
+    const w=host.clientWidth||320;
+    setX(w, true); // termine la sortie jusqu'au bord droit
+    setTimeout(()=>{
+      setX(0, false); // l'écran précédent (rendu par back()) apparaît à sa place normale
+      back();
+    }, DUR);
+  }
+  host.addEventListener('touchstart', e=>{
+    tracking=false; dragging=false;
+    if(!tabbar.hidden || e.touches.length!==1) return;
+    if(!BACK_SWIPE_SCREENS.has(currentScreen())) return;
+    if(scrollsHorizontally(e.target)) return;
+    sx=e.touches[0].clientX; sy=e.touches[0].clientY; dx=0; tracking=true;
+  }, {passive:true});
+  host.addEventListener('touchmove', e=>{
+    if(!tracking || e.touches.length!==1) return;
+    const t=e.touches[0], ndx=t.clientX-sx, ndy=t.clientY-sy;
+    if(!dragging){
+      if(Math.abs(ndx)<10 && Math.abs(ndy)<10) return;
+      if(Math.abs(ndx)<Math.abs(ndy)*RATIO){ tracking=false; return; }
+      dragging=true;
+    }
+    let d=ndx;
+    if(d<0) d*=0.35; // élastique : seul le sens « retour » (vers la droite) va jusqu'au bout
+    dx=d;
+    setX(dx, false);
+    e.preventDefault();
+  }, {passive:false});
+  function endSwipe(){
+    if(!dragging){ tracking=false; return; }
+    tracking=false; dragging=false;
+    if(dx>=THRESH) completeBack();
+    else snapBack();
+  }
+  host.addEventListener('touchend', endSwipe, {passive:true});
+  host.addEventListener('touchcancel', ()=>{
+    const was=dragging; tracking=false; dragging=false;
+    if(was) snapBack();
+  }, {passive:true});
+})();
+
 function saveLastRoute(screen, opts){
   try{
     if(state.authed && RESUMABLE_ADMIN.has(screen)){
@@ -1799,7 +1959,10 @@ function tournPhaseInfo(t){
 }
 function tournCard(t){
   const archived=state.dashView==='archived';
-  const st=TOURN_ST[t.status]||TOURN_ST.draft;
+  // `finished` est un drapeau additif (posé une fois les phases finales
+  // jouées, cf. openFinishTournament) : il ne change pas t.status, donc le
+  // badge l'emporte juste visuellement sur « En cours » sans rien désactiver.
+  const st = t.finished ? {label:'Terminé',badge:'ok',ic:'🏁',icBg:'var(--ok-soft)',icFg:'var(--ok)'} : (TOURN_ST[t.status]||TOURN_ST.draft);
   const sub = t.status==='draft'
     ? `${t.config.teams||'?'} équipes · ${fmtDate(t.config.date)} · étape ${Math.min((t.step||0)+1,CREATE_STEPS.length)}/${CREATE_STEPS.length} · ${CREATE_STEPS[Math.min(t.step||0,CREATE_STEPS.length-1)]}`
     : `${t.config.teams||'?'} équipes · ${fmtDate(t.config.date)}`;
@@ -1872,7 +2035,7 @@ screens.dashboard = ()=>{
       state._tournLoaded ? Promise.resolve() : refreshTournaments(),
       state._refsLoaded ? Promise.resolve() : refreshReferents(),
       state._orgsLoaded ? Promise.resolve() : refreshOrganizers(),
-    ]).then(()=>{ const cur=navStack[navStack.length-1]; if(cur && cur.screen==='dashboard') screens.dashboard(); });
+    ]).then(()=>{ const cur=navStack[navStack.length-1]; if(cur) render(cur.screen, cur.opts); });
     host.innerHTML = `<div class="screen" style="padding:0">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
         <div class="logo">${logoMark()} ${APP_NAME}</div></div>
@@ -1892,7 +2055,7 @@ screens.dashboard = ()=>{
       : `<div class="empty">🗄️<p>Aucun tournoi archivé.</p></div>`;
   }else{
     body = (active.length)
-      ? tournSection('En cours',live)+tournSection('Brouillons',drafts)+tournSection('Clôturés',closed)
+      ? tournSection('Mes tournois',live)+tournSection('Brouillons',drafts)+tournSection('Clôturés',closed)
       : `<div class="empty">🏐<p>Aucun tournoi pour le moment.<br>Créez votre premier tournoi ci-dessous.</p></div>`;
   }
   host.innerHTML = `
@@ -1973,9 +2136,12 @@ window.openTournament=async (id, targetScreen='orgLive')=>{
 
 /* ---------- Création wizard ---------- */
 let wizStep = 0;
-const WIZ_STEPS = ['Infos','Format & gymnases','Règles de match','Phases'];
+const WIZ_STEPS = ['Infos','Format & gymnases','Règles de match'];
 // Parcours complet de création (barre d'avancement commune à tous les écrans)
-const CREATE_STEPS = ['Infos','Format','Règles','Phases','Inscriptions','Répartition','Lancement'];
+// « Phases » est réglé après l'inscription et la répartition des équipes : le nombre
+// de poules en Principale (entre autres) se décide plus sereinement une fois qu'on
+// sait combien d'équipes sont réellement inscrites et comment elles sont réparties.
+const CREATE_STEPS = ['Infos','Format','Règles','Inscriptions','Répartition','Phases','Lancement'];
 function createProgArr(idx){ return CREATE_STEPS.map((_,i)=> i<idx?'done': i===idx?'cur':''); }
 // Étape réelle du parcours de création (0-3 = wizard, 4 = inscriptions, 5 = répartition, 6 = lancement)
 let createStage = 0;
@@ -1985,7 +2151,7 @@ function snapshotTournament(){
   return {
     config: JSON.parse(JSON.stringify(state.config)),
     gyms: GYMS.slice(0, state.config.gyms).map(g=>g.name),
-    teams: state.teams.map(t=>({name:t.name, level:t.level})),
+    teams: state.teams.map(t=>({name:t.name, level:t.level, phone:t.phone||''})),
     step: createStage,
   };
 }
@@ -2009,11 +2175,11 @@ function resumeDraft(id){
   const d=state.tournaments.find(x=>x.id===id); if(!d) return;
   Object.assign(state.config, d.config);
   (d.gyms||[]).forEach((nm,i)=>{ if(GYMS[i]) GYMS[i].name=nm; });
-  state.teams = (d.teams||[]).map(t=>({name:t.name, level:t.level}));
+  state.teams = (d.teams||[]).map(t=>({name:t.name, level:t.level, phone:t.phone||''}));
   state.currentDraftId=id;
   const st=d.step||0; createStage=st;
-  if(st<=3){ wizStep=st; go('wizard'); }
-  else { wizStep=3; rebuildPools(); go(st===4?'teamsRegister':st===5?'assignPools':'summary'); }
+  if(st<=2){ wizStep=st; go('wizard'); }
+  else { wizStep=2; rebuildPools(); go(st===3?'teamsRegister':st===4?'assignPools':st===5?'wizPhases':'summary'); }
 }
 // Lancement : enregistre le tournoi dans la liste (statut « En cours ») puis génère le QR
 async function launchTournament(){
@@ -2036,7 +2202,7 @@ async function launchTournament(){
         const gymsUsed=[...new Set(state.pools.map(p=>p.gym))];
         const structure={
           gyms: gymsUsed.map(gid=>({ key:gid, name:gymName(gid), position:Math.max(0,GYMS.findIndex(g=>g.id===gid)) })),
-          teams: state.teams.map(tm=>({ key:tm.name, name:tm.name, levelW:levelMeta(tm.level).w })),
+          teams: state.teams.map(tm=>({ key:tm.name, name:tm.name, levelW:levelMeta(tm.level).w, phone:tm.phone||'' })),
           pools: state.pools.map(p=>({ letter:p.letter, phase:'brassage', gymKey:p.gym, court:p.court, teamKeys:p.teams.map(x=>x.t) })),
           matches: (state.schedule||[]).map(m=>({ round:m.r, time:m.time, phase:'brassage', poolKey:m.pool, gymName:m.gym, court:m.court, aKey:m.a, bKey:m.b, refKey:m.ref })),
         };
@@ -2061,13 +2227,13 @@ screens.wizard = ()=>{
   tabbar.hidden=true;
   createStage=wizStep;
   setTop('Nouveau tournoi',{step:`${wizStep+1}/${CREATE_STEPS.length}`, prog:createProgArr(wizStep)});
-  const steps=[wizInfos,wizFormat,wizRules,wizPhases];
+  const steps=[wizInfos,wizFormat,wizRules];
   steps[wizStep]();
 };
 function wizNav(){
   return `<div class="btn-row" style="margin-top:22px">
     ${wizStep>0?`<button class="btn ghost" onclick="saveWizard();wizStep--;screens.wizard();host.scrollTop=0">Précédent</button>`:''}
-    <button class="btn" onclick="wizNext()">${wizStep<3?'Continuer':'Valider le format'}</button>
+    <button class="btn" onclick="wizNext()">${wizStep<2?'Continuer':'Valider le format'}</button>
   </div>
   <button class="btn ghost sm" style="margin-top:10px;width:100%" onclick="saveDraft(true)">💾 Enregistrer et reprendre plus tard</button>`;
 }
@@ -2103,7 +2269,17 @@ function saveWizard(){
   state.config.courtsPerGym = Array.from({length:state.config.gyms},(_,i)=> gc[i]||state.config.courtsPerGym[i]||3);
   state.config.courts = state.config.courtsPerGym.reduce((a,b)=>a+b,0);
 }
-function wizNext(){ saveWizard(); if(wizStep<3){wizStep++;screens.wizard();host.scrollTop=0;} else { go('teamsRegister'); } }
+function wizNext(){
+  if(wizStep===1){
+    const n=parseInt(document.getElementById('w_gyms').value)||1;
+    for(let i=0;i<n;i++){
+      const el=document.getElementById('w_gymname_'+i);
+      if(!el || !el.value.trim()){ toast('Renseignez le nom du gymnase '+(i+1)); if(el) el.focus(); return; }
+    }
+  }
+  saveWizard();
+  if(wizStep<2){wizStep++;screens.wizard();host.scrollTop=0;} else { go('teamsRegister'); }
+}
 
 function wizInfos(){
   host.innerHTML = `
@@ -2112,7 +2288,7 @@ function wizInfos(){
     <label class="field"><span>Nom du tournoi</span><input id="w_name" value="${C.name}"></label>
     <div class="grid2">
       <label class="field"><span>Date</span><input id="w_date" type="date" value="${C.date}"></label>
-      <label class="field"><span>Ville</span><input id="w_place" value="${C.place}"></label>
+      <label class="field"><span>Ville <span style="font-weight:500">(optionnel)</span></span><input id="w_place" value="${C.place}"></label>
     </div>
     <div class="field">
       <span>Image du tournoi <span style="font-weight:500">(optionnel)</span></span>
@@ -2178,10 +2354,15 @@ function renderGymNames(){
   box.querySelectorAll('input[id^="w_gymcourts_"]').forEach(el=>{prevC[+el.id.replace('w_gymcourts_','')]=el.value;});
   let h='';
   for(let i=0;i<n;i++){
-    const nm = prevN[i]!=null?prevN[i] : (GYMS[i]?GYMS[i].name:'Gymnase '+(i+1));
+    const def = GYM_DEFAULT_NAMES[i] || ('Gymnase '+(i+1));
+    // Un gymnase jamais renommé par l'organisateur (encore sur le nom de démo)
+    // part d'un champ vide avec ce nom en placeholder, pour forcer une saisie
+    // explicite plutôt que de laisser passer silencieusement un nom de démo.
+    const custom = GYMS[i] && GYMS[i].name !== def;
+    const nm = prevN[i]!=null ? prevN[i] : (custom ? GYMS[i].name : '');
     const ct = prevC[i]!=null?prevC[i] : (state.config.courtsPerGym[i]!=null?state.config.courtsPerGym[i]:3);
     h+=`<div class="card" style="padding:10px 12px;margin-top:8px;background:var(--surface-2);border:none">
-      <label class="field" style="margin:0"><span>Gymnase ${i+1}</span><input id="w_gymname_${i}" value="${nm}"></label>
+      <label class="field" style="margin:0"><span>Gymnase ${i+1}</span><input id="w_gymname_${i}" value="${nm}" placeholder="${def}"></label>
       <label class="field" style="margin:8px 0 0"><span>Nombre de terrains</span>${numCtl('w_gymcourts_'+i,ct,1,8)}</label>
     </div>`;
   }
@@ -2262,7 +2443,10 @@ function autoFinalLabel(){
   let K=1; while(K*2<=qual) K*=2; K=Math.max(2,K); // plus grande puissance de 2 ≤ qualifiés
   return {K, qual, label: K===2?'Finale directe':'1/'+(K/2)+' de finale ('+K+' équipes)'};
 }
-function wizPhases(){
+screens.wizPhases = ()=>{
+  tabbar.hidden=true;
+  createStage=5;
+  setTop('Déroulé du tournoi',{step:`6/${CREATE_STEPS.length}`, prog:createProgArr(5)});
   host.innerHTML = `
     <h3 style="font-size:19px">Déroulé du tournoi</h3>
     <p class="lead">Les phases s'enchaînent automatiquement.</p>
@@ -2275,9 +2459,13 @@ function wizPhases(){
       <small style="display:block;margin-top:4px;color:var(--muted)">Les 1ers &amp; 2es de poule y vont toujours. S'il manque des équipes pour remplir ces poules, les meilleurs 3es (classés par points puis différence) sont repêchés ; les autres partent en Consolante.</small>
     </label>
     <div id="wizPhaseList" style="margin-top:14px"></div>
-    ${wizNav()}`;
+    <div class="btn-row" style="margin-top:22px">
+      <button class="btn ghost" onclick="saveWizard();go('assignPools')">Précédent</button>
+      <button class="btn" onclick="saveWizard();go('summary')">Continuer</button>
+    </div>
+    <button class="btn ghost sm" style="margin-top:10px;width:100%" onclick="saveDraft(true)">💾 Enregistrer et quitter</button>`;
   updateConsoHint();
-}
+};
 function renderWizPhaseList(){
   const box=document.getElementById('wizPhaseList'); if(!box) return;
   const sw=document.getElementById('sw_conso');
@@ -2317,8 +2505,8 @@ window.updateFinalHint=()=>{
 /* ---------- Inscription des équipes (niveau) ---------- */
 screens.teamsRegister = ()=>{
   tabbar.hidden=true;
-  createStage=4;
-  setTop('Inscription des équipes',{step:`5/${CREATE_STEPS.length}`, prog:createProgArr(4)});
+  createStage=3;
+  setTop('Inscription des équipes',{step:`4/${CREATE_STEPS.length}`, prog:createProgArr(3)});
   const counts=LEVELS.map(l=>({...l,n:state.teams.filter(t=>t.level===l.id).length}));
   let h=`<div style="padding:0">
     <p class="lead" style="margin-top:0">Le niveau est renseigné par chaque équipe à l'inscription et sert à établir les têtes de série.</p>
@@ -2326,16 +2514,24 @@ screens.teamsRegister = ()=>{
       <div style="display:flex;flex-wrap:wrap;gap:8px">${counts.map(c=>`<span class="chip" style="color:${c.color}"><span style="width:8px;height:8px;border-radius:50%;background:${c.color};display:inline-block"></span>${c.label} · ${c.n}</span>`).join('')}</div>
       <div style="font-size:11.5px;color:var(--muted);margin-top:10px">ℹ️ Têtes de série : Nationale &gt; Régionale &gt; Départ./Loisirs &gt; Jeunes. Les équipes de même niveau sont réparties dans des poules différentes.</div>
     </div>
+    <div class="card" style="background:var(--brand-soft);border:1.5px dashed var(--brand);margin-top:10px;text-align:center">
+      <div style="font-size:26px;line-height:1">📂</div>
+      <div style="font-weight:800;font-size:13.5px;color:var(--brand);margin-top:4px">Importer un fichier</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.5;margin:4px 0 11px">Colonnes : nom, niveau, téléphone — fichier .xlsx ou .csv, avec ou sans en-têtes.</div>
+      <input id="teamsImportFile" type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="importTeamsFile(this)">
+      <button class="btn" style="width:100%;margin:0" onclick="document.getElementById('teamsImportFile').click()">📂 Choisir un fichier</button>
+    </div>
     <div style="margin-top:14px">`;
   state.teams.forEach((t,i)=>{
     const lm=levelMeta(t.level);
     h+=`<div class="list-item" style="padding:11px 13px;align-items:flex-start">
       <span class="ic" style="width:34px;height:34px;font-size:13px;font-weight:800;background:${lm.color}22;color:${lm.color};flex:none">${i+1}</span>
       <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
-        <input value="${(t.name||'').replace(/"/g,'&quot;')}" onchange="setTeamName(${i},this.value)" placeholder="Nom de l'équipe" style="width:100%;box-sizing:border-box;border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--surface);color:var(--fg);font-weight:700;font-size:14px;font-family:inherit">
+        <input value="${(t.name||'').replace(/"/g,'&quot;')}" onchange="setTeamName(${i},this.value);this.value=state.teams[${i}].name" placeholder="Nom de l'équipe" style="width:100%;box-sizing:border-box;border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--surface);color:var(--fg);font-weight:700;font-size:14px;font-family:inherit">
         <select onchange="setLevel(${i},this.value)" style="width:100%;box-sizing:border-box;border:1.5px solid var(--line);border-radius:10px;padding:8px 9px;background:var(--surface);color:var(--fg);font-weight:600;font-size:13px">
           ${LEVELS.map(l=>`<option value="${l.id}" ${l.id===t.level?'selected':''}>${l.label}</option>`).join('')}
         </select>
+        <input value="${(t.phone||'').replace(/"/g,'&quot;')}" onchange="setTeamPhone(${i},this.value)" type="tel" placeholder="Téléphone du capitaine (optionnel)" style="width:100%;box-sizing:border-box;border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--surface);color:var(--fg);font-weight:600;font-size:13px;font-family:inherit">
       </div>
       <button onclick="removeTeam(${i})" title="Supprimer l'équipe" style="border:none;background:var(--danger-soft);color:var(--danger);width:32px;height:32px;border-radius:9px;font-size:15px;font-weight:800;cursor:pointer;flex:none">✕</button>
     </div>`;
@@ -2343,7 +2539,7 @@ screens.teamsRegister = ()=>{
   h+=`</div>
     <button class="btn ghost" style="margin-top:14px" onclick="addTeam()">＋ Ajouter une équipe</button>
     <div class="btn-row" style="margin-top:10px">
-      <button class="btn ghost" onclick="wizStep=3;go('wizard')">Précédent</button>
+      <button class="btn ghost" onclick="wizStep=2;go('wizard')">Précédent</button>
       <button class="btn" onclick="rebuildPools();go('assignPools')">Continuer → Répartition</button>
     </div>
     <button class="btn ghost sm" style="margin-top:10px;width:100%" onclick="saveDraft(true)">💾 Enregistrer et quitter</button>
@@ -2351,7 +2547,22 @@ screens.teamsRegister = ()=>{
   host.innerHTML=h;
 };
 window.setLevel=(i,v)=>{ state.teams[i].level=v; };
-window.setTeamName=(i,v)=>{ if(state.teams[i]) state.teams[i].name=v.trim()||('Équipe '+(i+1)); };
+// Met une majuscule en début de chaque mot (espace, tiret, apostrophe) : "sc ollioules" -> "Sc Ollioules".
+// Ne touche qu'aux lettres minuscules en début de mot ; le reste est laissé tel
+// quel (un sigle déjà en majuscules, ex. "US Ollioules", n'est pas altéré).
+function titleCaseTeam(v){
+  const s=String(v||'').trim().replace(/\s+/g,' ');
+  if(!s) return s;
+  return s.replace(/(^|[\s'’-])([a-zà-öø-ÿ])/g, (m,sep,c)=>sep+c.toUpperCase());
+}
+window.setTeamName=(i,v)=>{ if(state.teams[i]) state.teams[i].name=titleCaseTeam(v)||('Équipe '+(i+1)); };
+// Normalise un numéro pour l'affichage/la saisie : chiffres groupés par 2
+// ("0612345678" -> "06 12 34 56 78"), quel que soit le séparateur saisi.
+function formatPhoneFr(v){
+  const d=String(v||'').replace(/\D+/g,'').slice(0,15);
+  return d.replace(/(\d{2})(?=\d)/g,'$1 ').trim();
+}
+window.setTeamPhone=(i,v)=>{ if(state.teams[i]) state.teams[i].phone=formatPhoneFr(v); };
 window.removeTeam=(i)=>{
   if(state.teams.length<=2){ toast('Il faut au moins 2 équipes'); return; }
   const nm=state.teams[i].name; state.teams.splice(i,1);
@@ -2360,16 +2571,71 @@ window.removeTeam=(i)=>{
   screens.teamsRegister();
 };
 window.addTeam=()=>{
-  state.teams.push({name:'Nouvelle équipe '+(state.teams.length+1), level:'dep'});
+  state.teams.push({name:'Nouvelle équipe '+(state.teams.length+1), level:'dep', phone:''});
   state.config.teams=state.teams.length;
   screens.teamsRegister();
+};
+// Import .xlsx/.csv : devine la colonne nom/niveau/téléphone par en-tête
+// (fr/en, insensible à la casse) ; sans en-tête reconnue, suppose l'ordre
+// nom, niveau, téléphone. Le niveau est reconnu par id ('dep') ou libellé
+// ('Départ./Loisirs', 'Départ', etc.) ; à défaut, reste 'dep'.
+window.importTeamsFile=(input)=>{
+  const file=input.files && input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    try{
+      const wb=XLSX.read(e.target.result, {type:'binary'});
+      const sheet=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(sheet, {header:1, raw:false, blankrows:false});
+      if(!rows.length){ toast('Fichier vide'); return; }
+      const norm=(s)=>String(s||'').trim().toLowerCase();
+      const guessLevel=(v)=>{
+        const s=norm(v);
+        const byId=LEVELS.find(l=>l.id===s); if(byId) return byId.id;
+        const byLabel=LEVELS.find(l=>norm(l.label).startsWith(s)||s.startsWith(norm(l.short))); if(byLabel) return byLabel.id;
+        return 'dep';
+      };
+      let r0=rows[0].map(norm);
+      // Priorité à une colonne qui désigne explicitement l'ÉQUIPE ("équipe"/"team") ;
+      // à défaut seulement, on retombe sur une colonne "nom" — mais jamais sur une
+      // colonne qui parle du capitaine ("nom du capitaine"), sans quoi c'est son nom
+      // qui serait importé à la place de celui de l'équipe.
+      let colName=r0.findIndex(x=>/(é|e)quipe|^team/.test(x) && !/capitain|captain/.test(x));
+      if(colName<0) colName=r0.findIndex(x=>/^nom/.test(x) && !/capitain|captain/.test(x));
+      let colLevel=r0.findIndex(x=>/^(niveau|level)/.test(x));
+      let colPhone=r0.findIndex(x=>/^(t[ée]l|phone)/.test(x));
+      let start=1;
+      if(colName<0 && colLevel<0 && colPhone<0){ colName=0; colLevel=1; colPhone=2; start=0; } // pas d'en-tête reconnue
+      const imported=[];
+      for(let i=start;i<rows.length;i++){
+        const row=rows[i]; const name=String((colName>=0?row[colName]:'')||'').trim();
+        if(!name) continue;
+        imported.push({
+          name: titleCaseTeam(name),
+          level: guessLevel(colLevel>=0?row[colLevel]:''),
+          phone: formatPhoneFr(colPhone>=0?row[colPhone]:''),
+        });
+      }
+      if(!imported.length){ toast('Aucune équipe reconnue dans ce fichier'); return; }
+      state.teams=imported;
+      state.config.teams=state.teams.length;
+      toast('✓ '+imported.length+' équipe'+(imported.length>1?'s':'')+' importée'+(imported.length>1?'s':''));
+      screens.teamsRegister();
+    }catch(err){
+      console.warn('Import équipes:', err);
+      toast('⚠️ Fichier illisible — vérifiez le format');
+    }finally{
+      input.value='';
+    }
+  };
+  reader.readAsBinaryString(file);
 };
 
 /* ---------- Assign teams to pools ---------- */
 screens.assignPools = ()=>{
   tabbar.hidden=true;
-  createStage=5;
-  setTop('Répartition des équipes',{step:`6/${CREATE_STEPS.length}`, prog:createProgArr(5)});
+  createStage=4;
+  setTop('Répartition des équipes',{step:`5/${CREATE_STEPS.length}`, prog:createProgArr(4)});
   const G=state.config.gyms;
   const methods=[['snake','Serpentin'],['random','Aléatoire'],['manual','Manuel']];
   let h=`<div class="screen" style="padding:0">
@@ -2434,7 +2700,7 @@ window.validateAssign=()=>{
   if(p>1 && cap<n){ toast(`⚠ ${n-cap} équipe(s) non placée(s) — augmentez le format`); return; }
   if(placed!==n){ toast(`⚠ ${n-placed} équipe(s) ne sont pas placées`); return; }
   if(state.pools.some(pl=>pl.teams.length<2)){ toast('⚠ Chaque poule doit avoir au moins 2 équipes'); return; }
-  go('summary');
+  go('wizPhases');
 };
 window.setPoolFormat=()=>{
   const pEl=document.getElementById('ap_pools'), tEl=document.getElementById('ap_tpp');
@@ -2495,7 +2761,7 @@ screens.summary = ()=>{
   host.innerHTML=`<div class="screen" style="padding:0">
     <span class="badge brand">Prêt à lancer</span>
     <h3 style="font-size:21px;margin:10px 0 2px">${C.name}</h3>
-    <p class="muted" style="margin:0 0 14px">${C.place} · ${fmtDate(C.date,true)}</p>
+    <p class="muted" style="margin:0 0 14px">${C.place?C.place+' · ':''}${fmtDate(C.date,true)}</p>
     <div class="card">
       <div class="summary-row"><span class="muted">Équipes</span><b>${C.teams}</b></div>
       <div class="summary-row"><span class="muted">Gymnases</span><b>${C.gyms}</b></div>
@@ -2506,7 +2772,7 @@ screens.summary = ()=>{
       <div class="summary-row"><span class="muted">Phases</span><b>${C.phaseConsolante?'Brassage → Principale + Consolante → Finales':'Brassage → Phases finales'}</b></div>
     </div>
     <button class="btn accent" style="margin-top:18px" onclick="launchTournament()">🚀 Lancer le tournoi &amp; générer le QR</button>
-    <button class="btn ghost" style="margin-top:10px" onclick="go('assignPools')">Précédent</button>
+    <button class="btn ghost" style="margin-top:10px" onclick="go('wizPhases')">Précédent</button>
     <button class="btn ghost sm" style="margin-top:10px;width:100%" onclick="saveDraft(true)">💾 Enregistrer et quitter</button>
     </div>`;
 };
@@ -2586,6 +2852,9 @@ function renderTabs(active){
 
 screens.orgLive = ()=>{
   setTop(null); renderTabs('orgLive');
+  if(window.sb && !state._refsLoaded){
+    refreshReferents().then(()=>{ const cur=navStack[navStack.length-1]; if(cur && cur.screen==='orgLive') screens.orgLive(); });
+  }
   host.innerHTML=`<div style="padding:0">
     <div class="card" style="margin-bottom:12px;display:flex;align-items:center;gap:12px;cursor:pointer;background:var(--brand-soft);border:none" onclick="go('qr')">
       <span style="width:42px;height:42px;border-radius:12px;background:var(--surface);display:grid;place-items:center;font-size:20px;flex:none">📱</span>
@@ -2603,6 +2872,14 @@ screens.orgLive = ()=>{
       </div>
       <span style="color:var(--brand);font-size:20px;flex:none">›</span>
     </div>`:''}
+    <div class="card" style="margin-bottom:12px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="go('teamsDirectory')">
+      <span style="width:42px;height:42px;border-radius:12px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;flex:none">📇</span>
+      <div style="flex:1;min-width:0">
+        <b style="font-size:13.5px">Répertoire des capitaines</b>
+        <div style="font-size:12px;color:var(--muted);margin-top:1px">Coordonnées pour contacter une équipe au besoin</div>
+      </div>
+      <span style="color:var(--brand);font-size:20px;flex:none">›</span>
+    </div>
     ${liveRules().timed?timerCard():''}
     ${(()=>{
       // Compteurs de la phase EN COURS, pas toujours le brassage (sinon ils
@@ -2637,7 +2914,12 @@ screens.orgLive = ()=>{
       const total=sch.length;
       const pct=total?Math.round(sch.filter(m=>m.status==='done').length/total*100):0;
       const order=phaseOrder(), cur=order.indexOf(state.livePhase);
-      const badge=i=> i<cur?`<span class="badge ok">Terminé</span>` : i===cur?`<span class="badge warn">● En cours</span>` : `<span class="badge wait">À venir</span>`;
+      const t=state.tournaments.find(x=>x.id===state.currentDraftId);
+      // La phase finale n'a pas de phase suivante, donc `cur` y reste bloqué
+      // à « en cours » tant que le tournoi n'est pas explicitement marqué
+      // « Terminé » (openFinishTournament) — à ce moment-là seulement, sa
+      // ligne passe elle aussi au badge « Terminé ».
+      const badge=i=> (i<cur || (i===cur && t && t.finished))?`<span class="badge ok">Terminé</span>` : i===cur?`<span class="badge warn">● En cours</span>` : `<span class="badge wait">À venir</span>`;
       const subRules=ph=> phaseRulesSet(ph)?' · '+fmtRules(rulesFor(ph)):'';
       const nxt=nextPhase(state.livePhase);
       const rowDefs={
@@ -2646,7 +2928,7 @@ screens.orgLive = ()=>{
         finales:`<div class="phase" style="cursor:pointer" onclick="go('bracket')"><div class="num">{N}</div><div style="flex:1"><b>Phases finales</b><small>${C.phaseConsolante?'Tableau à élimination':'Les 1ers–2es du brassage basculent directement en tableau à élimination'}${subRules('finales')}</small></div>{B}</div>`,
       };
       const rows=order.map((p,i)=> rowDefs[p].replace('{N}',i+1).replace('{B}',badge(i))).join('');
-      const remaining = nxt ? currentPhaseRemaining() : 0;
+      const remaining = currentPhaseRemaining();
       return `<div class="card">
       <div class="summary-row" style="border:none"><span class="muted">Phase en cours</span><span class="badge brand">${phaseName(state.livePhase)}</span></div>
       <div style="height:8px;border-radius:5px;background:var(--surface-2);overflow:hidden;margin-top:4px"><div style="width:${pct}%;height:100%;background:var(--brand)"></div></div>
@@ -2656,7 +2938,11 @@ screens.orgLive = ()=>{
     ${nxt
       ? `<button class="btn" style="margin-top:12px;width:100%" onclick="openPhaseSwitch()">✅ Clôturer « ${phaseName(state.livePhase)} » → lancer « ${phaseName(nxt)} »</button>
          ${remaining>0?`<p class="muted" style="text-align:center;margin-top:6px;font-size:12px">⚠️ ${remaining} match${remaining>1?'s':''} sans score pour l'instant</p>`:''}`
-      : `<p class="muted" style="text-align:center;margin-top:12px;font-size:12.5px">Dernière phase en cours — tableau à élimination.</p>`}
+      : t && t.finished
+        ? `<p class="muted" style="text-align:center;margin-top:12px;font-size:12.5px">✅ Tournoi marqué « Terminé ».</p>`
+        : remaining>0
+          ? `<p class="muted" style="text-align:center;margin-top:12px;font-size:12.5px">⚠️ ${remaining} match${remaining>1?'s':''} des phases finales sans score pour l'instant.</p>`
+          : `<button class="btn" style="margin-top:12px;width:100%" onclick="openFinishTournament()">🏁 Terminer le tournoi</button>`}
     ${cur>0?`<button class="btn ghost sm" style="margin-top:8px;width:100%" onclick="revertPhase()">↩︎ Revenir à la phase précédente</button>`:''}`;
     })()}
   </div>`;
@@ -2676,11 +2962,58 @@ function closeSheet(){
   setTimeout(()=>{ b.hidden=true; b.innerHTML=''; b.onclick=null; }, 280);
 }
 window.closeSheet=closeSheet;
+function openModal(title, html){
+  const b=document.getElementById('modal');
+  b.innerHTML=`<div class="modal"><button class="modal-close" aria-label="Fermer" onclick="closeModal()">✕</button><h3 class="modal-title">${title}</h3>${html}</div>`;
+  b.hidden=false;
+  b.onclick=(e)=>{ if(e.target===b) closeModal(); };
+  requestAnimationFrame(()=>b.classList.add('show'));
+}
+function closeModal(){
+  const b=document.getElementById('modal');
+  b.classList.remove('show');
+  setTimeout(()=>{ b.hidden=true; b.innerHTML=''; b.onclick=null; }, 220);
+}
+window.openModal=openModal;
+window.closeModal=closeModal;
+// Marquer le tournoi « Terminé » une fois les phases finales entièrement jouées.
+// Contrairement à openPhaseSwitch, il n'y a pas de phase suivante à lancer : on
+// pose un simple drapeau additif `finished` (distinct de `status`, qui reste
+// 'live') — passer `status` à 'closed' couperait l'accès public des capitaines
+// (tournaments.publicByCode exige status='live'), ce qui retirerait une
+// fonctionnalité existante. `finished` n'affecte aucun accès : il n'affiche
+// qu'un badge sur la carte « Mes tournois ».
+window.openFinishTournament=()=>{
+  if(nextPhase(state.livePhase) || currentPhaseRemaining()>0) return;
+  openSheet(`<h3 class="sheet-title">Terminer le tournoi ?</h3>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 16px;line-height:1.55">Tous les matchs des phases finales sont joués. Le tournoi sera marqué « Terminé » sur votre liste « Mes tournois ». Vous pourrez toujours revenir consulter les scores, le planning et le tableau final par la suite.</p>
+    <button class="btn" style="width:100%" onclick="confirmFinishTournament()">🏁 Confirmer</button>
+    <button class="btn ghost" style="width:100%;margin-top:10px" onclick="closeSheet()">Annuler</button>`);
+};
+window.confirmFinishTournament=async ()=>{
+  const t=state.tournaments.find(x=>x.id===state.currentDraftId);
+  closeSheet();
+  if(t){
+    t.finished=true; t.finishedAt=Date.now();
+    if(window.vboDb){
+      try{ await vboDb.setFinished(t.id,true); }
+      catch(e){ console.warn(e); toast('⚠️ Cloud échoué'); }
+    }
+    toast('🏁 Tournoi terminé');
+  }
+  const sc=scrollSnapshot(); render('orgLive'); scrollRestore(sc);
+};
 window.openPhaseSwitch=()=>{
   const cur=state.livePhase, nxt=nextPhase(cur);
   if(!nxt) return;
   const remaining=currentPhaseRemaining();
   if(remaining>0){ toast(`⚠️ ${remaining} match${remaining>1?'s':''} sans score — terminez « ${phaseName(cur)} » avant de la clôturer`); return; }
+  const ties=unresolvedTiesForPhase(cur);
+  if(ties.length){
+    const poolsList=[...new Set(ties.map(t=>t.pool))].sort().join(', ');
+    openModal('⚠️ Impossible de clôturer la phase', `<p style="font-size:13.5px;line-height:1.6;margin:0 0 10px">Dans la poule${ties.length>1?'s':''} <b>${poolsList}</b>, au moins deux équipes ont exactement les mêmes points et la même différence de points : leur classement n'est pas encore départagé.</p><p style="font-size:13.5px;line-height:1.7;margin:0 0 16px">Allez dans l'onglet « Poules », touchez le badge ${TIE_BADGE} sur une équipe concernée, puis validez avec ${CONFIRM_ORDER_BADGE} (même pour garder l'ordre actuel). Vous pourrez ensuite revenir ici pour clôturer « ${phaseName(cur)} ».</p><button class="btn" style="width:100%" onclick="closeModal()">Compris</button>`);
+    return;
+  }
   const r=rulesFor(nxt); // défaut = copie des règles de brassage tant que non définies
   const hor=horaireFor(nxt); // horaire de la phase suivante (défaut = horaire du brassage)
   const intro = nxt==='finales'
@@ -2765,6 +3098,27 @@ window.openPhaseSwitch=()=>{
   updatePhaseSchedPreview();
   if(nxt==='finales') updateFinalHint();
 };
+// Nombre de tours de la phase qui va démarrer — pour afficher l'heure du
+// dernier tour dans l'aperçu d'horaire, plutôt qu'une liste tronquée "tour 1,
+// tour 2, tour 3…" qui ne dit rien de la fin réelle du programme.
+function phaseNextRoundCount(nxt){
+  if(nxt==='poules2'){
+    const rs=[];
+    (state.phasePrincipal&&state.phasePrincipal.schedule||[]).forEach(m=>rs.push(m.r));
+    (state.phaseConsolante&&state.phaseConsolante.schedule||[]).forEach(m=>rs.push(m.r));
+    return rs.length?Math.max(...rs):1;
+  }
+  if(nxt==='finales'){
+    const Ks=[];
+    if(state._finalesProposal){
+      if(state._finalesProposal.principal) Ks.push(state._finalesProposal.principal.K);
+      if(state._finalesProposal.consolante) Ks.push(state._finalesProposal.consolante.K);
+    }
+    const K=Ks.length?Math.max(...Ks):2;
+    return Math.max(1, Math.round(Math.log2(K)));
+  }
+  return 1;
+}
 window.updatePhaseSchedPreview=function(){
   const box=document.getElementById('nhPreview'); if(!box) return;
   const g=id=>document.getElementById(id);
@@ -2772,7 +3126,10 @@ window.updatePhaseSchedPreview=function(){
   const rm=(+((g('nh_round')||{}).value))||20, su=(+((g('nh_setup')||{}).value))||0;
   const per=rm+su, parts=st.split(':'), base=((+parts[0])||9)*60+((+parts[1])||0);
   const fmt=t=>`${String(Math.floor(t/60)%24).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;
-  box.innerHTML=`Un tour toutes les ${per} min · Tour 1 à ${fmt(base)}, tour 2 à ${fmt(base+per)}, tour 3 à ${fmt(base+2*per)}…`;
+  const n=phaseNextRoundCount(nextPhase(state.livePhase));
+  box.innerHTML = n>1
+    ? `Un tour toutes les ${per} min · Tour 1 à ${fmt(base)}, dernier tour à ${fmt(base+(n-1)*per)}`
+    : `Un tour toutes les ${per} min · Tour 1 à ${fmt(base)}`;
 };
 // Permet à l'admin de corriger à la main la répartition automatique des qualifiés
 // en poules de Principale/Consolante, avant de démarrer la phase (bouton dans la
@@ -2836,7 +3193,7 @@ window.movePhase2Team=(catKey,from,name,to)=>{
   const idx=pf.teams.findIndex(x=>x.t===name); if(idx<0) return;
   const [tm]=pf.teams.splice(idx,1); pt.teams.push(tm);
   state._phase2Edited=true;
-  cat.schedule = makeSchedule(cat.pools, horaireFor('poules2'));
+  cat.schedule = makeSchedule(cat.pools, horaireFor('poules2'), courtsByGymFromPools(cat.pools));
   openPhase2PoolsEditor(false); toast(name+' → Poule '+to);
 };
 window.cancelPhase2PoolsEdit=()=>{
@@ -2971,8 +3328,8 @@ window.confirmPhaseSwitch=async ()=>{
         // mais il faut tout de même régénérer les horaires du planning avec l'horaire
         // qui vient d'être choisi/confirmé ci-dessus (setHoraire), sans toucher aux poules.
         const hor2=horaireFor('poules2');
-        if(state.phasePrincipal) state.phasePrincipal.schedule=makeSchedule(state.phasePrincipal.pools, hor2);
-        if(state.config.phaseConsolante && state.phaseConsolante) state.phaseConsolante.schedule=makeSchedule(state.phaseConsolante.pools, hor2);
+        if(state.phasePrincipal) state.phasePrincipal.schedule=makeSchedule(state.phasePrincipal.pools, hor2, courtsByGymFromPools(state.phasePrincipal.pools));
+        if(state.config.phaseConsolante && state.phaseConsolante) state.phaseConsolante.schedule=makeSchedule(state.phaseConsolante.pools, hor2, courtsByGymFromPools(state.phaseConsolante.pools));
       }
     }
   }
@@ -3012,6 +3369,12 @@ window.confirmPhaseSwitch=async ()=>{
         await vboDb.addPhase(t.id, structure);
       }
       t.livePhase=nxt;
+      // Les règles (n_sets, etc.) viennent d'être écrites dans state.config via
+      // setPhaseRules/setHoraire ci-dessus, mais t.config est une copie distincte
+      // (Object.assign dans openTournament, pas une référence) : sans cette
+      // resynchronisation, toRow(t) sauvegarderait l'ancienne config et le réglage
+      // (ex: 2 sets en finale) serait perdu au prochain rechargement.
+      t.config=JSON.parse(JSON.stringify(state.config));
       await vboDb.save(t, {});
       const fresh=await vboDb.loadStructure(t.id);
       applyLoadedStructure(fresh);
@@ -3313,6 +3676,20 @@ function schedRow(m){
     ${canEnter?`<button class="btn ghost sm" style="margin-top:8px;width:100%" onclick="openAdminScoreSheet('${m.id}')">${btnLabel}</button>`:''}
     ${startBtn}</div>`;
 }
+// Capture/restaure la position de lecture autour d'un render() déclenché par une
+// action de modale (démarrer/saisir un score), PAS une vraie navigation : en plus
+// du scroll vertical de l'écran, le tableau des phases finales se scrolle aussi
+// horizontalement (.bracket, overflow-x) — host.innerHTML le reconstruit à chaque
+// render et remettrait ce scroll à 0 sans cette restauration dédiée.
+function scrollSnapshot(){
+  const br=host.querySelector('.bracket');
+  return { y: host.scrollTop, x: br ? br.scrollLeft : 0 };
+}
+function scrollRestore(s){
+  host.scrollTop=s.y;
+  const br=host.querySelector('.bracket');
+  if(br) br.scrollLeft=s.x;
+}
 window.adminStartMatch=async (id)=>{
   try{
     if(window.vboDb) await vboDb.adminStartMatch(id);
@@ -3320,7 +3697,7 @@ window.adminStartMatch=async (id)=>{
     if(m) m.status='live';
     toast('▶️ Match passé en direct');
     const cur=navStack[navStack.length-1];
-    if(cur){ const y=host.scrollTop; render(cur.screen, cur.opts); host.scrollTop=y; }
+    if(cur){ const sc=scrollSnapshot(); render(cur.screen, cur.opts); scrollRestore(sc); }
   }catch(e){
     console.warn('Démarrage match (admin):', e);
     toast('⚠️ Impossible de démarrer ce match');
@@ -3351,11 +3728,21 @@ window.openAdminScoreSheet=(id)=>{
   const isThird = m.phase==='finalesPrincipal3e' || m.phase==='finalesConsolante3e';
   const isFinals = isThird || m.phase==='finalesPrincipal' || m.phase==='finalesConsolante';
   const subtitle = isFinals ? `${isThird?'🥉':'🏆'} ${bracketRoundLabel(m)}` : `Poule ${m.pool} · Terrain ${m.court} · ${m.gym}`;
+  // Même bouton de démarrage que sur les matchs de poule (schedRow) : on le propose
+  // aussi ici pour les matchs de bracket, qui n'ont pas d'autre point d'entrée.
+  const startBtn = m.status==='upcoming'
+    ? `<button class="btn ghost sm" style="margin:0 0 14px;width:100%" onclick="adminStartMatchInSheet('${id}')">▶️ Démarrer le match</button>` : '';
   openSheet(`<h3 style="font-size:18px;margin:2px 0 4px;font-family:var(--font-display)">Saisir le score</h3>
     <p class="muted" style="font-size:13px;margin:0 0 14px">${subtitle}</p>
+    ${startBtn}
     ${rows}
     ${nSets>1?`<p class="muted" style="font-size:12px;margin:10px 0 0">💡 Vous pouvez valider un set à la fois : revenez sur ce match une fois le set suivant terminé.</p>`:''}
     <button class="btn" style="margin-top:16px;width:100%" id="admScoreBtn" onclick="submitAdminScore('${id}')">Valider le score</button>`);
+};
+// Démarre le match ET rafraîchit la modale (render() ne touche pas #sheet).
+window.adminStartMatchInSheet=async (id)=>{
+  await adminStartMatch(id);
+  openAdminScoreSheet(id);
 };
 window.submitAdminScore=async (id)=>{
   const mFor=findMatchById(id);
@@ -3387,7 +3774,7 @@ window.submitAdminScore=async (id)=>{
     const cur=navStack[navStack.length-1];
     // Simple rafraîchissement de l'écran (pas une vraie navigation) : on
     // restaure la position de lecture au lieu de renvoyer en haut de la page.
-    if(cur){ const y=host.scrollTop; render(cur.screen, cur.opts); host.scrollTop=y; }
+    if(cur){ const sc=scrollSnapshot(); render(cur.screen, cur.opts); scrollRestore(sc); }
   }catch(e){
     console.warn('Saisie score:', e);
     toast('⚠️ Enregistrement échoué');
@@ -3475,6 +3862,9 @@ screens.schedule = ()=>{
 };
 
 let standPool=null;
+const TIE_BADGE_STYLE='border:none;background:var(--danger-soft);color:var(--danger);font-weight:700';
+const TIE_BADGE=`<span class="chip" style="${TIE_BADGE_STYLE};margin:3px 0">⚠️ égalité</span>`;
+const CONFIRM_ORDER_BADGE='<span style="display:inline-block;background:var(--brand);color:#fff;font-weight:700;font-size:12px;padding:3px 9px;border-radius:8px;white-space:nowrap;margin:3px 0">✅ Confirmer cet ordre</span>';
 function poolStandingRows(p, schedule){
   const win=state.config.winPts??3, loss=state.config.lossPts??0;
   const played=(schedule||[]).filter(m=>m.pool===p.letter && m.status==='done');
@@ -3492,8 +3882,101 @@ function poolStandingRows(p, schedule){
     return {t:t.t, j, g, p:j-g, pts:g*win+(j-g)*loss, pf, pc};
   });
   rows.sort((a,b)=> b.pts-a.pts || (b.pf-b.pc)-(a.pf-a.pc) || a.t.localeCompare(b.t));
+  applyTieOverrides(rows);
   return rows;
 }
+// Égalité stricte (points ET différence) : par défaut on retombe sur l'ordre
+// alphabétique ci-dessus, qui n'a aucun sens sportif — on laisse donc l'admin
+// choisir l'ordre exact entre les équipes concernées (window.openTieBreakEditor),
+// mémorisé dans state.config.poolTieOrder sous une clé = noms des équipes à
+// égalité triés (indépendante de la lettre de poule/phase, qui peut se répéter :
+// se recalcule naturellement si la composition de la poule change, sans
+// invalidation explicite à gérer). rows[i].tieKey est posé sur TOUTES les lignes
+// d'un même groupe d'égalité, utilisé par l'UI pour afficher le repère.
+function tieGroupKey(names){ return names.slice().sort().join('|'); }
+function applyTieOverrides(rows){
+  let i=0;
+  while(i<rows.length){
+    let j=i+1;
+    while(j<rows.length && rows[j].pts===rows[i].pts && (rows[j].pf-rows[j].pc)===(rows[i].pf-rows[i].pc)) j++;
+    if(j-i>1 && rows.slice(i,j).some(r=>r.j>0)){
+      const names=rows.slice(i,j).map(r=>r.t);
+      const key=tieGroupKey(names);
+      for(let k=i;k<j;k++) rows[k].tieKey=key;
+      const override=(state.config.poolTieOrder||{})[key];
+      const resolved=!!(override && override.length===names.length && names.every(n=>override.includes(n)));
+      if(resolved){
+        const sub=rows.slice(i,j).sort((a,b)=> override.indexOf(a.t)-override.indexOf(b.t));
+        for(let k=i;k<j;k++) rows[k]=sub[k-i];
+      }
+      for(let k=i;k<j;k++) rows[k].tieResolved=resolved;
+    }
+    i=j;
+  }
+}
+// Égalités non départagées de la phase EN COURS (pools propres à chaque
+// catégorie pour ne jamais mélanger les lettres de poule Principale/Consolante,
+// qui peuvent coïncider) — utilisé pour bloquer le passage à la phase
+// suivante tant qu'un admin/référent n'a pas choisi un ordre (sinon des
+// équipes pourraient se retrouver dans le mauvais tableau de phase suivante
+// sur la seule foi d'un tri alphabétique arbitraire).
+function unresolvedTiesForPhase(phaseKey){
+  const cats=[];
+  if(phaseKey==='brassage'){ cats.push({pools:state.pools||[], schedule:state.schedule||[]}); }
+  else if(phaseKey==='poules2'){
+    ensurePhases();
+    cats.push({pools:state.phasePrincipal.pools||[], schedule:state.phasePrincipal.schedule||[]});
+    if(state.config.phaseConsolante) cats.push({pools:state.phaseConsolante.pools||[], schedule:state.phaseConsolante.schedule||[]});
+  }
+  const found=[];
+  cats.forEach(({pools,schedule})=>{
+    pools.forEach(p=>{
+      const seen=new Set();
+      poolStandingRows(p, schedule).forEach(r=>{
+        if(r.tieKey && !r.tieResolved && !seen.has(r.tieKey)){ seen.add(r.tieKey); found.push({pool:p.letter, tieKey:r.tieKey}); }
+      });
+    });
+  });
+  return found;
+}
+window.setTieOrder=(tieKey, team, newPos)=>{
+  state.config.poolTieOrder = state.config.poolTieOrder || {};
+  const names=tieKey.split('|');
+  let order=(state.config.poolTieOrder[tieKey]||names.slice()).slice();
+  const oldPos=order.indexOf(team);
+  if(oldPos<0 || newPos===oldPos) return;
+  order.splice(oldPos,1);
+  order.splice(newPos,0,team);
+  state.config.poolTieOrder[tieKey]=order;
+  openTieBreakEditor(tieKey);
+  render('standings');
+};
+window.confirmTieOrder=(tieKey)=>{
+  state.config.poolTieOrder = state.config.poolTieOrder || {};
+  const names=tieKey.split('|');
+  const order=(state.config.poolTieOrder[tieKey]||names.slice()).slice();
+  state.config.poolTieOrder[tieKey]=order;
+  closeSheet();
+  render('standings');
+  toast('Ordre confirmé');
+};
+window.openTieBreakEditor=(tieKey)=>{
+  const names=tieKey.split('|');
+  const order=((state.config.poolTieOrder||{})[tieKey]||names.slice()).slice();
+  const escKey=tieKey.replace(/'/g,"\\'");
+  openSheet(`
+    <h3 class="sheet-title">⚠️ Égalité à départager</h3>
+    <p style="font-size:12.5px;color:var(--muted);margin:0 0 12px;line-height:1.5">Ces équipes ont exactement les mêmes points et la même différence de points : leur ordre dans le classement n'est pas déterminé automatiquement. Choisissez l'ordre voulu dans les menus ci-dessous (ou laissez l'ordre déjà proposé), puis touchez ${CONFIRM_ORDER_BADGE}. Sans cette validation, la clôture de la phase restera bloquée.</p>
+    <div class="pool"><ul>
+      ${order.map((t,i)=>{const esc=t.replace(/'/g,"\\'");return `<li><span class="tinfo"><span class="tname">${i+1}. ${t}</span>
+        <select onchange="setTieOrder('${escKey}', '${esc}', +this.value)">
+          ${order.map((_,j)=>`<option value="${j}"${j===i?' selected':''}>${j+1}${j===0?'er':'e'}</option>`).join('')}
+        </select></span></li>`;}).join('')}
+    </ul></div>
+    <button class="btn" style="margin-top:16px;width:100%" onclick="confirmTieOrder('${escKey}')">✅ Confirmer cet ordre</button>
+    <button class="btn ghost sm" style="margin-top:8px;width:100%" onclick="closeSheet()">Annuler</button>
+  `);
+};
 let standPhase='brassage';
 const PHASE_LABEL={brassage:'Brassage',principal:'Principale',consolante:'Consolante'};
 function phaseSeg(current,fn){
@@ -3522,9 +4005,10 @@ screens.standings = ()=>{
     <div class="pool"><div class="ph">Poule ${p.letter}<span class="tn">${courtLabel}</span></div>
     <div style="overflow-x:auto">
     <table class="tbl" style="min-width:400px"><thead><tr><th>Équipe</th><th>J</th><th>V</th><th>PP</th><th>PC</th><th>Diff</th><th>Pts</th></tr></thead><tbody>
-    ${rows.map((r,i)=>{const d=r.pf-r.pc;const dc=d>0?'var(--ok)':d<0?'var(--danger)':'var(--muted)';return `<tr class="${i<2?'qual':''}"><td><span class="rk ${i<2?'top':''}">${i+1}</span><span class="tcell"><span>${r.t}</span>${levelBadge(r.t)}</span></td><td>${r.j}</td><td style="color:var(--ok);font-weight:800">${r.g}</td><td>${r.pf}</td><td>${r.pc}</td><td style="color:${dc};font-weight:800">${d>0?'+':''}${d}</td><td><b>${r.pts}</b></td></tr>`;}).join('')}
+    ${rows.map((r,i)=>{const d=r.pf-r.pc;const dc=d>0?'var(--ok)':d<0?'var(--danger)':'var(--muted)';const tieBtn=r.tieKey?`<button class="chip" style="margin-left:6px;${TIE_BADGE_STYLE};cursor:pointer" onclick="openTieBreakEditor('${r.tieKey.replace(/'/g,"\\'")}')" title="Égalité à départager">⚠️ égalité</button>`:'';return `<tr class="${i<2?'qual':''}"><td><span class="rk ${i<2?'top':''}">${i+1}</span><span class="tcell"><span>${r.t}</span>${levelBadge(r.t)}${tieBtn}</span></td><td>${r.j}</td><td style="color:var(--ok);font-weight:800">${r.g}</td><td>${r.pf}</td><td>${r.pc}</td><td style="color:${dc};font-weight:800">${d>0?'+':''}${d}</td><td><b>${r.pts}</b></td></tr>`;}).join('')}
     </tbody></table></div></div>
     <p class="muted" style="font-size:12px;margin-top:10px;line-height:1.6"><b>V</b> victoires · <b>PP</b> points pour · <b>PC</b> points contre · <b>Diff</b> différence · <b>Pts</b> points de classement (${state.config.winPts??3} par victoire, ${state.config.lossPts??0} par défaite).</p>
+    ${rows.some(r=>r.tieKey)?`<p class="muted" style="font-size:12.5px;margin-top:6px">En cas d'égalité stricte (points et différence), l'ordre est alphabétique par défaut — touchez ${TIE_BADGE} sur une équipe concernée pour choisir l'ordre vous-même, puis validez avec « Confirmer cet ordre » : tant que ce n'est pas fait (même pour garder l'ordre actuel), le passage à la phase suivante reste bloqué.</p>`:''}
     <p class="muted" style="font-size:12.5px;margin-top:6px">${qualNote}</p>
   </div>`;
 };
@@ -3697,7 +4181,11 @@ screens.bracket = ()=>{
       const m=real.find(x=>(x.court||i+1)===i+1);
       return rm(m ? bm(m.a,m.b,m) : bm('À déterminer','À déterminer'));
     }).join('');
-    cols+=`<div class="round"><h4>${names[ci]}</h4><div class="rmatches">${inner}</div></div>`;
+    // Rappel de l'horaire de départ — uniquement sur le 1er tour : les tours suivants
+    // démarrent dès que le tour précédent est joué, donc leur horaire théorique n'a
+    // pas de valeur informative pour l'admin.
+    const roundTime = round===1 ? (real.length ? real[0].time : bracketSlotTime(round)) : null;
+    cols+=`<div class="round"><h4>${names[ci]}</h4>${roundTime?`<div class="rtime">🕒 ${roundTime}</div>`:''}<div class="rmatches">${inner}</div></div>`;
   }
   const rw=164+nSets*20;
   // Petite finale (3e place) : même habillage colonne que le tableau (.round/h4/.rmatch),
@@ -3726,14 +4214,18 @@ screens.bracket = ()=>{
   </div>`;
 };
 function bm(a, b, m){
-  const row=(name,val,win)=>`<div class="r${win?' win':''}"><span class="nm"><span class="nmtxt">${name}</span>${levelBadge(name)}</span><span class="sc"><b>${val}</b></span></div>`;
-  if(!m || !m.id) return `<div class="bm">${row(a,'–')}${row(b,'–')}</div>`;
+  // Un set par colonne (la largeur --rw de .bracket réserve déjà la place pour
+  // nSets scores) : afficher uniquement le dernier set cachait les précédents
+  // une fois plusieurs sets saisis.
+  const row=(name,vals,win)=>`<div class="r${win?' win':''}"><span class="nm"><span class="nmtxt">${name}</span>${levelBadge(name)}</span><span class="sc">${vals.map(v=>`<b>${v}</b>`).join('')}</span></div>`;
+  if(!m || !m.id) return `<div class="bm">${row(a,['–'])}${row(b,['–'])}</div>`;
   const played=matchSetsPlayed(m);
-  const last=played.length?played[played.length-1]:null;
   const w=matchWinner(m);
   const icon=m.status==='done' ? '✏️' : '📝';
-  return `<div class="bm tap" onclick="openAdminScoreSheet('${m.id}')">
-    ${row(a, last?last[0]:'–', w==='a')}${row(b, last?last[1]:'–', w==='b')}
+  const va=played.length?played.map(s=>s[0]):['–'];
+  const vb=played.length?played.map(s=>s[1]):['–'];
+  return `<div class="bm tap${m.status==='live'?' live':''}" onclick="openAdminScoreSheet('${m.id}')">
+    ${row(a, va, w==='a')}${row(b, vb, w==='b')}
     <span class="bmEdit">${icon}</span>
   </div>`;
 }
@@ -3784,6 +4276,57 @@ screens.adminReferents = ()=>{
     <button class="btn accent" style="margin-top:18px" onclick="go('createRef')">＋ Créer un référent</button>
   </div>`;
 };
+
+// Répertoire des capitaines (numéros de téléphone) : admin ET référent, accès
+// via orgLive. Jamais visible des capitaines — load_structure()/publicByCode
+// n'expose pas le téléphone, seul teams.directory (require_login) le fait.
+screens.teamsDirectory = ()=>{
+  setTop('Répertoire des capitaines'); tabbar.hidden=true;
+  const tid=state.loadedStructTid||state.currentDraftId;
+  if(!window.vboDb || !vboDb.isUuid(tid)){
+    host.innerHTML=`<div style="padding:0"><div class="empty">📇<p>Répertoire indisponible pour ce tournoi.</p></div></div>`;
+    return;
+  }
+  if(state._directoryTid!==tid){
+    state._directoryTid=tid; state._directory=null;
+    api.teamsDirectory(tid).then(res=>{
+      state._directory=(res&&res.teams)||[];
+      const cur=navStack[navStack.length-1];
+      if(cur && cur.screen==='teamsDirectory') screens.teamsDirectory();
+    }).catch(e=>{
+      console.warn('Répertoire:', e);
+      state._directory=[];
+      const cur=navStack[navStack.length-1];
+      if(cur && cur.screen==='teamsDirectory') screens.teamsDirectory();
+    });
+  }
+  if(state._directory===null){
+    host.innerHTML=`<div style="padding:0"><div class="empty">⏳<p>Chargement…</p></div></div>`;
+    return;
+  }
+  const list=state._directory||[];
+  host.innerHTML=`<div style="padding:0">
+    <div class="card" style="background:var(--brand-soft);border:none;margin-bottom:14px">
+      <small class="muted">📇 Coordonnées des capitaines, réservées à l'organisation — à utiliser en cas de besoin de les contacter.</small>
+    </div>
+    ${list.length?`<div class="search-pill" style="margin-top:0"><span class="search-ic">🔍</span><input placeholder="Rechercher une équipe…" oninput="filterDirectory(this.value)" autofocus></div>`:''}
+    <div id="directoryList" style="margin-top:${list.length?'12px':'0'}"></div>
+  </div>`;
+  renderDirectoryList('');
+};
+window.filterDirectory=(q)=>{ renderDirectoryList(q); };
+function renderDirectoryList(q){
+  const all=state._directory||[];
+  const list=q?all.filter(t=>t.name.toLowerCase().includes(q.toLowerCase())):all;
+  const elList=document.getElementById('directoryList');
+  if(!elList) return;
+  elList.innerHTML=list.length?list.map(t=>`<div class="list-item" style="background:var(--surface)">
+      <span class="ic">🏐</span>
+      <span style="min-width:0;flex:1"><b>${t.name}</b><small>${t.pool?('Poule '+t.pool):'—'}</small></span>
+      ${t.phone?`<a href="tel:${String(t.phone).replace(/\s+/g,'')}" class="btn sm" style="margin-left:auto;flex:none;text-decoration:none">📞 <span style="text-decoration:underline">${formatPhoneFr(t.phone)}</span></a>`
+        :`<small class="muted" style="margin-left:auto;flex:none">Non renseigné</small>`}
+    </div>`).join(''):`<div class="empty">📇<p>${all.length?'Aucune équipe trouvée':'Aucune équipe.'}</p></div>`;
+}
 
 screens.refProfile = (opts)=>{
   if(!state.authed){ go(state.refSession?'refSpace':'home'); return; }
@@ -4237,7 +4780,7 @@ screens.refSpace = ()=>{
   const live=all.filter(t=>t.status==='live');
   const others=all.filter(t=>t.status!=='live');
   const row=t=>{
-    const st=TOURN_ST[t.status]||TOURN_ST.draft;
+    const st = t.finished ? {label:'Terminé',badge:'ok',ic:'🏁',icBg:'var(--ok-soft)',icFg:'var(--ok)'} : (TOURN_ST[t.status]||TOURN_ST.draft);
     const open = t.status==='live' ? `openTournament('${t.id}')` : `toast('Ce tournoi n\\'est pas en cours')`;
     return `<div class="list-item" style="background:var(--surface)" onclick="${open}">
       <span class="ic" style="background:${st.icBg};color:${st.icFg}">${st.ic}</span>
@@ -4256,7 +4799,7 @@ screens.refSpace = ()=>{
       <span style="width:42px;height:42px;border-radius:12px;background:var(--surface);color:var(--brand);display:grid;place-items:center;font-size:19px;flex:none">${ICON.referee}</span>
       <div><div style="font-family:var(--font-display);font-weight:800">${r?r.name:'Référent'}</div><small class="muted">Référent gymnase · suivi des tournois en direct</small></div>
     </div>
-    <p class="eyebrow" style="margin:4px 0 8px">Tournois en cours</p>
+    <p class="eyebrow" style="margin:4px 0 8px">Mes tournois</p>
     ${live.length?live.map(row).join(''):'<p class="muted" style="font-size:13px;margin:0 0 6px">Aucun tournoi en cours actuellement.</p>'}
     ${others.length?`<p class="eyebrow" style="margin:18px 0 8px">Autres tournois</p>${others.map(row).join('')}`:''}
     ${installBlock('full')}
@@ -4381,7 +4924,48 @@ window.pickCaptainTeam=async (team)=>{
   state.captainTeam=team;
   try{ localStorage.setItem('vbo_captain', JSON.stringify({code:state.joinCode, team})); }catch(_){}
   await loadJoinedTournament(state.joinCode, team);
-  go('myMatches');
+  // Si l'équipe n'a pas de téléphone enregistré (tournoi créé avant cette
+  // fonctionnalité, ou champ laissé vide), on ne bloque pas le capitaine.
+  try{
+    const probe=await api.verifyCaptainPhone(state.joinCode, team, '');
+    if(probe && probe.skip){
+      try{ localStorage.setItem('vbo_captain', JSON.stringify({code:state.joinCode, team, verified:true})); }catch(_){}
+      go('myMatches');
+      return;
+    }
+  }catch(e){ console.warn('Vérification téléphone:', e); }
+  go('phoneGate');
+};
+screens.phoneGate = ()=>{
+  setTop('Vérification'); tabbar.hidden=true;
+  if(state._joinLoading){
+    host.innerHTML=`<div style="padding:0"><div class="empty">⏳<p>Chargement du tournoi…</p></div></div>`;
+    return;
+  }
+  host.innerHTML=`<div style="padding:0;text-align:center">
+    <div style="margin:14px auto;width:72px;height:72px;border-radius:50%;background:var(--accent-soft);color:var(--brand);display:grid;place-items:center;font-size:30px">🔒</div>
+    <p class="lead">Pour protéger les coordonnées des capitaines, confirmez le numéro de téléphone renseigné à l'inscription de <b>${state.captainTeam||''}</b>.</p>
+    <label class="field" style="text-align:left"><span>Numéro de téléphone</span><input id="phoneGateInput" type="tel" placeholder="06 12 34 56 78" style="text-align:center;font-weight:700" autofocus oninput="this.value=formatPhoneFr(this.value)" onkeydown="if(event.key==='Enter')submitPhoneGate()"></label>
+    <button class="btn" style="margin-top:12px;width:100%" onclick="submitPhoneGate()">Valider</button>
+    <button class="btn ghost sm" style="margin-top:10px;width:100%" onclick="go('pickTeam',{replace:true})">← Changer d'équipe</button>
+  </div>`;
+};
+window.submitPhoneGate=async ()=>{
+  const el=document.getElementById('phoneGateInput');
+  const phone=((el&&el.value)||'').trim();
+  if(!phone){ toast('Entrez votre numéro de téléphone'); return; }
+  try{
+    const res=await api.verifyCaptainPhone(state.joinCode, state.captainTeam, phone);
+    if(res && res.ok){
+      try{ localStorage.setItem('vbo_captain', JSON.stringify({code:state.joinCode, team:state.captainTeam, verified:true})); }catch(_){}
+      go('myMatches', {replace:true});
+    } else {
+      toast('Numéro incorrect — réessayez');
+    }
+  }catch(e){
+    console.warn('Vérification téléphone:', e);
+    toast('Connexion impossible — réessayez');
+  }
 };
 window.captainLeave=()=>{
   try{ localStorage.removeItem('vbo_captain'); }catch(_){}
@@ -4392,7 +4976,9 @@ window.startMatch=async (id)=>{
   try{
     await api.startMatch(id, state.captainTeam||'');
     await loadJoinedTournament(state.joinCode, state.captainTeam);
+    const y=host.scrollTop; // on reste sur le même écran : pas de retour en haut de page
     go('myMatches',{replace:true});
+    host.scrollTop=y;
   }catch(e){
     console.warn('Démarrage match:', e);
     toast("⚠️ Impossible de démarrer ce match — réessayez");
@@ -4597,7 +5183,7 @@ window.submitNewPassword=async ()=>{
 /* ---------- Render dispatch ---------- */
 // Écrans « formulaire » à une colonne : restent resserrés/centrés en desktop (.screen.narrow)
 // au lieu de s'étirer sur toute la largeur du conteneur élargi.
-const NARROW_SCREENS=new Set(['home','login','refLogin','createRef','setPassword','wizard','enterScore','scan','qr','teamsRegister','assignPools','summary','refProfile','refMail']);
+const NARROW_SCREENS=new Set(['home','login','refLogin','createRef','setPassword','wizard','enterScore','scan','qr','teamsRegister','assignPools','wizPhases','summary','refProfile','refMail','phoneGate']);
 function render(screen,opts){
   (screens[screen]||screens.home)(opts||{});
   orgHeader.hidden = tabbar.hidden;
@@ -4619,7 +5205,7 @@ function render(screen,opts){
       state.captainTeam=saved.team;
       await loadJoinedTournament(code, saved.team);
       if(!localStorage.getItem('vbo_captain')) return; // code expiré : déjà redirigé vers l'écran de scan
-      go('myMatches'); return;
+      go(saved.verified?'myMatches':'phoneGate'); return;
     }
     loadJoinedTournament(code); go('pickTeam'); return;
   }
@@ -4653,7 +5239,7 @@ function render(screen,opts){
       // En cas de code expiré/invalide, loadJoinedTournament a déjà navigué
       // vers l'écran de scan et vidé vbo_captain — ne pas écraser ça.
       if(!localStorage.getItem('vbo_captain')) return;
-      go('myMatches'); return;
+      go(saved.verified?'myMatches':'phoneGate'); return;
     }
   }catch(e){ console.warn('Restauration capitaine:', e); }
   go('home');

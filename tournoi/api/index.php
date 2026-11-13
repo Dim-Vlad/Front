@@ -10,6 +10,7 @@
 //    tournaments.list      GET                           -> [rows]
 //    tournaments.save      POST {id?,row}                -> {id}
 //    tournaments.setArchived POST {id,archived}          -> {ok}
+//    tournaments.setFinished POST {id,finished,finished_at?} -> {ok}
 //    tournaments.setStatus POST {id,status,closed_at?}   -> {ok}
 //    tournaments.remove    POST {id}                     -> {ok}
 //    tournaments.saveStructure POST {tid,s}              -> {counts} (remplace TOUT)
@@ -22,6 +23,8 @@
 //    matches.conflicts     GET  ?tid=                    -> [rows] (admin/référent, type:conflict|waiting)
 //    matches.resolveConflict POST {matchId,pick|sets}    -> {ok} (admin/référent)
 //    tournaments.publicByCode  GET  ?code=&team= (public) -> {name,pools,schedule,myEntries}|null
+//    teams.verifyPhone     POST {code,team,phone} (public) -> {ok,skip?} (jamais le numéro en clair)
+//    teams.directory       GET  ?tid=                    -> {teams:[{name,phone,pool}]} (admin/référent)
 //    referents.list        GET                           -> [rows]
 //    referents.create      POST {name,email,password}    -> {ok,id,email,name}
 //    organizers.list       GET                           -> [rows]
@@ -144,6 +147,51 @@ function ensure_match_started_column(PDO $pdo): void {
   $done = true;
 }
 
+// Numéro de téléphone du capitaine : ajouté après coup, même mécanisme que
+// started_at ci-dessus. Jamais exposé par load_structure() (public via
+// tournaments.publicByCode) : seulement lu par teams.verifyPhone (qui ne
+// renvoie qu'un booléen) et teams.directory (admin/référent authentifiés).
+function ensure_team_phone_column(PDO $pdo): void {
+  static $done = false;
+  if ($done) return;
+  $st = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                      WHERE table_schema = DATABASE() AND table_name = 'vbo_teams'
+                        AND column_name = 'phone'");
+  if ((int)$st->fetchColumn() === 0) {
+    $pdo->exec("ALTER TABLE vbo_teams ADD COLUMN phone VARCHAR(30) NULL");
+  }
+  $done = true;
+}
+
+// Marqueur « Terminé » posé par l'organisateur une fois les phases finales
+// jouées. Volontairement distinct de `status` (qui reste 'live') : passer le
+// statut à 'closed' coupe l'accès public (tournaments.publicByCode exige
+// status='live'), ce qui priverait les capitaines de la vue du tableau final
+// une fois le tournoi terminé — `finished` est purement additif, affiché sur
+// la carte « Mes tournois », sans retirer aucun accès existant.
+function ensure_tournament_finished_column(PDO $pdo): void {
+  static $done = false;
+  if ($done) return;
+  $st = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                      WHERE table_schema = DATABASE() AND table_name = 'vbo_tournaments'
+                        AND column_name = 'finished'");
+  if ((int)$st->fetchColumn() === 0) {
+    $pdo->exec("ALTER TABLE vbo_tournaments ADD COLUMN finished TINYINT(1) NOT NULL DEFAULT 0");
+    $pdo->exec("ALTER TABLE vbo_tournaments ADD COLUMN finished_at DATETIME NULL");
+  }
+  $done = true;
+}
+
+// Réduit un numéro à ses seuls chiffres, en ramenant +33/0033 vers le 0
+// français, pour comparer deux saisies (espaces, points, indicatif...)
+// sans jamais avoir à stocker/comparer le texte brut.
+function normalize_phone(string $v): string {
+  $digits = preg_replace('/\D+/', '', $v) ?? '';
+  if (strpos($digits, '0033') === 0) $digits = '0' . substr($digits, 4);
+  if (strlen($digits) === 11 && strpos($digits, '33') === 0) $digits = '0' . substr($digits, 2);
+  return $digits;
+}
+
 // Les scores déjà saisis par UNE équipe (capitaine) pour un tournoi, afin
 // que sa saisie survive à une perte de connexion / un rechargement de page
 // (vbo_score_entries est déjà persistée en base ; il ne manquait que ce
@@ -237,13 +285,16 @@ switch ($action) {
   // ========================== TOURNAMENTS ===========================
   case 'tournaments.list': {
     require_login(); // admin + référent peuvent lire
+    ensure_tournament_finished_column(db());
     $rows = db()->query(
       "SELECT id, created_by, name, event_date, place, status, archived,
-              join_code, live_phase, config, created_at, launched_at, closed_at
+              join_code, live_phase, config, created_at, launched_at, closed_at,
+              finished, finished_at
       FROM vbo_tournaments ORDER BY created_at DESC"
     )->fetchAll();
     foreach ($rows as &$r) {
       $r['archived'] = (bool)$r['archived'];
+      $r['finished'] = (bool)$r['finished'];
       $r['config']   = $r['config'] !== null ? json_decode($r['config']) : null;
     }
     ok($rows);
@@ -298,6 +349,18 @@ switch ($action) {
     break;
   }
 
+  case 'tournaments.setFinished': {
+    require_admin();
+    $id = field('id');
+    if (!is_uuid($id)) { ok(); break; }
+    ensure_tournament_finished_column(db());
+    $finished = field('finished') ? 1 : 0;
+    db()->prepare("UPDATE vbo_tournaments SET finished = ?, finished_at = ? WHERE id = ?")
+        ->execute([$finished, $finished ? mysql_dt(field('finished_at', date('c'))) : null, $id]);
+    ok();
+    break;
+  }
+
   case 'tournaments.setStatus': {
     require_admin();
     $id = field('id');
@@ -348,12 +411,14 @@ switch ($action) {
         $nameToGymId[$g['name'] ?? ''] = $gid;
       }
       // Équipes
+      ensure_team_phone_column($pdo);
       $teamNameToId = [];
-      $insTeam = $pdo->prepare("INSERT INTO vbo_teams (id, tournament_id, name, level) VALUES (?,?,?,?)");
+      $insTeam = $pdo->prepare("INSERT INTO vbo_teams (id, tournament_id, name, level, phone) VALUES (?,?,?,?,?)");
       foreach ($teams as $t) {
         $teid = uuid4();
         $lvl = isset($t['levelW']) ? (int)$t['levelW'] : null;
-        $insTeam->execute([$teid, $tid, $t['name'] ?? '', $lvl]);
+        $phone = trim((string)($t['phone'] ?? ''));
+        $insTeam->execute([$teid, $tid, $t['name'] ?? '', $lvl, $phone !== '' ? $phone : null]);
         $teamNameToId[$t['name'] ?? ''] = $teid;
       }
       // Poules
@@ -752,6 +817,51 @@ switch ($action) {
     $team = trim((string)($_GET['team'] ?? ''));
     $myEntries = $team !== '' ? my_entries_for_team(db(), $t['id'], $team) : [];
     ok(['name' => $t['name'], 'pools' => $s['pools'], 'schedule' => $s['schedule'], 'myEntries' => $myEntries]);
+    break;
+  }
+
+  // Vérifie le numéro saisi par un capitaine après son choix d'équipe, contre
+  // celui enregistré par l'organisation à l'inscription — sans jamais renvoyer
+  // ce numéro au client (seulement un booléen). Si l'équipe n'a pas de numéro
+  // enregistré (tournois créés avant cette fonctionnalité, ou champ laissé
+  // vide), on laisse passer (skip:true) plutôt que de bloquer le capitaine.
+  case 'teams.verifyPhone': {
+    $code = strtoupper(trim((string)field('code', '')));
+    $team = trim((string)field('team', ''));
+    if ($code === '' || $team === '') fail(400, "Paramètres manquants.");
+    $st = db()->prepare("SELECT id FROM vbo_tournaments WHERE join_code = ?");
+    $st->execute([$code]);
+    $t = $st->fetch();
+    if (!$t) fail(404, "Tournoi introuvable.");
+    $pdo = db();
+    ensure_team_phone_column($pdo);
+    $st = $pdo->prepare("SELECT phone FROM vbo_teams WHERE tournament_id = ? AND name = ?");
+    $st->execute([$t['id'], $team]);
+    $row = $st->fetch();
+    if (!$row) fail(404, "Équipe introuvable.");
+    $stored = normalize_phone((string)($row['phone'] ?? ''));
+    if ($stored === '') { ok(['ok' => true, 'skip' => true]); break; }
+    $given = normalize_phone((string)field('phone', ''));
+    ok(['ok' => $given !== '' && $given === $stored]);
+    break;
+  }
+
+  // Répertoire des capitaines (admin/référent, voir lien tel: côté client) :
+  // seule route qui renvoie le numéro en clair, jamais exposée aux capitaines.
+  case 'teams.directory': {
+    require_login();
+    $tid = (string)($_GET['tid'] ?? '');
+    if (!is_uuid($tid)) fail(400, "Tournoi non encore enregistré.");
+    $pdo = db();
+    ensure_team_phone_column($pdo);
+    $st = $pdo->prepare("SELECT t.name AS name, t.phone AS phone, p.letter AS pool
+                         FROM vbo_teams t
+                         LEFT JOIN vbo_pool_teams pt ON pt.team_id = t.id
+                         LEFT JOIN vbo_pools p ON p.id = pt.pool_id AND p.phase = 'brassage'
+                         WHERE t.tournament_id = ?
+                         ORDER BY t.name");
+    $st->execute([$tid]);
+    ok(['teams' => $st->fetchAll()]);
     break;
   }
 
