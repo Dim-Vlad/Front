@@ -2481,6 +2481,7 @@ function rulesCard(p, r){
         <label class="field" style="margin-top:4px"><span>Points par set</span>${numCtl(p+'pts', r.pointsPerSet, 10, 50)}</label>
       </div>
       <div id="${p}timeRow" ${r.timed?'':'hidden'}>
+        <p style="font-size:12px;color:var(--muted);margin:6px 2px 8px;line-height:1.45">⏱️ Ces valeurs réglent le chronomètre affiché sur l'écran en direct pendant les matchs (pas le planning horaire ci-dessous, qui en est pré-rempli mais reste modifiable).</p>
         <label class="field" style="margin-top:4px"><span>Durée du set (minutes)</span>${numCtl(p+'min', r.setMinutes, 5, 40)}</label>
         <label class="field" style="margin-top:4px"><span>Pause entre les sets (minutes)</span>${numCtl(p+'brk', r.breakMinutes!=null?r.breakMinutes:3, 0, 15)}</label>
       </div>
@@ -2518,11 +2519,33 @@ function wizRules(){
     el.addEventListener('live',()=>{saveWizard();updateSchedPreview();});
     el.addEventListener('change',()=>{saveWizard();updateSchedPreview();});
   });
+  ['b_sets','b_min','b_brk'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.addEventListener('live',()=>syncRoundFromTimer('b_'));
+    el.addEventListener('change',()=>syncRoundFromTimer('b_'));
+  });
+  syncRoundFromTimer('b_');
   updateSchedPreview();
 }
 window.toggleSw=(id)=>{document.getElementById(id).classList.toggle('on');};
 window.toggleTimed=(p)=>{p=p||''; const on=document.getElementById('sw_'+p+'timed').classList.contains('on');
-  document.getElementById(p+'timeRow').hidden=!on; document.getElementById(p+'ptsRow').hidden=on;};
+  document.getElementById(p+'timeRow').hidden=!on; document.getElementById(p+'ptsRow').hidden=on;
+  if(on) syncRoundFromTimer(p);};
+// Quand le set est joué au temps, la "Durée d'un match" du bloc Horaire est
+// redondante à saisir manuellement : elle découle directement des règles de
+// match (sets × durée du set + pauses entre sets). On la pré-remplit donc
+// automatiquement, sans empêcher l'organisateur de la corriger ensuite à la main.
+const HORAIRE_ROUND_FIELD={b_:'w_roundmin', n_:'nh_round'};
+function syncRoundFromTimer(p){
+  const roundId=HORAIRE_ROUND_FIELD[p]; if(!roundId) return;
+  const swEl=document.getElementById('sw_'+p+'timed'); if(!swEl || !swEl.classList.contains('on')) return;
+  const g=id=>document.getElementById(id);
+  const minEl=g(p+'min'), roundEl=g(roundId); if(!minEl || !roundEl) return;
+  const sets=Math.max(1, parseInt((g(p+'sets')||{}).value)||1);
+  const setM=parseInt(minEl.value)||0, brkM=parseInt((g(p+'brk')||{}).value)||0;
+  roundEl.value = sets*setM + Math.max(0, sets-1)*brkM;
+  if(p==='b_'){ saveWizard(); updateSchedPreview(); } else { updatePhaseSchedPreview(); }
+}
 
 // Nombre de qualifiés en Principale = 1ers + 2es de chaque poule (partage par rang)
 function principalQualCount(){
@@ -3216,6 +3239,12 @@ window.openPhaseSwitch=()=>{
     <button class="btn ghost" style="margin-top:8px;width:100%" onclick="closeSheet()">Annuler</button>
   `);
   ['nh_round','nh_setup'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.addEventListener('live',updatePhaseSchedPreview); el.addEventListener('change',updatePhaseSchedPreview); } });
+  ['n_sets','n_min','n_brk'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.addEventListener('live',()=>syncRoundFromTimer('n_'));
+    el.addEventListener('change',()=>syncRoundFromTimer('n_'));
+  });
+  syncRoundFromTimer('n_');
   updatePhaseSchedPreview();
   if(nxt==='finales') updateFinalHint();
 };
