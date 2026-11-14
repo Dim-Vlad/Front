@@ -573,6 +573,7 @@ window.api = (function(){
     saveStructure:  (tid,s)=>          call('tournaments.saveStructure',{body:{tid,s}}),
     addPhase:       (tid,s)=>          call('tournaments.addPhase',    {body:{tid,s}}),
     loadStructure:  (tid)=>            call('tournaments.loadStructure',{query:{tid}}),
+    syncTimer:      (tid,state)=>      call('tournaments.syncTimer',   {body:{tid,state}}),
     setMatchScore:  (id,sets,complete)=> call('matches.setScore',       {body:{id,sets,complete}}),
     submitCaptainScore:(matchId,teamName,sets)=> call('matches.submitCaptainScore', {body:{matchId,teamName,sets}}),
     startMatch:     (matchId,teamName)=> call('matches.startMatch',     {body:{matchId,teamName}}),
@@ -2202,6 +2203,7 @@ window.openTournament=async (id, targetScreen='orgLive')=>{
   if(t.joinCode) state.joinCode=t.joinCode;
   state.currentDraftId=t.id;
   state.livePhase=t.livePhase||'brassage';
+  timerLoad(); // reprend le chrono en cours (F5) au lieu de repartir de zéro
   state.conflicts=[]; state._conflictsLoaded=false;
   // Planning/Classements doivent s'ouvrir sur la phase réellement en cours, pas
   // rester bloqués sur le brassage si ce tournoi a déjà avancé.
@@ -3024,7 +3026,6 @@ screens.orgLive = ()=>{
       </div>
       <span style="color:var(--brand);font-size:20px;flex:none">›</span>
     </div>
-    ${liveRules().timed?timerCard():''}
     ${(()=>{
       // Compteurs de la phase EN COURS, pas toujours le brassage (sinon ils
       // restent figés à 100% une fois la phase 2 lancée).
@@ -3090,7 +3091,6 @@ screens.orgLive = ()=>{
     ${cur>0?`<button class="btn ghost sm" style="margin-top:8px;width:100%" onclick="revertPhase()">↩︎ Revenir à la phase précédente</button>`:''}`;
     })()}
   </div>`;
-  if(liveRules().timed) paintTimer();
 };
 /* ---------- Bottom sheet (pop-up) ---------- */
 function openSheet(inner){
@@ -3679,6 +3679,53 @@ function liveNowMatches(){
   }
   return [];
 }
+// Tour réellement joué en ce moment, déduit des statuts de match (comme côté
+// capitaine, cf. activeRoundMatches plus bas) — à ne pas confondre avec
+// timer.round, le compteur manuel avancé via le bouton "Tour suivant →", qui
+// peut déraper par rapport à l'avancement réel (clic en avance/en retard).
+// Sert à ce que le tour affiché sur l'écran organisateur/référent — et celui
+// poussé aux capitaines via timerSave/tournaments.syncTimer — correspondent
+// toujours à ce qui se joue vraiment sur le terrain.
+function timerRealRound(){
+  const rs=liveNowMatches().map(m=>m.r).filter(r=>r!=null);
+  return rs.length ? Math.min(...rs) : timer.round;
+}
+// Phase "live" (brassage/poules2/finales) correspondant au champ m.phase
+// d'un match du planning capitaine (qui mêle toutes les phases du tournoi,
+// cf. captainMatches), à comparer à state.livePhase.
+function matchLivePhase(m){
+  const p=m.phase||'brassage';
+  if(p==='principal'||p==='consolante') return 'poules2';
+  if(p.indexOf('finales')===0) return 'finales';
+  return 'brassage';
+}
+// Avancement du chrono pour une équipe donnée, côté capitaine. Le chrono est
+// un objet unique pour tout le tournoi (un seul "Tour" à la fois, quel que
+// soit le gymnase — cf. le bouton "Tour suivant" de l'organisateur), poussé
+// au serveur à chaque changement d'état par timerSave (tournaments.syncTimer)
+// et relu ici via state.remoteTimer (rempli par loadJoinedTournament depuis
+// tournaments.publicByCode). Tant que l'organisateur n'a pas encore lancé le
+// chrono (ou que la synchro n'est pas encore arrivée), on retombe sur le tour
+// en cours déduit des statuts de match (comme côté organisateur, cf.
+// activeRoundMatches/liveNowMatches) : pas de décompte précis, mais au moins
+// le tour affiché, pour ne jamais se retrouver sans aucun visuel.
+function captainTimerStatus(team){
+  if(!liveRules().timed) return null;
+  const sch=(state.schedule||[]).filter(m=>matchLivePhase(m)===state.livePhase);
+  if(!sch.some(m=>m.a===team||m.b===team||m.ref===team)) return null;
+  const r=liveRules();
+  const rt=state.remoteTimer;
+  if(rt && rt.started){
+    const full=(rt.phase==='break' ? (r.breakMinutes!=null?r.breakMinutes:3) : (r.setMinutes||15))*60;
+    const remaining = (rt.running && rt.endAt) ? Math.max(0, Math.round((rt.endAt-Date.now())/1000)) : (rt.remaining!=null?rt.remaining:full);
+    const next = rt.phase==='set' ? rt.round+1 : rt.round;
+    return {round:rt.round, phase:rt.phase, remaining, full, next, running:!!rt.running, ended:!!rt.ended};
+  }
+  const active=activeRoundMatches(sch);
+  if(!active.length) return null;
+  const round=active[0].r;
+  return {round, phase:'set', remaining:null, full:null, next:round+1, running:false, ended:false};
+}
 function phaseName(p){
   if(p==='poules2') return state.config.phaseConsolante ? 'Principal & Consolante' : 'Principal';
   if(p==='finales') return 'Phases finales';
@@ -3714,7 +3761,50 @@ function fmtRules(r){ const n=r.sets||1; return `${n===1?'1 set':n+' sets'} · $
 /* ---------- Chrono (set au temps) ---------- */
 const timer={ remaining:(liveRules().setMinutes||15)*60, running:false, round:1, id:null, ended:false, started:false, endAt:null, preAlertDone:false, phase:'set' };
 const PRE_ALERT=30; // secondes avant la fin pour la pré-alerte
+// Persistance du chrono (survit à un F5) : une clé par tournoi + phase en
+// cours, avec endAt (horodatage absolu) comme source de vérité pour le temps
+// réellement écoulé — pas le dernier `remaining` enregistré, qui serait faux
+// si la page est restée fermée un moment.
+function timerStorageKey(){ return 'vbo_timer_'+(state.currentDraftId||'x')+'_'+(state.livePhase||'x'); }
+function timerSave(){
+  const snap={
+    phase:timer.phase, round:timer.round, remaining:timer.remaining, running:timer.running,
+    started:timer.started, ended:timer.ended, preAlertDone:timer.preAlertDone, endAt:timer.endAt,
+  };
+  try{ localStorage.setItem(timerStorageKey(), JSON.stringify(snap)); }catch(e){}
+  // Pousse aussi l'état au serveur pour que les capitaines voient le même
+  // décompte en direct (cf. captainTimerStatus / tournaments.publicByCode).
+  // Le round envoyé est le tour réellement joué (timerRealRound), pas le
+  // compteur manuel, pour qu'il n'y ait jamais d'écart avec le tour affiché
+  // côté capitaine. Fire-and-forget : une erreur réseau ne doit jamais
+  // bloquer le chrono local.
+  if(window.vboDb && vboDb.isUuid(state.currentDraftId)){
+    api.syncTimer(state.currentDraftId, {...snap, round:timerRealRound()}).catch(()=>{});
+  }
+}
+function timerLoad(){
+  let s=null;
+  try{ s=JSON.parse(localStorage.getItem(timerStorageKey())||'null'); }catch(e){}
+  if(!s) return;
+  Object.assign(timer, s); timer.id=null;
+  if(timer.running && timer.endAt){
+    timer.remaining=Math.max(0, Math.round((timer.endAt-Date.now())/1000));
+    if(timer.remaining<=0){
+      timer.remaining=0; timer.running=false; timer.endAt=null;
+      if(timer.phase==='set') timerStartBreak(); else timerStartNextSet();
+    } else {
+      timer.id=setInterval(timerTick,250);
+      requestWake();
+    }
+  }
+}
 function fmtClock(s){ s=Math.max(0,s); const m=Math.floor(s/60), ss=s%60; return `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`; }
+// Couleur du décompte affiché au capitaine (cf. screens.myMatches) : neutre,
+// puis alerte dès la dernière minute, rouge une fois le temps écoulé — même
+// logique d'alerte que paintTimer côté organisateur, en plus simple.
+function capTmClockColor(remaining){
+  return remaining<=0 ? 'var(--danger)' : remaining<=60 ? 'var(--warn,#b8860b)' : '';
+}
 // Durée pleine du décompte actuellement affiché : celle du set, ou celle de la
 // pause entre les sets quand le chrono a basculé en phase 'break'.
 function timerFull(){
@@ -3724,7 +3814,7 @@ function timerFull(){
 function timerCard(){
   return `<div class="card" id="tmCard" style="margin-bottom:12px;text-align:center;padding:18px 16px">
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em">
-      <span id="tmPhaseLabel">${timer.phase==='break'?'☕ Pause entre les sets':'⏱️ Set au temps'}</span><span>·</span><span>Tour <span id="tmRound">${timer.round}</span></span>
+      <span id="tmPhaseLabel">${timer.phase==='break'?'☕ Pause entre les sets':'⏱️ Set au temps'}</span><span>·</span><span>Tour <span id="tmRound">${timerRealRound()}</span></span>
     </div>
     <div id="tmDisplay" style="font-family:var(--font-display);font-weight:800;font-size:62px;line-height:1.05;margin:6px 0 2px;font-variant-numeric:tabular-nums">${fmtClock(timer.remaining)}</div>
     <div id="tmHint" class="muted" style="font-size:12.5px;margin-bottom:12px">Durée du set : ${liveRules().setMinutes||15} min</div>
@@ -3749,12 +3839,12 @@ function paintTimer(){
   const isBreak=timer.phase==='break';
   d.textContent=fmtClock(timer.remaining);
   d.style.color = timeout?'var(--danger)' : stopped?'var(--ok)' : nearEnd?'var(--warn,#b8860b)' : timer.running?'var(--brand)' : 'var(--fg)';
-  const r=document.getElementById('tmRound'); if(r) r.textContent=timer.round;
+  const r=document.getElementById('tmRound'); if(r) r.textContent=timerRealRound();
   const lbl=document.getElementById('tmPhaseLabel'); if(lbl) lbl.textContent = isBreak?'☕ Pause entre les sets':'⏱️ Set au temps';
   const t=document.getElementById('tmToggle');
   if(t) t.textContent = timeout?'Temps écoulé' : stopped?'Reprendre' : timer.running?'Pause' : (timer.remaining<full?'Reprendre':(isBreak?'Lancer la pause':'Lancer le tour'));
   const h=document.getElementById('tmHint');
-  if(h) h.textContent = timeout?'🔔 Temps écoulé — sifflez la fin !' : stopped?'✋ Set arrêté (25 pts atteints)' : nearEnd?'⚠️ Dernières 30 secondes !' : (isBreak?`Pause avant le tour ${timer.round} : ${liveRules().breakMinutes!=null?liveRules().breakMinutes:3} min`:`Durée du set : ${liveRules().setMinutes||15} min`);
+  if(h) h.textContent = timeout?'🔔 Temps écoulé — sifflez la fin !' : stopped?'✋ Set arrêté (25 pts atteints)' : nearEnd?'⚠️ Dernières 30 secondes !' : (isBreak?`Pause avant le tour ${timerRealRound()} : ${liveRules().breakMinutes!=null?liveRules().breakMinutes:3} min`:`Durée du set : ${liveRules().setMinutes||15} min`);
   const c=document.getElementById('tmCard'); if(c) c.style.background = timeout?'var(--danger-soft)' : stopped?'var(--ok-soft)' : nearEnd?'var(--warn-soft,#f6e6c3)' : 'var(--surface)';
   const e=document.getElementById('tmEnd'); if(e){ e.style.display = isBreak?'none':''; e.disabled = timeout||stopped; }
 }
@@ -3803,12 +3893,13 @@ function releaseWake(){ try{ if(_wake){ _wake.release(); _wake=null; } }catch(e)
 // qu'il n'y ait pas besoin de lancer un chrono à la main pour la pause.
 function timerStartBreak(){
   const brk=liveRules().breakMinutes;
-  if(!brk){ timer.ended=true; paintTimer(); return; } // pas de pause configurée : comportement inchangé
+  if(!brk){ timer.ended=true; timerSave(); paintTimer(); return; } // pas de pause configurée : comportement inchangé
   timer.phase='break'; timer.ended=false; timer.started=true; timer.running=true; timer.preAlertDone=false;
   timer.remaining=brk*60;
   timer.endAt=Date.now()+timer.remaining*1000;
   timer.id=setInterval(timerTick,250);
   requestWake();
+  timerSave();
   paintTimer();
   toast('Pause entre les sets');
 }
@@ -3817,8 +3908,9 @@ function timerStartBreak(){
 function timerStartNextSet(){
   timer.phase='set'; timer.round++; timer.ended=false; timer.started=false; timer.running=false; timer.preAlertDone=false;
   timer.remaining=(liveRules().setMinutes||15)*60;
+  timerSave();
   paintTimer();
-  toast('Tour '+timer.round+' prêt');
+  toast('Tour '+timerRealRound()+' prêt');
 }
 function timerTick(){
   // Temps restant calculé sur l'horloge réelle : fiable même après un gel (écran verrouillé / app en arrière-plan).
@@ -3842,16 +3934,17 @@ window.timerToggle=()=>{
     timer.endAt = Date.now() + timer.remaining*1000;  // ancre horloge réelle
     timer.id=setInterval(timerTick,250);              // tick fin → resync rapide au réveil
     requestWake();                                    // garde l'écran allumé
-    toast(timer.phase==='break'?'Pause lancée':'Tour '+timer.round+' lancé');
+    toast(timer.phase==='break'?'Pause lancée':'Tour '+timerRealRound()+' lancé');
   }
+  timerSave();
   paintTimer();
 };
 window.timerEndSet=()=>{
   timerStop();
   if(timer.phase==='set'){ timerStartBreak(); toast('Set arrêté — 25 points atteints'); }
-  else { timer.ended=true; paintTimer(); }
+  else { timer.ended=true; timerSave(); paintTimer(); }
 };
-window.timerReset=()=>{ timerStop(); timer.phase='set'; timer.ended=false; timer.started=false; timer.preAlertDone=false; timer.remaining=(liveRules().setMinutes||15)*60; paintTimer(); };
+window.timerReset=()=>{ timerStop(); timer.phase='set'; timer.ended=false; timer.started=false; timer.preAlertDone=false; timer.remaining=(liveRules().setMinutes||15)*60; timerSave(); paintTimer(); };
 window.timerNext=()=>{ timerStop(); timerStartNextSet(); };
 /* Au retour de l'app au premier plan : resync immédiat + reprise du wake lock (relâché pendant la mise en arrière-plan). */
 document.addEventListener&&document.addEventListener('visibilitychange',()=>{
@@ -4057,10 +4150,15 @@ screens.schedule = ()=>{
     if(ms.some(m=>m.status==='done'||m.status==='live'||matchSetsPlayed(m).length>0)) return `<span class="segdot live"${st} title="En cours"></span>`;
     return '';
   };
+  // Chrono visible ici aussi (pas seulement sur "Accueil") quand l'onglet
+  // affiché correspond bien à la phase réellement en train d'être jouée, pour
+  // que l'organisateur/référent puisse le suivre sans changer d'écran.
+  const showLiveTimer = liveRules().timed && orderKey(schedPhase)===orderKey(state.livePhase);
   let h=`<div style="padding:0">
     <h3 style="font-size:19px;margin-bottom:2px">Planning des matchs</h3>
     <p class="muted" style="margin:0 0 6px;font-size:13px">${phaseName} · ${nAvenir} match${nAvenir>1?'s':''} à venir</p>
     <p class="muted" style="margin:0 0 var(--pad-y);font-size:11.5px;line-height:1.4">🕐 Début ${vh.startTime||'09:00'} · un tour toutes les ${vRound+vSetup} min (${vRound} min de jeu + ${vSetup} min de mise en place)</p>
+    ${showLiveTimer?timerCard():''}
     <div class="filter-sticky">
     <p class="eyebrow" style="margin:0 0 6px">Phase</p>
     <div class="seg seg-strong">${schedPhaseKeys.map((k,i)=>{
@@ -4112,6 +4210,7 @@ screens.schedule = ()=>{
   });
   h+=`</div>`;
   host.innerHTML=h;
+  if(showLiveTimer) paintTimer();
 };
 
 let standPool=null;
@@ -4476,10 +4575,15 @@ screens.bracket = ()=>{
     cols+=`<div class="round"><div class="round-head"><h4>${names[ci]}</h4>${roundTime?`<div class="rtime">🕒 ${roundTime}</div>`:''}</div><div class="rmatches">${inner}</div></div>`;
   }
   const rw=164+nSets*20;
+  // Chrono visible ici aussi quand les phases finales se jouent au temps —
+  // une seule phase "finales" pour Principal et Consolante, donc valable
+  // quelle que soit la catégorie affichée (bracketCat).
+  const showLiveTimer = liveRules().timed && state.livePhase==='finales';
   host.innerHTML=`<div style="padding:0">
     <h3 style="font-size:19px;margin-bottom:4px">Phase finale · ${catLabel}</h3>
     <p class="lead" style="margin-top:0">${br.K} équipes qualifiées · départ en ${names[0]==='Finale'?'finale directe':names[0]+' de finale'}.</p>
     <p class="muted" style="margin:-4px 0 var(--pad-y);font-size:12px">🏆 Règles des finales : <b>${fmtNote}</b></p>
+    ${showLiveTimer?timerCard():''}
     ${catSeg}
     ${podiumBlock}
     <p class="eyebrow" style="margin:16px 0 8px">📋 Tableau</p>
@@ -4488,6 +4592,7 @@ screens.bracket = ()=>{
       <small class="muted">${started?'Appuyez sur un match pour saisir son score. Le tour suivant se génère automatiquement une fois le tour en cours terminé.':'Aperçu basé sur le classement actuel — les matchs seront créés au lancement des phases finales.'}</small>
     </div>
   </div>`;
+  if(showLiveTimer) paintTimer();
   // Les stades (1/8, 1/4, 1/2, Finale) restent visibles au défilement, figés juste
   // sous le volet Principal/Consolante : hauteur mesurée dynamiquement (dépend du
   // padding --pad-y, différent mobile/desktop) plutôt que codée en dur.
@@ -5158,6 +5263,18 @@ window.loadJoinedTournament=async (code,team)=>{
     state.pools=data.pools||[];
     state.schedule=data.schedule||[];
     state.myEntries=data.myEntries||{};
+    // Nécessaire au visuel d'avancement du chrono (captainTimerStatus) : le
+    // capitaine n'a pas d'autre moyen de connaître le tour/phase en cours ni
+    // si "set au temps" est actif (publicByCode ne renvoie pas toute la config).
+    const tc=data.timerConfig;
+    if(tc){
+      state.livePhase=tc.livePhase||'brassage';
+      state.config.phaseConsolante=!!tc.phaseConsolante;
+      if(tc.brassage) Object.assign(state.config, tc.brassage);
+      state.config.rules2=tc.rules2||null;
+      state.config.finale=tc.finale||null;
+    }
+    state.remoteTimer=data.timer||null;
     // L'arbitrage des phases à élimination directe n'est pas persisté en base
     // (voir assignBracketReferees) : on le recalcule ici aussi, par catégorie.
     assignBracketReferees(state.schedule.filter(m=>m.phase==='finalesPrincipal'||m.phase==='finalesPrincipal3e'));
@@ -5211,7 +5328,7 @@ async function liveRefreshTick(){
   }catch(e){ console.warn('Rafraîchissement auto:', e); }
   finally{ _liveRefreshBusy=false; }
 }
-setInterval(liveRefreshTick, 20000);
+setInterval(liveRefreshTick, 10000);
 window.filterTeams=(q)=>{
   const list=document.getElementById('teamList');
   const items=window._teams.filter(x=>x.t.toLowerCase().includes(q.toLowerCase()))
@@ -5272,7 +5389,8 @@ window.submitPhoneGate=async ()=>{
 };
 window.captainLeave=()=>{
   try{ localStorage.removeItem('vbo_captain'); }catch(_){}
-  state.captainTeam=null; state.joinCode=null; state.myEntries=null; state.pools=[]; state.schedule=[];
+  clearInterval(window._capTimerTick); window._capTimerTick=null;
+  state.captainTeam=null; state.joinCode=null; state.myEntries=null; state.pools=[]; state.schedule=[]; state.remoteTimer=null;
   go('home',{replace:true});
 };
 window.startMatch=async (id)=>{
@@ -5306,6 +5424,8 @@ screens.myMatches = ()=>{
   const upcoming=list.filter(m=>m.status==='todo');
   const played=list.filter(m=>m.status==='valid');
   const wins=played.filter(m=>wonBy(m,team)).length;
+  clearInterval(window._capTimerTick); window._capTimerTick=null;
+  const ts=captainTimerStatus(team);
   host.innerHTML=`<div style="padding:0">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
       <span class="ic" style="width:46px;height:46px;border-radius:13px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;font-size:22px">🏐</span>
@@ -5315,6 +5435,14 @@ screens.myMatches = ()=>{
       <div class="card" style="text-align:center;padding:12px"><div style="font-family:var(--font-display);font-size:22px;font-weight:800">${list.length}</div><small class="muted">matchs au total</small></div>
       <div class="card" style="text-align:center;padding:12px"><div style="font-family:var(--font-display);font-size:22px;font-weight:800">${wins}/${played.length}</div><small class="muted">victoires</small></div>
     </div>
+    ${!ts ? '' : `<div class="card" style="margin:10px 0 2px;padding:10px 14px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:20px;flex:none">${ts.ended?'🏁':ts.phase==='break'?'☕':'⏱️'}</span>
+        <div style="flex:1;font-size:12.5px;line-height:1.4">
+          <b>${ts.ended?'Chrono terminé · Tour '+ts.round:ts.phase==='break'?'Pause entre les sets · Tour '+ts.round:'Tour '+ts.round+' en cours'}</b>
+          ${(!ts.ended && ts.phase==='set')?`<div class="muted">⏭️ Tour ${ts.next} à venir</div>`:''}
+        </div>
+        ${(!ts.ended && ts.remaining!=null)?`<div id="capTmClock" style="font-family:var(--font-display);font-weight:800;font-size:19px;flex:none;color:${capTmClockColor(ts.remaining)}">${fmtClock(ts.remaining)}</div>`:''}
+      </div>`}
     ${(()=>{
       let h='';
       // "À arbitrer" reste toujours au-dessus des autres sections : une
@@ -5341,6 +5469,18 @@ screens.myMatches = ()=>{
     <button class="btn ghost sm" style="margin-top:16px" onclick="captainLeave()">Changer d'équipe / quitter</button>
     ${installBlock('full')}
   </div>`;
+  // Décompte purement local à l'affichage (le serveur n'est repoussé qu'au
+  // prochain rafraîchissement auto, cf. liveRefreshTick) : ne modifie jamais
+  // ts/remoteTimer, juste le texte affiché.
+  if(ts && !ts.ended && ts.running && ts.remaining!=null && ts.remaining>0){
+    let remaining=ts.remaining;
+    window._capTimerTick=setInterval(()=>{
+      remaining=Math.max(0,remaining-1);
+      const el=document.getElementById('capTmClock');
+      if(el){ el.textContent=fmtClock(remaining); el.style.color=capTmClockColor(remaining); }
+      if(remaining<=0) clearInterval(window._capTimerTick);
+    },1000);
+  }
 };
 // La saisie du score n'est possible que sur un match réellement en cours
 // ('live'/'pending' : démarré par l'arbitre, ou déjà saisi par ce capitaine).
@@ -5389,13 +5529,17 @@ function refMatchCard(m){
 screens.enterScore = (o)=>{
   setTop('Saisir le score'); tabbar.hidden=true;
   const list=state.captainList||[];
-  const m=list.find(x=>x.id===o.id)||list[0]||{id:'',a:'Équipe A',b:'Équipe B',pool:'–',court:'–',mine:null};
-  const nSets=Math.max(1, state.config.sets||1);
+  const m=list.find(x=>x.id===o.id)||list[0]||{id:'',a:'Équipe A',b:'Équipe B',pool:'–',court:'–',mine:null,phase:'brassage'};
+  // Règles de la phase DE CE MATCH (brassage/poules2/finales peuvent avoir un
+  // nombre de sets différent — cf. rulesForMatchPhase, déjà utilisé côté admin) :
+  // ne jamais retomber sur state.config.sets seul, qui est celui du brassage.
+  const r=rulesForMatchPhase(m.phase);
+  const nSets=Math.max(1, r.sets||1);
   const preSets=(m.mine&&m.mine.sets&&m.mine.sets.length)?m.mine.sets
     : (m.mine&&m.mine.sa!=null)?[[m.mine.sa,m.mine.sb]] : [];
   const rules = nSets===1
-    ? `1 set à ${state.config.pointsPerSet} points${state.config.twoPointGap?' · 2 points d\'écart':''}`
-    : `${nSets} sets à ${state.config.pointsPerSet} points${state.config.twoPointGap?' · 2 points d\'écart':''}`;
+    ? `1 set à ${r.pointsPerSet} points${r.twoPointGap?' · 2 points d\'écart':''}`
+    : `${nSets} sets à ${r.pointsPerSet} points${r.twoPointGap?' · 2 points d\'écart':''}`;
   const rows = Array.from({length:nSets}, (_,s)=>{
     const sa=preSets[s]?preSets[s][0]:''; const sb=preSets[s]?preSets[s][1]:'';
     return `<div class="scorebox"${s>0?' style="margin-top:12px"':''}>
@@ -5411,23 +5555,32 @@ screens.enterScore = (o)=>{
       <div style="margin-top:8px;font-size:13px" class="muted">${rules}</div>
     </div>
     <div style="margin-top:20px">${rows}</div>
+    ${nSets>1?`<p class="muted" style="font-size:12px;margin:10px 0 0">💡 Vous pouvez valider un set à la fois : revenez sur ce match une fois le set suivant terminé.</p>`:''}
     <button class="btn" style="margin-top:16px" id="submitScoreBtn" onclick="submitScore('${m.id}')">Valider mon score</button>
     <p class="demo-note" style="margin-top:16px">💡 Saisissez le score tel qu'il s'est joué. Le match est validé dès que l'autre capitaine a saisi le même score ; en cas d'écart, l'organisation tranche.</p>
   </div>`;
 };
 window.submitScore=async (id)=>{
-  const nSets=Math.max(1, state.config.sets||1);
+  const se=(state.schedule||[]).find(x=>x.id===id);
+  if(!se){ toast('⚠️ Match non synchronisé — revenez à la liste'); return; }
+  const nSets=Math.max(1, rulesForMatchPhase(se.phase).sets||1);
+  // Comme côté admin (submitAdminScore) : les sets suivants peuvent rester
+  // vides pour une saisie set par set, mais jamais un trou avant un set rempli.
   const sets=[];
+  let sawEmpty=false;
   for(let s=0;s<nSets;s++){
-    const a=parseInt((document.getElementById('sa'+s)||{}).value);
-    const b=parseInt((document.getElementById('sb'+s)||{}).value);
-    if(isNaN(a)||isNaN(b)){ toast(nSets>1?'Entrez les scores de chaque set':'Entrez les deux scores'); return; }
+    const aVal=((document.getElementById('sa'+s)||{}).value||'').trim();
+    const bVal=((document.getElementById('sb'+s)||{}).value||'').trim();
+    if(aVal===''&&bVal===''){ sawEmpty=true; continue; }
+    if(sawEmpty){ toast(`Set ${s} manquant avant le set ${s+1}`); return; }
+    const a=parseInt(aVal), b=parseInt(bVal);
+    if(isNaN(a)||isNaN(b)){ toast(nSets>1?`Entrez les deux scores du set ${s+1}`:'Entrez les deux scores'); return; }
     if(a===b){ toast(nSets>1?`Set ${s+1} : un set ne peut pas être à égalité`:'Un set ne peut pas finir à égalité'); return; }
     sets.push([a,b]);
   }
+  if(!sets.length){ toast(nSets>1?'Entrez le score d\'au moins un set':'Entrez les deux scores'); return; }
+  const complete=sets.length===nSets;
   const m=(state.captainList||[]).find(x=>x.id===id); if(!m){ go('myMatches',{replace:true}); return; }
-  const se=(state.schedule||[]).find(x=>x.id===id);
-  if(!se){ toast('⚠️ Match non synchronisé — revenez à la liste'); return; }
   const btn=document.getElementById('submitScoreBtn');
   if(btn){ btn.disabled=true; btn.textContent='Enregistrement…'; }
   try{
@@ -5438,7 +5591,7 @@ window.submitScore=async (id)=>{
     }else{
       state.myEntries = state.myEntries||{};
       state.myEntries[se.id] = {sa:sets[0][0], sb:sets[0][1], sets};
-      toast('Score enregistré — en attente de l\'autre capitaine');
+      toast(complete ? 'Score enregistré — en attente de l\'autre capitaine' : 'Set enregistré — revenez une fois le set suivant terminé');
     }
     go('myMatches',{replace:true});
   }catch(e){

@@ -182,6 +182,23 @@ function ensure_tournament_finished_column(PDO $pdo): void {
   $done = true;
 }
 
+// État du chrono vif (set au temps) de l'organisateur/référent, poussé depuis
+// son navigateur (cf. timerSave côté front) pour que les capitaines puissent
+// voir le même décompte en direct (tournaments.syncTimer / publicByCode).
+// Stocké en JSON brut (phase/round/endAt/running) : c'est un reflet transitoire
+// de l'état du chrono, pas une donnée structurée interrogée par SQL.
+function ensure_timer_state_column(PDO $pdo): void {
+  static $done = false;
+  if ($done) return;
+  $st = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                      WHERE table_schema = DATABASE() AND table_name = 'vbo_tournaments'
+                        AND column_name = 'timer_state'");
+  if ((int)$st->fetchColumn() === 0) {
+    $pdo->exec("ALTER TABLE vbo_tournaments ADD COLUMN timer_state TEXT NULL");
+  }
+  $done = true;
+}
+
 // Réduit un numéro à ses seuls chiffres, en ramenant +33/0033 vers le 0
 // français, pour comparer deux saisies (espaces, points, indicatif...)
 // sans jamais avoir à stocker/comparer le texte brut.
@@ -238,6 +255,21 @@ function clean_sets($sets): array {
     $clean[] = [$a, $b];
   }
   return $clean;
+}
+
+// Nombre de sets attendus pour un match selon sa phase — même mapping que
+// rulesForMatchPhase/rulesFor côté JS (admin/référent). Utilisé uniquement
+// par la double-saisie croisée des capitaines (matches.submitCaptainScore)
+// pour ne jamais valider un match tant que les DEUX capitaines n'ont pas
+// saisi tous les sets requis, même si leurs saisies partielles coïncident.
+function expected_sets_for_phase(array $cfg, ?string $phase): int {
+  $finales = ['finalesPrincipal', 'finalesConsolante', 'finalesPrincipal3e', 'finalesConsolante3e'];
+  $poules2 = ['principal', 'consolante'];
+  if (in_array($phase, $finales, true)) { $r = $cfg['finale'] ?? null; }
+  elseif (in_array($phase, $poules2, true)) { $r = $cfg['rules2'] ?? null; }
+  else { $r = null; }
+  $n = (is_array($r) ? ($r['sets'] ?? null) : null) ?? ($cfg['sets'] ?? null);
+  return $n ? (int)$n : 1;
 }
 
 $action = $_GET['action'] ?? '';
@@ -588,9 +620,12 @@ switch ($action) {
   // Double-saisie croisée des capitaines (public, sans authentification —
   // mêmes capitaines que tournaments.publicByCode, sans compte). Chaque
   // capitaine envoie son score ; on l'oriente dans le sens team_a/team_b du
-  // match pour pouvoir comparer les deux saisies. Si les deux concordent, le
-  // match est validé automatiquement ; sinon il reste 'pending' (= affiché
-  // "en attente" côté capitaines) jusqu'à l'arbitrage de l'organisation.
+  // match pour pouvoir comparer les deux saisies. Si les deux concordent ET
+  // portent sur tous les sets requis par la phase du match, le match est
+  // validé automatiquement ; sinon il reste 'pending' (= affiché "en attente"
+  // côté capitaines) — que ce soit par désaccord, ou simplement parce qu'un
+  // set par set est en cours (chaque capitaine peut saisir un set, revenir
+  // plus tard pour le suivant, exactement comme l'admin/référent).
   case 'matches.submitCaptainScore': {
     $matchId = (string)field('matchId', '');
     if (!is_uuid($matchId)) fail(400, "Match invalide.");
@@ -601,7 +636,7 @@ switch ($action) {
     $pdo = db();
     ensure_score_entries_table($pdo);
 
-    $st = $pdo->prepare("SELECT m.status, m.team_a, m.team_b, ta.name AS name_a, tb.name AS name_b
+    $st = $pdo->prepare("SELECT m.status, m.team_a, m.team_b, m.phase, m.tournament_id, ta.name AS name_a, tb.name AS name_b
                           FROM vbo_matches m
                           LEFT JOIN vbo_teams ta ON ta.id = m.team_a
                           LEFT JOIN vbo_teams tb ON tb.id = m.team_b
@@ -610,6 +645,12 @@ switch ($action) {
     $m = $st->fetch();
     if (!$m) fail(404, "Match introuvable.");
     if ($m['status'] === 'valid') fail(409, "Ce match est déjà validé.");
+
+    $tSt = $pdo->prepare("SELECT config FROM vbo_tournaments WHERE id = ?");
+    $tSt->execute([$m['tournament_id']]);
+    $tRow = $tSt->fetch();
+    $cfg = ($tRow && $tRow['config'] !== null) ? (json_decode($tRow['config'], true) ?: []) : [];
+    $expectedSets = expected_sets_for_phase($cfg, $m['phase']);
 
     $norm = fn($s) => mb_strtolower(trim((string)$s));
     if ($norm($teamName) === $norm($m['name_a'])) { $teamId = $m['team_a']; }
@@ -638,7 +679,14 @@ switch ($action) {
       break;
     }
 
-    if ($entries[0]['sets'] === $entries[1]['sets']) {
+    // Les deux saisies doivent être identiques ET porter sur tous les sets de
+    // la phase : sinon une coïncidence sur un set par set ("5 à 10" saisi par
+    // les deux pour le seul set 1 d'une finale en 2 sets) validerait le match
+    // avant que le second set ait même été joué.
+    $bothComplete = count(json_decode($entries[0]['sets'], true) ?: []) >= $expectedSets
+      && count(json_decode($entries[1]['sets'], true) ?: []) >= $expectedSets;
+
+    if ($bothComplete && $entries[0]['sets'] === $entries[1]['sets']) {
       $agreed = json_decode($entries[0]['sets'], true);
       try {
         $pdo->beginTransaction();
@@ -709,6 +757,23 @@ switch ($action) {
     if ($m['status'] === 'valid') fail(409, "Ce match est déjà validé.");
 
     $pdo->prepare("UPDATE vbo_matches SET started_at = COALESCE(started_at, NOW()) WHERE id = ?")->execute([$matchId]);
+    ok(['ok' => true]);
+    break;
+  }
+
+  // Pousse l'état courant du chrono "set au temps" de l'organisateur/référent
+  // (objet `timer` du front, cf. timerSave) pour qu'il soit relu par les
+  // capitaines via tournaments.publicByCode. Appelé à chaque changement d'état
+  // du chrono (démarrage/pause/reset/tour suivant), pas à chaque tick.
+  case 'tournaments.syncTimer': {
+    require_login();
+    $tid = (string)field('tid', '');
+    if (!is_uuid($tid)) fail(400, "Tournoi invalide.");
+    $pdo = db();
+    ensure_timer_state_column($pdo);
+    $state = field('state', null);
+    $json = $state === null ? null : json_encode($state, JSON_UNESCAPED_UNICODE);
+    $pdo->prepare("UPDATE vbo_tournaments SET timer_state = ? WHERE id = ?")->execute([$json, $tid]);
     ok(['ok' => true]);
     break;
   }
@@ -811,7 +876,8 @@ switch ($action) {
   case 'tournaments.publicByCode': {
     $code = strtoupper(trim((string)($_GET['code'] ?? '')));
     if ($code === '') fail(400, "Code manquant.");
-    $st = db()->prepare("SELECT id, name, status FROM vbo_tournaments WHERE join_code = ?");
+    ensure_timer_state_column(db());
+    $st = db()->prepare("SELECT id, name, status, live_phase, config, timer_state FROM vbo_tournaments WHERE join_code = ?");
     $st->execute([$code]);
     $t = $st->fetch();
     if (!$t || $t['status'] !== 'live') { ok(null); break; }
@@ -819,7 +885,29 @@ switch ($action) {
     if ($s === null) { ok(null); break; }
     $team = trim((string)($_GET['team'] ?? ''));
     $myEntries = $team !== '' ? my_entries_for_team(db(), $t['id'], $team) : [];
-    ok(['name' => $t['name'], 'pools' => $s['pools'], 'schedule' => $s['schedule'], 'myEntries' => $myEntries]);
+    // Pour le visuel d'avancement du chrono et la saisie des scores côté capitaine
+    // (cf. captainTimerStatus, screens.enterScore) : seuls live_phase et les règles
+    // de jeu/chrono de chaque phase sont utiles, jamais le reste de la config
+    // (horaires, etc.) qui n'a pas d'utilité publique. sets/pointsPerSet/twoPointGap
+    // sont indispensables pour que le capitaine saisisse le bon nombre de sets —
+    // sans ça, une finale en 2 sets n'affichait qu'un seul champ de score (nSets
+    // retombait toujours à 1, faute de ces champs côté capitaine).
+    $cfg = $t['config'] !== null ? json_decode($t['config'], true) : [];
+    $pickRules = function ($r) {
+      return is_array($r) ? [
+        'timed' => !empty($r['timed']), 'setMinutes' => $r['setMinutes'] ?? null, 'breakMinutes' => $r['breakMinutes'] ?? null,
+        'sets' => $r['sets'] ?? null, 'pointsPerSet' => $r['pointsPerSet'] ?? null, 'twoPointGap' => !empty($r['twoPointGap']),
+      ] : null;
+    };
+    $timerConfig = [
+      'livePhase' => $t['live_phase'] ?: 'brassage',
+      'phaseConsolante' => !empty($cfg['phaseConsolante']),
+      'brassage' => $pickRules($cfg),
+      'rules2' => $pickRules($cfg['rules2'] ?? null),
+      'finale' => $pickRules($cfg['finale'] ?? null),
+    ];
+    $timer = $t['timer_state'] !== null ? json_decode($t['timer_state'], true) : null;
+    ok(['name' => $t['name'], 'pools' => $s['pools'], 'schedule' => $s['schedule'], 'myEntries' => $myEntries, 'timerConfig' => $timerConfig, 'timer' => $timer]);
     break;
   }
 
