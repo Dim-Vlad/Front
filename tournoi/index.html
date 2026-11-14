@@ -337,13 +337,17 @@ input,select{font-family:inherit;font-size:15px}
   padding:12px max(16px,env(safe-area-inset-left,0)) calc(12px + env(safe-area-inset-bottom,0)) max(16px,env(safe-area-inset-right,0))}
 
 /* Bracket */
-.bracket{--bgap:22px;display:flex;align-items:stretch;overflow-x:auto;padding:4px 2px 12px}
+.bracket{--bgap:22px;display:flex;align-items:stretch;overflow-x:auto;overflow-y:clip;padding:4px 2px 12px}
 .round{display:flex;flex-direction:column;flex:0 0 var(--rw,150px);min-width:var(--rw,150px)}
 .round:not(:last-child){padding-right:var(--bgap)}
+.round-head{position:sticky;z-index:2;background:var(--surface);padding-bottom:2px}
 .round h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:center;margin:0;height:14px}
 .round .rtime{font-size:10.5px;color:var(--muted);text-align:center;margin:1px 0 8px;font-weight:600}
 .rmatches{flex:1;display:flex;flex-direction:column}
 .rmatch{flex:1;display:flex;flex-direction:column;justify-content:center;position:relative}
+.finale-slot{position:relative}
+.finale-slot .third-finale{position:absolute;top:100%;left:0;right:0;margin-top:10px}
+.finale-slot .third-finale h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:center;margin:0 0 6px}
 .bm{border:1px solid var(--line);border-radius:11px;overflow:hidden;font-size:12.5px;background:var(--surface);margin:7px 0}
 .bm .r{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 11px;min-height:36px}
 .bm .r+.r{border-top:1px solid var(--line)}
@@ -413,8 +417,9 @@ input,select{font-family:inherit;font-size:15px}
 .summary-row b{font-weight:700}
 .list-item{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--line);border-radius:14px}
 .list-item+.list-item{margin-top:10px}
-.tour{margin-top:10px}
-.tour-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+.tour{margin-top:10px;border:1px solid var(--line);border-radius:14px;padding:14px}
+.tour>.list-item{border:none;padding:0}
+.tour-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
 .tbtn{border:1px solid var(--line);background:var(--surface);color:var(--muted);font-family:inherit;font-weight:700;font-size:11.5px;padding:6px 11px;border-radius:9px;cursor:pointer}
 .tbtn:hover{color:var(--fg);border-color:var(--muted)}
 .tcard{cursor:pointer}
@@ -519,10 +524,13 @@ input,select{font-family:inherit;font-size:15px}
   .screen{--pad-y:30px;--pad-x:max(32px,env(safe-area-inset-left,0));padding:var(--pad-y) max(32px,env(safe-area-inset-right,0)) 40px var(--pad-x)}
   .topbar{padding-left:max(32px,env(safe-area-inset-left,0));padding-right:max(32px,env(safe-area-inset-right,0))}
   .screen.narrow{max-width:560px;margin-left:auto;margin-right:auto}
-  .tour-grid,.refs-grid,.sched-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .tour-grid,.refs-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .tour-grid .tour{margin-top:0}
   .refs-grid .list-item,.refs-grid .list-item+.list-item{margin-top:0}
-  .sched-grid .match,.sched-grid .match+.match{margin-top:0}
+  /* Planning : tous les matchs d'un même tour (même gymnase) sur une seule ligne,
+     au lieu de s'empiler — --n (posé en JS) = nb de matchs de ce groupe. */
+  .sched-grid{display:grid;grid-template-columns:repeat(var(--n,2),1fr);gap:12px;align-items:stretch}
+  .sched-grid .match,.sched-grid .match+.match{margin-top:0;height:100%}
 }
 </style>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -980,25 +988,52 @@ rebuildPools();
 // score (= 'pending', en attente de l'adversaire) des autres (= 'live', à saisir).
 // "Déjà saisi" vient de state.myEntries, relu depuis la base à chaque
 // chargement : survit à une perte de connexion / un rechargement de page.
+// Rang chronologique d'une phase, pour remettre les matchs du capitaine dans
+// l'ordre réel du tournoi : côté backend, state.schedule n'est trié que par
+// (round, heure), et le numéro de round repart à 1 à chaque nouvelle phase
+// (brassage, puis principal/consolante, puis finales) — un tri brut mélangerait
+// donc le round 1 de la phase 2 avec le round 1 du brassage. Principal et
+// consolante se jouent en parallèle (même rang), tout comme les deux tableaux
+// finaux et leurs petites finales.
+const PHASE_RANK={brassage:0, principal:1, consolante:1, finalesPrincipal:2, finalesConsolante:2, finalesPrincipal3e:2, finalesConsolante3e:2};
 function captainMatches(team){
   return (state.schedule||[]).map((m)=>{
     const mine = (state.myEntries&&state.myEntries[m.id]) || null;
     const status = m.status==='done' ? 'valid' : m.status==='live' ? (mine?'pending':'live') : 'todo';
     return {
-      id:m.id, round:m.r, time:m.time, pool:m.pool, court:m.court, gym:m.gym, ref:m.ref,
+      id:m.id, round:m.r, time:m.time, pool:m.pool, court:m.court, gym:m.gym, ref:m.ref, phase:m.phase,
       a:m.a, b:m.b,
       sa: status==='valid'?m.sa:null,
       sb: status==='valid'?m.sb:null,
       sets: status==='valid'?m.sets:null,
       status, mine,
     };
-  }).filter(m=>m.a===team||m.b===team);
+  }).filter(m=>m.a===team||m.b===team)
+    .sort((x,y)=>(PHASE_RANK[x.phase]??0)-(PHASE_RANK[y.phase]??0));
 }
 function captainRefMatches(team){
   return (state.schedule||[]).filter(m=>m.ref===team).map(m=>({
-    id:m.id, round:m.r, time:m.time, pool:m.pool, court:m.court, gym:m.gym,
+    id:m.id, round:m.r, time:m.time, pool:m.pool, court:m.court, gym:m.gym, phase:m.phase,
     a:m.a, b:m.b, status: m.status==='done'?'valid':m.status==='live'?'live':'todo',
   }));
+}
+// Badge de phase affiché sur les cartes de match côté capitaine : contrairement à
+// l'organisateur (qui filtre déjà son planning par phase), le capitaine voit tous
+// ses matchs mêlés au fil du tournoi (brassage, principal/consolante, tableau final).
+function matchPhaseChip(m){
+  if(m.phase==='finalesPrincipal3e'||m.phase==='finalesConsolante3e') return `<span class="chip">🥉 Petite finale</span>`;
+  if(m.phase==='finalesPrincipal'||m.phase==='finalesConsolante'){
+    // round1Count déduit du planning du capitaine lui-même (pas de state.bracketPrincipal
+    // côté capitaine, qui n'est alimenté que par les écrans admin) : le nombre de matchs
+    // déjà persistés au 1er tour de cette catégorie donne la taille K du tableau.
+    const round1Count=(state.schedule||[]).filter(x=>x.phase===m.phase && x.r===1).length || 1;
+    const K=Math.max(2, round1Count*2);
+    const label=roundNames(K)[(m.round||1)-1] || 'Phase finale';
+    return `<span class="chip">🏆 ${label}</span>`;
+  }
+  if(m.phase==='consolante') return `<span class="chip">🥈 Consolante</span>`;
+  if(m.phase==='principal') return `<span class="chip">🥇 Principal</span>`;
+  return `<span class="chip">🏐 Brassage</span>`;
 }
 // Planning global (organisateur) — généré depuis les poules/terrains réels
 function gymName(id){ const g=GYMS.find(x=>x.id===id); return g?g.name:id; }
@@ -1552,10 +1587,19 @@ async function advanceBracketIfRoundDone(phaseKey){
   // boucle, les paires encore en cours du tour précédent (ex: les 2 derniers
   // matchs d'un 1/4 de finale) ne seraient plus jamais réexaminées.
   const rounds=[...new Set(sched.map(m=>m.r||1))].sort((a,b)=>a-b);
+  // Taille structurelle du 1er tour (posé intégralement, d'un coup, au lancement du
+  // tableau) : base fiable pour savoir combien de matchs un tour DOIT compter une
+  // fois complet. Nécessaire pour repérer la vraie demi-finale (2 matchs) : les
+  // tours sont remplis progressivement paire par paire, donc un 1/4 ou un 1/8 peut
+  // transitoirement, lui aussi, n'avoir que 2 matchs déjà générés — sans cette
+  // taille attendue, la petite finale serait parfois créée à partir des perdants
+  // des 2 premiers 1/4 (ou 1/8) terminés plutôt que des 2 vraies demi-finales.
+  const round1Size = sched.filter(m=>(m.r||1)===1).length;
   const newMatches=[];
   rounds.forEach(r=>{
     const cur=sched.filter(m=>m.r===r).sort((a,b)=>(a.court||0)-(b.court||0));
     if(cur.length<=1) return; // pas de tour, ou déjà la finale : rien à générer après
+    const expectedSize = round1Size / Math.pow(2, r-1);
     const nextR=r+1;
     const existingNext=sched.filter(m=>m.r===nextR);
     for(let i=0;i*2+1<cur.length;i++){
@@ -1564,7 +1608,7 @@ async function advanceBracketIfRoundDone(phaseKey){
       if(existingNext.some(m=>m.court===i+1)) continue; // déjà généré (ré-saisie d'un score)
       const w1=matchWinner(m1)==='a'?m1.a:m1.b, w2=matchWinner(m2)==='a'?m2.a:m2.b;
       newMatches.push(...buildBracketMatches(phaseKey, nextR, [[w1,w2]]).matches.map(mm=>({...mm, court:i+1})));
-      if(cur.length===2){
+      if(expectedSize===2 && cur.length===2){
         const phase3e = phaseKey==='finalesConsolante' ? 'finalesConsolante3e' : 'finalesPrincipal3e';
         const already3e = (bracketData3e(catKey).schedule||[]).length>0;
         if(!already3e){
@@ -2104,14 +2148,14 @@ screens.dashboard = ()=>{
       : `<div class="empty">🏐<p>Aucun tournoi pour le moment.<br>Créez votre premier tournoi ci-dessous.</p></div>`;
   }
   host.innerHTML = `
-    <div class="screen" style="padding:0">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+    <div style="padding:0">
+      <div class="filter-sticky" style="display:flex;align-items:center;gap:10px">
         <div class="logo">${logoMark()} ${APP_NAME}</div>
         ${roleBadge()||'<span style="margin-left:auto"></span>'}
         ${themeToggleBtn()}
         <button class="btn ghost sm" onclick="vboSignOut('authed');go('home')">Quitter</button>
       </div>
-      <p class="eyebrow">Mes tournois</p>
+      <p class="eyebrow" style="margin-top:16px">Mes tournois</p>
       <h3 style="font-size:22px;margin:4px 0 14px">Espace organisateur</h3>
       <div class="seg seg-strong" style="margin-bottom:6px">
         <button class="${view==='active'?'on':''}" onclick="setDashView('active')">Actifs</button>
@@ -2999,8 +3043,8 @@ screens.orgLive = ()=>{
       const nxt=nextPhase(state.livePhase);
       const rowDefs={
         brassage:`<div class="phase"><div class="num">{N}</div><div style="flex:1"><b>Brassage</b><small>Poules de ${C.teamsPerPool} · ${fmtRules(rulesFor('brassage'))}</small></div>{B}</div>`,
-        poules2:`<div class="phase" style="cursor:pointer" onclick="setStandPhase('principal');go('standings')"><div class="num">{N}</div><div style="flex:1"><b>Principal &amp; Consolante</b><small>1ers–2es (+ meilleurs 3es repêchés) en Principal, les autres en Consolante · rejoué en poules${subRules('poules2')}</small></div>{B}</div>`,
-        finales:`<div class="phase" style="cursor:pointer" onclick="go('bracket')"><div class="num">{N}</div><div style="flex:1"><b>Phases finales</b><small>${C.phaseConsolante?'Tableau à élimination':'Les 1ers–2es du brassage basculent directement en tableau à élimination'}${subRules('finales')}</small></div>{B}</div>`,
+        poules2:`<div class="phase"><div class="num">{N}</div><div style="flex:1"><b>Principal &amp; Consolante</b><small>1ers–2es (+ meilleurs 3es repêchés) en Principal, les autres en Consolante · rejoué en poules${subRules('poules2')}</small></div>{B}</div>`,
+        finales:`<div class="phase"><div class="num">{N}</div><div style="flex:1"><b>Phases finales</b><small>${C.phaseConsolante?'Tableau à élimination':'Les 1ers–2es du brassage basculent directement en tableau à élimination'}${subRules('finales')}</small></div>{B}</div>`,
       };
       const rows=order.map((p,i)=> rowDefs[p].replace('{N}',i+1).replace('{B}',badge(i))).join('');
       const remaining = currentPhaseRemaining();
@@ -3973,9 +4017,9 @@ screens.schedule = ()=>{
       ? realGyms.map(g=>{
           const gm=ms.filter(m=>m.gym===g).sort((a,b)=>(a.court||0)-(b.court||0));
           if(!gm.length) return '';
-          return `<p class="eyebrow" style="margin:10px 0 4px;color:${gymColor(g)}">🏟️ ${g}</p><div class="sched-grid">${gm.map(m=>schedRow(m,showCat)).join('')}</div>`;
+          return `<p class="eyebrow" style="margin:10px 0 4px;color:${gymColor(g)}">🏟️ ${g}</p><div class="sched-grid" style="--n:${gm.length}">${gm.map(m=>schedRow(m,showCat)).join('')}</div>`;
         }).join('')
-      : `<div class="sched-grid">${[...ms].sort((a,b)=>(a.court||0)-(b.court||0)).map(m=>schedRow(m,showCat)).join('')}</div>`;
+      : `<div class="sched-grid" style="--n:${ms.length}">${[...ms].sort((a,b)=>(a.court||0)-(b.court||0)).map(m=>schedRow(m,showCat)).join('')}</div>`;
     const done=ms.every(m=>m.status==='done');
     // Un tour est "en cours" si un de ses matchs l'est réellement (démarré ou
     // déjà saisi côté capitaine) — PAS simplement parce que le tour précédent
@@ -4171,6 +4215,11 @@ screens.validate = ()=>{
     host.innerHTML=`<div style="padding:0"><div class="empty">⏳<p>Chargement…</p></div></div>`;
     return;
   }
+  // Au-delà du tout premier chargement : on affiche d'abord les conflits déjà
+  // connus, puis on revérifie en tâche de fond. Sans ça, un conflit apparu
+  // pendant qu'on était sur un autre onglet (ex. « Finale ») ne remontait
+  // jamais ici tant qu'on ne faisait pas un F5 complet.
+  if(state.currentDraftId) refreshConflicts(state.currentDraftId);
   const all=state.conflicts;
   if(!all.length){ host.innerHTML=`<div style="padding:0;text-align:center;margin-top:40px"><div style="font-size:46px">✅</div><h3 style="margin-top:10px">Aucun conflit</h3><p class="lead">Tous les scores concordent.</p></div>`; return; }
   const conflicts=all.filter(c=>c.type!=='waiting');
@@ -4316,40 +4365,47 @@ screens.bracket = ()=>{
     </div>
     <p class="muted" style="text-align:center;font-size:12px;margin:2px 0 4px">${p.real?'✅ Podium final — tous les résultats sont joués.':'Le podium se complète au fil des matchs décisifs joués.'}</p>` : '';
 
+  // Petite finale (3e place) : positionnée en absolu juste sous la carte de la finale
+  // (ancrée sur .rmatch, qui a déjà position:relative) plutôt qu'empilée dans le flux —
+  // ainsi la finale garde exactement le même centrage que n'importe quel autre tour
+  // (alignée avec le point de convergence des 2 demi-finales), que la petite finale
+  // soit affichée ou non. Elle n'existe réellement qu'une fois les deux demi-finales
+  // jouées (cf. advanceBracketIfRoundDone) : avant ça, ses deux équipes ne sont pas
+  // déterminables, donc on ne l'affiche pas.
+  let thirdBlockHtml='';
+  if(hasThird){
+    const m3=(bracketData3e(bracketCat).schedule||[])[0];
+    if(m3) thirdBlockHtml=`<div class="third-finale"><h4>🥉 Petite finale</h4>${bm(m3.a, m3.b, m3)}</div>`;
+  }
   let cols='';
   for(let ci=0; ci<names.length; ci++){
     const round=ci+1, real=byRound(round), nMatches=br.first.length/Math.pow(2,ci);
+    const isLast=ci===names.length-1;
     // Tant qu'un tour n'est pas entièrement généré (ex: une seule des 2 demies est déjà
     // jouable), il faut quand même réserver UNE case par match attendu — sinon le ou les
     // matchs déjà réels se retrouvent seuls dans la colonne et ne s'alignent plus avec
     // les 2 matchs du tour précédent dont ils dépendent (cf court = position dans le tour).
+    // La petite finale est ancrée (position:absolute) sur .finale-slot, un wrapper à la
+    // taille exacte de la carte (et non sur .rmatch, qui occupe toute la hauteur de la
+    // tranche de centrage) — sinon top:100% la placerait en bas de la tranche entière
+    // au lieu de juste sous la carte réellement affichée.
+    const wrapFinale=html=>isLast&&thirdBlockHtml ? `<div class="finale-slot">${html}${thirdBlockHtml}</div>` : html;
     let inner;
     if(round===1) inner=br.first.map(([a,b],i)=>{
       const m=real.find(x=>(x.court||i+1)===i+1);
-      return rm(m ? bm(m.a,m.b,m) : bm(a||'À déterminer', b||'À déterminer'));
+      return rm(wrapFinale(m ? bm(m.a,m.b,m) : bm(a||'À déterminer', b||'À déterminer')));
     }).join(''); // aperçu avant lancement
     else inner=Array.from({length:nMatches}, (_,i)=>{
       const m=real.find(x=>(x.court||i+1)===i+1);
-      return rm(m ? bm(m.a,m.b,m) : bm('À déterminer','À déterminer'));
+      return rm(wrapFinale(m ? bm(m.a,m.b,m) : bm('À déterminer','À déterminer')));
     }).join('');
     // Rappel de l'horaire de départ — uniquement sur le 1er tour : les tours suivants
     // démarrent dès que le tour précédent est joué, donc leur horaire théorique n'a
     // pas de valeur informative pour l'admin.
     const roundTime = round===1 ? (real.length ? real[0].time : bracketSlotTime(round)) : null;
-    cols+=`<div class="round"><h4>${names[ci]}</h4>${roundTime?`<div class="rtime">🕒 ${roundTime}</div>`:''}<div class="rmatches">${inner}</div></div>`;
+    cols+=`<div class="round"><div class="round-head"><h4>${names[ci]}</h4>${roundTime?`<div class="rtime">🕒 ${roundTime}</div>`:''}</div><div class="rmatches">${inner}</div></div>`;
   }
   const rw=164+nSets*20;
-  // Petite finale (3e place) : même habillage colonne que le tableau (.round/h4/.rmatch),
-  // mais dans son propre conteneur .bracket pour qu'elle reste seule :last-child et
-  // n'hérite pas des connecteurs visuels entre tours (qui supposent une colonne suivante).
-  let thirdCol='';
-  if(hasThird){
-    const m3=(bracketData3e(bracketCat).schedule||[])[0];
-    const inner=rm(m3 ? bm(m3.a, m3.b, m3) : bm('À déterminer','À déterminer'));
-    thirdCol=`<div class="bracket" style="--rw:${rw}px;margin-top:4px">
-      <div class="round"><h4>🥉 Petite finale</h4><div class="rmatches">${inner}</div></div>
-    </div>`;
-  }
   host.innerHTML=`<div style="padding:0">
     <h3 style="font-size:19px;margin-bottom:4px">Phase finale · ${catLabel}</h3>
     <p class="lead" style="margin-top:0">${br.K} équipes qualifiées · départ en ${names[0]==='Finale'?'finale directe':names[0]+' de finale'}.</p>
@@ -4358,11 +4414,31 @@ screens.bracket = ()=>{
     ${podiumBlock}
     <p class="eyebrow" style="margin:16px 0 8px">📋 Tableau</p>
     <div class="bracket" style="--rw:${rw}px">${cols}</div>
-    ${thirdCol}
     <div class="card" style="margin-top:16px;text-align:center;background:var(--surface-2);border:none">
       <small class="muted">${started?'Appuyez sur un match pour saisir son score. Le tour suivant se génère automatiquement une fois le tour en cours terminé.':'Aperçu basé sur le classement actuel — les matchs seront créés au lancement des phases finales.'}</small>
     </div>
   </div>`;
+  // Les stades (1/8, 1/4, 1/2, Finale) restent visibles au défilement, figés juste
+  // sous le volet Principal/Consolante : hauteur mesurée dynamiquement (dépend du
+  // padding --pad-y, différent mobile/desktop) plutôt que codée en dur.
+  requestAnimationFrame(()=>{
+    const seg=host.querySelector('.filter-sticky');
+    const h=seg?seg.offsetHeight:0;
+    host.querySelectorAll('.round-head').forEach(el=>{ el.style.top=`calc(${h}px - var(--pad-y))`; });
+    // La petite finale (position:absolute sous la carte de la finale, cf. plus haut) peut
+    // dépasser la hauteur naturelle de la colonne Finale dans les petits tableaux (ex. 4
+    // équipes, où cette colonne n'est haute que de la hauteur des 2 demi-finales) : on
+    // agrandit alors sa hauteur minimale pour qu'elle ne soit pas tronquée par
+    // overflow-y:clip sur .bracket, sans jamais toucher au centrage de la carte de la
+    // finale elle-même (toujours géré par le flex existant, donc toujours parfaitement
+    // aligné avec les 2 demi-finales, quelle que soit la hauteur finale de la colonne).
+    const thirdEl=host.querySelector('.third-finale');
+    if(thirdEl){
+      const gap=10, round=thirdEl.closest('.round'), head=round.querySelector('.round-head'), card=thirdEl.previousElementSibling;
+      const needed=Math.ceil(head.offsetHeight + card.offsetHeight + 2*(gap + thirdEl.offsetHeight));
+      if(round.offsetHeight < needed) round.style.minHeight=needed+'px';
+    }
+  });
 };
 function bm(a, b, m){
   // Un set par colonne (la largeur --rw de .bracket réserve déjà la place pour
@@ -4927,7 +5003,7 @@ window.refSignIn=async ()=>{
 screens.refSpace = ()=>{
   setTop(null); tabbar.hidden=true;
   const r=state.refProfile || state.referents.find(x=>x.id===state.refSession);
-  const all=state.tournaments.filter(t=>!t.archived);
+  const all=state.tournaments.filter(t=>!t.archived && t.status!=='draft');
   const live=all.filter(t=>t.status==='live');
   const others=all.filter(t=>t.status!=='live');
   const row=t=>{
@@ -4939,14 +5015,14 @@ screens.refSpace = ()=>{
       <span class="badge ${st.badge}" style="margin-left:auto;flex:none">${st.label}</span>
     </div>`;
   };
-  host.innerHTML=`<div class="screen" style="padding:0">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+  host.innerHTML=`<div style="padding:0">
+    <div class="filter-sticky" style="display:flex;align-items:center;gap:10px">
       <div class="logo">${logoMark()} ${APP_NAME}</div>
       ${roleBadge()||'<span style="margin-left:auto"></span>'}
       ${themeToggleBtn()}
       <button class="btn ghost sm" onclick="vboSignOut('refSession');go('home')">Quitter</button>
     </div>
-    <div class="card" style="background:var(--brand-soft);border:none;margin-bottom:14px;display:flex;align-items:center;gap:12px">
+    <div class="card" style="background:var(--brand-soft);border:none;margin:16px 0 14px;display:flex;align-items:center;gap:12px">
       <span style="width:42px;height:42px;border-radius:12px;background:var(--surface);color:var(--brand);display:grid;place-items:center;font-size:19px;flex:none">${ICON.referee}</span>
       <div><div style="font-family:var(--font-display);font-weight:800">${r?r.name:'Référent'}</div><small class="muted">Référent gymnase · suivi des tournois en direct</small></div>
     </div>
@@ -5043,16 +5119,22 @@ async function liveRefreshTick(){
       return;
     }
     const tid=state.currentDraftId;
-    if(window.vboDb && vboDb.isUuid(tid) && (cur.screen==='orgLive'||cur.screen==='schedule'||cur.screen==='validate')){
+    // Les 5 écrans de la barre d'onglets organisation/référent (orgLive,
+    // schedule, standings, validate, bracket) doivent tous rester à jour en
+    // tâche de fond : un admin/référent qui reste sur « Finale » ou « Poules »
+    // pendant qu'un capitaine démarre un match ou saisit un score ne doit pas
+    // avoir à faire un F5 pour que ça remonte.
+    const liveScreens=['orgLive','schedule','standings','validate','bracket'];
+    if(window.vboDb && vboDb.isUuid(tid) && liveScreens.includes(cur.screen)){
       const fresh = await vboDb.loadStructure(tid);
       applyLoadedStructure(fresh);
       // refreshConflicts se rend déjà lui-même pour 'orgLive'/'validate' (avec les
-      // données déjà à jour ci-dessus) ; seul 'schedule' a besoin d'un rendu manuel.
+      // données déjà à jour ci-dessus) ; les autres écrans ont besoin d'un rendu manuel.
       await refreshConflicts(tid);
       const cur2=navStack[navStack.length-1];
-      if(cur2 && cur2.screen==='schedule' && cur.screen==='schedule' && screens.schedule){
+      if(cur2 && cur2.screen===cur.screen && (cur.screen==='schedule'||cur.screen==='standings'||cur.screen==='bracket') && screens[cur.screen]){
         const y=host.scrollTop;
-        screens.schedule(cur2.opts||{});
+        screens[cur.screen](cur2.opts||{});
         host.scrollTop=y;
       }
     }
@@ -5209,12 +5291,13 @@ function matchCard(m,team,hi){
     : m.status==='todo'
     ? `<button class="btn ghost sm" style="width:100%" onclick="startMatch('${m.id}')">▶️ Démarrer le match</button>`
     : '';
+  const refPart = m.ref ? `<span style="display:flex;align-items:center;gap:5px"><span style="color:var(--brand);font-size:13px;display:inline-flex">${ICON.whistle}</span>Arbitre : <b style="color:var(--fg)">${m.ref}</b></span>` : '<span></span>';
   return `<div class="match"${hi?' style="border:2px solid var(--brand)"':''}>
     <div class="meta"><span class="chip"${hi?' style="background:var(--brand-soft);color:var(--brand)"':''}>Tour ${m.round} · ${m.time}</span><span>T${m.court} · ${m.gym}</span>${badge}</div>
     <div class="teams"><span class="t">${m.a}</span>
       <span class="sc">${scoreSC(scObj)}</span>
       <span class="t right">${m.b}</span></div>
-    ${refLine(m)}
+    <div class="muted" style="font-size:11px;margin-top:7px;display:flex;align-items:center;justify-content:space-between;gap:8px">${refPart}${matchPhaseChip(m)}</div>
     ${action}</div>`;
 }
 function refMatchCard(m){
@@ -5228,7 +5311,7 @@ function refMatchCard(m){
     <div class="teams"><span class="t">${m.a}</span>
       <span class="sc" style="color:var(--muted);font-weight:700">vs</span>
       <span class="t right">${m.b}</span></div>
-    <div class="muted" style="font-size:11px;margin-top:7px">🏐 Poule ${m.pool}</div>
+    <div class="muted" style="font-size:11px;margin-top:7px;display:flex;align-items:center;justify-content:space-between;gap:8px"><span>🏐 Poule ${m.pool}</span>${matchPhaseChip(m)}</div>
     ${action}
   </div>`;
 }

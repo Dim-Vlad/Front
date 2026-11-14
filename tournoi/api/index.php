@@ -612,13 +612,16 @@ switch ($action) {
     if ($m['status'] === 'valid') fail(409, "Ce match est déjà validé.");
 
     $norm = fn($s) => mb_strtolower(trim((string)$s));
-    if ($norm($teamName) === $norm($m['name_a'])) { $teamId = $m['team_a']; $side = 'a'; }
-    elseif ($norm($teamName) === $norm($m['name_b'])) { $teamId = $m['team_b']; $side = 'b'; }
+    if ($norm($teamName) === $norm($m['name_a'])) { $teamId = $m['team_a']; }
+    elseif ($norm($teamName) === $norm($m['name_b'])) { $teamId = $m['team_b']; }
     else fail(400, "Cette équipe ne joue pas ce match.");
 
-    // Toujours stocké dans le sens team_a/team_b du match, quel que soit le
-    // capitaine qui saisit, pour que les deux lignes soient comparables.
-    $canon = $side === 'a' ? $clean : array_map(fn($s) => [$s[1], $s[0]], $clean);
+    // Le client (screens.enterScore) affiche déjà les champs de saisie sous les noms
+    // réels team_a/team_b du match (pas "mon score/score adverse") : le score reçu est
+    // donc déjà dans le bon sens, quel que soit le capitaine qui saisit — ne PAS le
+    // réinverser ici (ça avait pour effet de rendre deux saisies identiques "différentes"
+    // quand c'est le capitaine de l'équipe B qui saisissait).
+    $canon = $clean;
 
     $pdo->prepare("INSERT INTO vbo_score_entries (id, match_id, team_id, sets, score_a, score_b, created_at)
                     VALUES (?,?,?,?,?,?,NOW())
