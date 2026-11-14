@@ -890,7 +890,7 @@ const state = {
     name:'',
     date:new Date().toISOString().slice(0,10), place:'', image:null,
     teams:24, gyms:2, courts:6, courtsPerGym:[3,3], pools:6, teamsPerPool:4,
-    sets:1, pointsPerSet:25, twoPointGap:true, timed:false, setMinutes:15,
+    sets:1, pointsPerSet:25, twoPointGap:true, timed:false, setMinutes:15, breakMinutes:3,
     winPts:3, lossPts:0,
     phaseConsolante:true, principalPools:4, principalTeamsPerPool:4, finalStart:'auto', distribution:'snake',
     scheduleMode:'rotation', splitPhase2ByGym:false,
@@ -2346,6 +2346,7 @@ function saveWizard(){
   if(g('b_sets')) state.config.sets=+g('b_sets').value;
   if(g('b_pts')) state.config.pointsPerSet=+g('b_pts').value;
   if(g('b_min')) state.config.setMinutes=+g('b_min').value;
+  if(g('b_brk')) state.config.breakMinutes=+g('b_brk').value;
   if(g('sw_b_timed')) state.config.timed=g('sw_b_timed').classList.contains('on');
   if(g('sw_b_gap')) state.config.twoPointGap=g('sw_b_gap').classList.contains('on');
   if(g('w_winpts')) state.config.winPts=+g('w_winpts').value;
@@ -2481,6 +2482,7 @@ function rulesCard(p, r){
       </div>
       <div id="${p}timeRow" ${r.timed?'':'hidden'}>
         <label class="field" style="margin-top:4px"><span>Durée du set (minutes)</span>${numCtl(p+'min', r.setMinutes, 5, 40)}</label>
+        <label class="field" style="margin-top:4px"><span>Pause entre les sets (minutes)</span>${numCtl(p+'brk', r.breakMinutes!=null?r.breakMinutes:3, 0, 15)}</label>
       </div>
       <div class="toggle">
         <div><b>2 points d'écart</b><small>Il faut 2 points d'avance pour gagner le set</small></div>
@@ -2493,7 +2495,7 @@ function wizRules(){
     <h3 style="font-size:19px">Règles de la phase de brassage</h3>
     <p class="lead">Ces règles s'appliquent au brassage. Celles des phases suivantes seront à définir au moment de les lancer.</p>
     <p class="eyebrow" style="margin:14px 0 2px">🔄 Phase de brassage</p>
-    ${rulesCard('b_', {sets:C.sets, pointsPerSet:C.pointsPerSet, twoPointGap:C.twoPointGap, timed:C.timed, setMinutes:C.setMinutes})}
+    ${rulesCard('b_', {sets:C.sets, pointsPerSet:C.pointsPerSet, twoPointGap:C.twoPointGap, timed:C.timed, setMinutes:C.setMinutes, breakMinutes:C.breakMinutes})}
     <div class="card" style="margin-top:16px;background:var(--brand-soft);border:1.5px solid var(--brand)">
       <div style="display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px;color:var(--brand)"><span style="font-size:18px">🕐</span> Horaire des matchs</div>
       <p style="font-size:12px;color:var(--muted);margin:7px 2px 12px;line-height:1.5">Les horaires du planning sont calculés à partir de ces paramètres. <b style="color:var(--fg)">Un tour</b> = durée d'un match + mise en place.</p>
@@ -3421,6 +3423,7 @@ window.confirmPhaseSwitch=async ()=>{
     sets: g('n_sets')?+g('n_sets').value:base.sets,
     pointsPerSet: g('n_pts')?+g('n_pts').value:base.pointsPerSet,
     setMinutes: g('n_min')?+g('n_min').value:base.setMinutes,
+    breakMinutes: g('n_brk')?+g('n_brk').value:base.breakMinutes,
     timed: g('sw_n_timed')?g('sw_n_timed').classList.contains('on'):base.timed,
     twoPointGap: g('sw_n_gap')?g('sw_n_gap').classList.contains('on'):base.twoPointGap,
   };
@@ -3653,7 +3656,7 @@ function phaseName(p){
   return 'Brassage';
 }
 function nextPhase(p){ const o=phaseOrder(); const i=o.indexOf(p); return i>=0&&i<o.length-1 ? o[i+1] : null; }
-function defaultRules(){ const c=state.config; return {sets:c.sets, pointsPerSet:c.pointsPerSet, twoPointGap:c.twoPointGap, timed:c.timed, setMinutes:c.setMinutes}; }
+function defaultRules(){ const c=state.config; return {sets:c.sets, pointsPerSet:c.pointsPerSet, twoPointGap:c.twoPointGap, timed:c.timed, setMinutes:c.setMinutes, breakMinutes:c.breakMinutes}; }
 function phaseRulesSet(p){ return p==='poules2' ? !!state.config.rules2 : p==='finales' ? !!state.config.finale : true; }
 function rulesFor(p){
   if(p==='poules2') return state.config.rules2 || defaultRules();
@@ -3680,13 +3683,19 @@ function liveRules(){ return rulesFor(state.livePhase); }
 function fmtRules(r){ const n=r.sets||1; return `${n===1?'1 set':n+' sets'} · ${r.timed?`au temps (${r.setMinutes||15} min)`:`${r.pointsPerSet||25} pts${r.twoPointGap?", 2 d'écart":''}`}`; }
 
 /* ---------- Chrono (set au temps) ---------- */
-const timer={ remaining:(liveRules().setMinutes||15)*60, running:false, round:1, id:null, ended:false, started:false, endAt:null, preAlertDone:false };
+const timer={ remaining:(liveRules().setMinutes||15)*60, running:false, round:1, id:null, ended:false, started:false, endAt:null, preAlertDone:false, phase:'set' };
 const PRE_ALERT=30; // secondes avant la fin pour la pré-alerte
 function fmtClock(s){ s=Math.max(0,s); const m=Math.floor(s/60), ss=s%60; return `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`; }
+// Durée pleine du décompte actuellement affiché : celle du set, ou celle de la
+// pause entre les sets quand le chrono a basculé en phase 'break'.
+function timerFull(){
+  const r=liveRules();
+  return (timer.phase==='break' ? (r.breakMinutes!=null?r.breakMinutes:3) : (r.setMinutes||15)) * 60;
+}
 function timerCard(){
   return `<div class="card" id="tmCard" style="margin-bottom:12px;text-align:center;padding:18px 16px">
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em">
-      <span>⏱️ Set au temps</span><span>·</span><span>Tour <span id="tmRound">${timer.round}</span></span>
+      <span id="tmPhaseLabel">${timer.phase==='break'?'☕ Pause entre les sets':'⏱️ Set au temps'}</span><span>·</span><span>Tour <span id="tmRound">${timer.round}</span></span>
     </div>
     <div id="tmDisplay" style="font-family:var(--font-display);font-weight:800;font-size:62px;line-height:1.05;margin:6px 0 2px;font-variant-numeric:tabular-nums">${fmtClock(timer.remaining)}</div>
     <div id="tmHint" class="muted" style="font-size:12.5px;margin-bottom:12px">Durée du set : ${liveRules().setMinutes||15} min</div>
@@ -3703,20 +3712,22 @@ function timerCard(){
 }
 function paintTimer(){
   const d=document.getElementById('tmDisplay'); if(!d) return;
-  const full=(liveRules().setMinutes||15)*60;
+  const full=timerFull();
   if(!timer.started){ timer.remaining=full; } // au repos : suit la durée configurée
   const timeout=timer.remaining<=0;            // chrono arrivé à zéro
   const stopped=timer.ended && !timeout;        // arrêté à la main (25 pts)
   const nearEnd=timer.running && timer.remaining>0 && timer.remaining<=PRE_ALERT; // dernières 30 s
+  const isBreak=timer.phase==='break';
   d.textContent=fmtClock(timer.remaining);
   d.style.color = timeout?'var(--danger)' : stopped?'var(--ok)' : nearEnd?'var(--warn,#b8860b)' : timer.running?'var(--brand)' : 'var(--fg)';
   const r=document.getElementById('tmRound'); if(r) r.textContent=timer.round;
+  const lbl=document.getElementById('tmPhaseLabel'); if(lbl) lbl.textContent = isBreak?'☕ Pause entre les sets':'⏱️ Set au temps';
   const t=document.getElementById('tmToggle');
-  if(t) t.textContent = timeout?'Temps écoulé' : stopped?'Reprendre' : timer.running?'Pause' : (timer.remaining<full?'Reprendre':'Lancer le tour');
+  if(t) t.textContent = timeout?'Temps écoulé' : stopped?'Reprendre' : timer.running?'Pause' : (timer.remaining<full?'Reprendre':(isBreak?'Lancer la pause':'Lancer le tour'));
   const h=document.getElementById('tmHint');
-  if(h) h.textContent = timeout?'🔔 Temps écoulé — sifflez la fin !' : stopped?'✋ Set arrêté (25 pts atteints)' : nearEnd?'⚠️ Dernières 30 secondes !' : `Durée du set : ${liveRules().setMinutes||15} min`;
+  if(h) h.textContent = timeout?'🔔 Temps écoulé — sifflez la fin !' : stopped?'✋ Set arrêté (25 pts atteints)' : nearEnd?'⚠️ Dernières 30 secondes !' : (isBreak?`Pause avant le tour ${timer.round} : ${liveRules().breakMinutes!=null?liveRules().breakMinutes:3} min`:`Durée du set : ${liveRules().setMinutes||15} min`);
   const c=document.getElementById('tmCard'); if(c) c.style.background = timeout?'var(--danger-soft)' : stopped?'var(--ok-soft)' : nearEnd?'var(--warn-soft,#f6e6c3)' : 'var(--surface)';
-  const e=document.getElementById('tmEnd'); if(e) e.disabled = timeout||stopped;
+  const e=document.getElementById('tmEnd'); if(e){ e.style.display = isBreak?'none':''; e.disabled = timeout||stopped; }
 }
 /* Audio débloqué au premier geste utilisateur (lancement du tour), réutilisé pour la sonnerie. */
 let _ac=null;
@@ -3758,17 +3769,43 @@ function timerPreBuzz(){
 let _wake=null;
 async function requestWake(){ try{ if('wakeLock' in navigator){ _wake=await navigator.wakeLock.request('screen'); } }catch(e){} }
 function releaseWake(){ try{ if(_wake){ _wake.release(); _wake=null; } }catch(e){} }
+// Fin du set (temps écoulé ou arrêt manuel à 25 pts) : bascule automatiquement
+// sur le décompte de la pause entre les sets (si elle est configurée), pour
+// qu'il n'y ait pas besoin de lancer un chrono à la main pour la pause.
+function timerStartBreak(){
+  const brk=liveRules().breakMinutes;
+  if(!brk){ timer.ended=true; paintTimer(); return; } // pas de pause configurée : comportement inchangé
+  timer.phase='break'; timer.ended=false; timer.started=true; timer.running=true; timer.preAlertDone=false;
+  timer.remaining=brk*60;
+  timer.endAt=Date.now()+timer.remaining*1000;
+  timer.id=setInterval(timerTick,250);
+  requestWake();
+  paintTimer();
+  toast('Pause entre les sets');
+}
+// Fin de la pause : prépare le tour suivant (chrono prêt, à lancer à la main
+// comme pour tout nouveau tour).
+function timerStartNextSet(){
+  timer.phase='set'; timer.round++; timer.ended=false; timer.started=false; timer.running=false; timer.preAlertDone=false;
+  timer.remaining=(liveRules().setMinutes||15)*60;
+  paintTimer();
+  toast('Tour '+timer.round+' prêt');
+}
 function timerTick(){
   // Temps restant calculé sur l'horloge réelle : fiable même après un gel (écran verrouillé / app en arrière-plan).
   if(timer.endAt){ timer.remaining = Math.max(0, Math.round((timer.endAt - Date.now())/1000)); }
   else { timer.remaining--; }
-  if(timer.remaining<=0){ timer.remaining=0; timerStop(); timerBuzz(); }
+  if(timer.remaining<=0){
+    timer.remaining=0; timerStop(); timerBuzz();
+    if(timer.phase==='set') timerStartBreak(); else timerStartNextSet();
+    return;
+  }
   else if(timer.remaining<=PRE_ALERT && !timer.preAlertDone){ timer.preAlertDone=true; timerPreBuzz(); }
   paintTimer();
 }
 function timerStop(){ if(timer.id){ clearInterval(timer.id); timer.id=null; } timer.running=false; timer.endAt=null; releaseWake(); }
 window.timerToggle=()=>{
-  if(timer.remaining<=0 || timer.ended){ timer.remaining=(liveRules().setMinutes||15)*60; timer.ended=false; timer.preAlertDone=false; }
+  if(timer.remaining<=0 || timer.ended){ timer.remaining=timerFull(); timer.ended=false; timer.preAlertDone=false; }
   if(timer.running){ timerStop(); }
   else {
     ensureAudio();                                    // débloque l'audio (geste utilisateur)
@@ -3776,13 +3813,17 @@ window.timerToggle=()=>{
     timer.endAt = Date.now() + timer.remaining*1000;  // ancre horloge réelle
     timer.id=setInterval(timerTick,250);              // tick fin → resync rapide au réveil
     requestWake();                                    // garde l'écran allumé
-    toast('Tour '+timer.round+' lancé');
+    toast(timer.phase==='break'?'Pause lancée':'Tour '+timer.round+' lancé');
   }
   paintTimer();
 };
-window.timerEndSet=()=>{ timerStop(); timer.ended=true; paintTimer(); toast('Set arrêté — 25 points atteints'); };
-window.timerReset=()=>{ timerStop(); timer.ended=false; timer.started=false; timer.preAlertDone=false; timer.remaining=(liveRules().setMinutes||15)*60; paintTimer(); };
-window.timerNext=()=>{ timerStop(); timer.ended=false; timer.preAlertDone=false; timer.round++; timer.remaining=(liveRules().setMinutes||15)*60; paintTimer(); toast('Tour '+timer.round+' prêt'); };
+window.timerEndSet=()=>{
+  timerStop();
+  if(timer.phase==='set'){ timerStartBreak(); toast('Set arrêté — 25 points atteints'); }
+  else { timer.ended=true; paintTimer(); }
+};
+window.timerReset=()=>{ timerStop(); timer.phase='set'; timer.ended=false; timer.started=false; timer.preAlertDone=false; timer.remaining=(liveRules().setMinutes||15)*60; paintTimer(); };
+window.timerNext=()=>{ timerStop(); timerStartNextSet(); };
 /* Au retour de l'app au premier plan : resync immédiat + reprise du wake lock (relâché pendant la mise en arrière-plan). */
 document.addEventListener&&document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible' && timer.running){ requestWake(); timerTick(); }
