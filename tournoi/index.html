@@ -890,7 +890,7 @@ const state = {
   config:{
     name:'',
     date:new Date().toISOString().slice(0,10), place:'', image:null,
-    teams:24, gyms:2, courts:6, courtsPerGym:[3,3], pools:6, teamsPerPool:4,
+    teams:24, gyms:1, courts:6, courtsPerGym:[6], pools:6, teamsPerPool:4,
     sets:1, pointsPerSet:25, twoPointGap:true, timed:false, setMinutes:15, breakMinutes:3,
     winPts:3, lossPts:0,
     phaseConsolante:true, principalPools:4, principalTeamsPerPool:4, finalStart:'auto', distribution:'snake',
@@ -2506,6 +2506,7 @@ function wizRules(){
         <input id="w_starttime" type="time" value="${C.startTime||'09:00'}" onchange="saveWizard();updateSchedPreview()">
       </label>
       <label class="field" style="margin:10px 0 0"><span>Durée d'un match (min)</span>${numCtl('w_roundmin',C.roundMinutes||20,5,120)}</label>
+      <p id="w_roundEstimate" class="muted" style="font-size:11.5px;margin:4px 2px 0;line-height:1.4" ${C.timed?'hidden':''}>ℹ️ Au point, cette durée n'est qu'une estimation : la durée réelle d'un match peut varier.</p>
       <label class="field" style="margin:10px 0 0"><span>Mise en place entre les tours (min)</span>${numCtl('w_setupmin',C.setupMinutes!=null?C.setupMinutes:10,0,60)}</label>
       <div id="schedPreview" style="font-size:12px;margin:12px 2px 0;line-height:1.45;font-weight:700;color:var(--brand)"></div>
     </div>
@@ -2532,12 +2533,17 @@ function wizRules(){
 window.toggleSw=(id)=>{document.getElementById(id).classList.toggle('on');};
 window.toggleTimed=(p)=>{p=p||''; const on=document.getElementById('sw_'+p+'timed').classList.contains('on');
   document.getElementById(p+'timeRow').hidden=!on; document.getElementById(p+'ptsRow').hidden=on;
+  const noteEl=document.getElementById(HORAIRE_ESTIMATE_NOTE[p]); if(noteEl) noteEl.hidden=on;
   if(on) syncRoundFromTimer(p);};
 // Quand le set est joué au temps, la "Durée d'un match" du bloc Horaire est
 // redondante à saisir manuellement : elle découle directement des règles de
 // match (sets × durée du set + pauses entre sets). On la pré-remplit donc
 // automatiquement, sans empêcher l'organisateur de la corriger ensuite à la main.
+// La "Mise en place entre les tours" est synchronisée de la même façon sur la
+// "Pause entre les sets" : même logique de transition, même durée par défaut.
 const HORAIRE_ROUND_FIELD={b_:'w_roundmin', n_:'nh_round'};
+const HORAIRE_SETUP_FIELD={b_:'w_setupmin', n_:'nh_setup'};
+const HORAIRE_ESTIMATE_NOTE={b_:'w_roundEstimate', n_:'nh_roundEstimate'};
 function syncRoundFromTimer(p){
   const roundId=HORAIRE_ROUND_FIELD[p]; if(!roundId) return;
   const swEl=document.getElementById('sw_'+p+'timed'); if(!swEl || !swEl.classList.contains('on')) return;
@@ -2546,6 +2552,8 @@ function syncRoundFromTimer(p){
   const sets=Math.max(1, parseInt((g(p+'sets')||{}).value)||1);
   const setM=parseInt(minEl.value)||0, brkM=parseInt((g(p+'brk')||{}).value)||0;
   roundEl.value = sets*setM + Math.max(0, sets-1)*brkM;
+  const setupEl=g(HORAIRE_SETUP_FIELD[p]);
+  if(setupEl) setupEl.value = brkM;
   if(p==='b_'){ saveWizard(); updateSchedPreview(); } else { updatePhaseSchedPreview(); }
 }
 
@@ -2554,8 +2562,25 @@ function principalQualCount(){
   const n=(state.pools||[]).reduce((s,p)=> s+Math.min(2,(p.teams||[]).length), 0);
   return n || Math.floor((C.teams||0)/2);
 }
+// Une fois le Principal (et la Consolante) réellement joués, le nombre de
+// qualifiés pour les finales n'est plus l'estimation du brassage
+// (principalQualCount = « 1ers+2es » théoriques avant même le brassage) mais
+// l'effectif réel de chaque catégorie — on retient le plus grand des deux pour
+// que le menu ne plafonne jamais le tableau de la catégorie qui a le plus
+// d'équipes (chaque bracket se borne de toute façon à son propre effectif
+// réel dans buildBracket, donc rien n'oblige l'autre catégorie à ce nombre).
+// Tant que le Principal n'a pas encore été construit (aperçu dans l'assistant,
+// avant même le brassage), on retombe sur l'estimation du brassage.
 function autoFinalLabel(){
-  const qual=principalQualCount();
+  let qual;
+  if(state.phasePrincipal && state.phasePrincipal.pools && state.phasePrincipal.pools.length){
+    qual = categoryRanking(phaseData('principal')).length;
+    if(state.config.phaseConsolante && state.phaseConsolante && state.phaseConsolante.pools && state.phaseConsolante.pools.length){
+      qual = Math.max(qual, categoryRanking(phaseData('consolante')).length);
+    }
+  } else {
+    qual = principalQualCount();
+  }
   let K=1; while(K*2<=qual) K*=2; K=Math.max(2,K); // plus grande puissance de 2 ≤ qualifiés
   return {K, qual, label: K===2?'Finale directe':'1/'+(K/2)+' de finale ('+K+' équipes)'};
 }
@@ -3160,6 +3185,13 @@ window.openPhaseSwitch=()=>{
   }
   const r=rulesFor(nxt); // défaut = copie des règles de brassage tant que non définies
   const hor=horaireFor(nxt); // horaire de la phase suivante (défaut = horaire du brassage)
+  // Tant que l'horaire de cette phase n'a pas encore été fixé (1ère ouverture de
+  // cette fiche pour ce passage de phase), on propose l'heure actuelle plutôt que
+  // l'heure de début de la phase précédente (hor.startTime) : l'admin ouvre cette
+  // fiche précisément quand la phase en cours vient réellement de se terminer, donc
+  // « maintenant » est l'estimation la plus fiable du départ de la phase suivante.
+  const horAlreadySet = nxt==='poules2' ? !!C.horaire2 : nxt==='finales' ? !!C.horaireF : true;
+  const startDefault = horAlreadySet ? (hor.startTime||'09:00') : nowHHMM();
   const intro = nxt==='finales'
     ? 'Les équipes qualifiées sont basculées dans les tableaux à élimination.'
     : 'Les équipes sont redistribuées : 1ers–2es (+ meilleurs 3es repêchés si besoin) en Principal'+(C.phaseConsolante?', les autres en Consolante.':'.');
@@ -3229,13 +3261,16 @@ window.openPhaseSwitch=()=>{
     <div class="card" style="background:var(--brand-soft);border:1.5px solid var(--brand)">
       <p style="font-size:12px;color:var(--muted);margin:0 2px 10px;line-height:1.45">Ajustez les horaires pour cette phase. <b style="color:var(--fg)">Un tour</b> = durée d'un match + mise en place.</p>
       <label class="field" style="margin:0"><span>Heure de début</span>
-        <input id="nh_start" type="time" value="${hor.startTime||'09:00'}" onchange="updatePhaseSchedPreview()">
+        <input id="nh_start" type="time" value="${startDefault}" onchange="updatePhaseSchedPreview()">
       </label>
       <label class="field" style="margin:10px 0 0"><span>Durée d'un match (min)</span>${numCtl('nh_round',hor.roundMinutes||20,5,120)}</label>
+      <p id="nh_roundEstimate" class="muted" style="font-size:11.5px;margin:4px 2px 0;line-height:1.4" ${r.timed?'hidden':''}>ℹ️ Au point, cette durée n'est qu'une estimation : la durée réelle d'un match peut varier.</p>
       <label class="field" style="margin:10px 0 0"><span>Mise en place entre les tours (min)</span>${numCtl('nh_setup',hor.setupMinutes!=null?hor.setupMinutes:10,0,60)}</label>
       <div id="nhPreview" style="font-size:12px;margin:12px 2px 0;line-height:1.45;font-weight:700;color:var(--brand)"></div>
+      <button class="btn" id="nhValidateBtn" style="margin-top:12px;width:100%" onclick="validateHoraire()">✅ Valider cet horaire</button>
+      <p id="nhValidateHint" style="font-size:12px;color:var(--danger);margin:8px 2px 0;font-weight:700">⚠️ Validez l'horaire ci-dessus pour pouvoir démarrer la phase.</p>
     </div>
-    <button class="btn" style="margin-top:16px;width:100%" id="phaseSwitchBtn" onclick="confirmPhaseSwitch()">Démarrer « ${phaseName(nxt)} »</button>
+    <button class="btn" style="margin-top:16px;width:100%" id="phaseSwitchBtn" onclick="confirmPhaseSwitch()" disabled>Démarrer « ${phaseName(nxt)} »</button>
     <button class="btn ghost" style="margin-top:8px;width:100%" onclick="closeSheet()">Annuler</button>
   `);
   ['nh_round','nh_setup'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.addEventListener('live',updatePhaseSchedPreview); el.addEventListener('change',updatePhaseSchedPreview); } });
@@ -3280,6 +3315,20 @@ window.updatePhaseSchedPreview=function(){
   box.innerHTML = n>1
     ? `Un tour toutes les ${per} min · Tour 1 à ${fmt(base)}, dernier tour à ${fmt(base+(n-1)*per)}`
     : `Un tour toutes les ${per} min · Tour 1 à ${fmt(base)}`;
+  // Toute modification de l'horaire (y compris le tout premier affichage) remet
+  // le bouton « Démarrer » sous clé : il faut re-valider explicitement dès que
+  // l'heure de début, la durée d'un match ou la mise en place changent, pour ne
+  // jamais lancer la phase sur un horaire qui n'a pas été relu après correction.
+  const vb=g('nhValidateBtn'); if(vb){ vb.disabled=false; vb.textContent="✅ Valider cet horaire"; }
+  const hint=g('nhValidateHint'); if(hint) hint.style.display='';
+  const sw=g('phaseSwitchBtn'); if(sw) sw.disabled=true;
+};
+window.validateHoraire=()=>{
+  const g=id=>document.getElementById(id);
+  const vb=g('nhValidateBtn'); if(vb){ vb.disabled=true; vb.textContent='✅ Horaire validé'; }
+  const hint=g('nhValidateHint'); if(hint) hint.style.display='none';
+  const sw=g('phaseSwitchBtn'); if(sw) sw.disabled=false;
+  toast('Horaire validé ✓');
 };
 // Permet à l'admin de corriger à la main la répartition automatique des qualifiés
 // en poules de Principale/Consolante, avant de démarrer la phase (bouton dans la
@@ -3743,6 +3792,7 @@ function setPhaseRules(p, r){ if(p==='poules2') state.config.rules2=r; else if(p
 // Horaire par phase : le brassage utilise l'horaire défini dans l'assistant ;
 // chaque phase suivante peut avoir le sien (défaut = reprise de l'horaire du brassage).
 function baseHoraire(){ const c=state.config; return {startTime:c.startTime||'09:00', roundMinutes:c.roundMinutes||20, setupMinutes:c.setupMinutes!=null?c.setupMinutes:10}; }
+function nowHHMM(){ const d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
 function horaireFor(p){
   const c=state.config;
   if(p==='poules2') return c.horaire2 || baseHoraire();
@@ -4037,6 +4087,21 @@ function rulesForMatchPhase(phase){
   if(phase==='finalesPrincipal'||phase==='finalesConsolante'||phase==='finalesPrincipal3e'||phase==='finalesConsolante3e') return rulesFor('finales');
   return rulesFor('brassage');
 }
+// Valide le score d'un set selon le réglage "2 points d'écart" :
+// désactivé -> le set est plafonné à pointsPerSet (1 point d'écart suffit pour gagner,
+// mais le score ne peut pas aller au-delà) ; activé -> pas de plafond (avantages), mais
+// il faut au moins 2 points d'écart entre les deux équipes. Retourne un message
+// d'erreur (à afficher en toast), ou null si le score est valide.
+function setScoreError(a, b, r, label){
+  if(a===b) return (label?`${label} : `:'')+'un set ne peut pas finir à égalité';
+  const cap=r.pointsPerSet||25;
+  if(r.twoPointGap){
+    if(Math.abs(a-b)<2) return (label?`${label} : `:'')+'il faut au moins 2 points d\'écart entre les deux équipes';
+  } else if(Math.max(a,b)>cap){
+    return (label?`${label} : `:'')+`le score ne peut pas dépasser ${cap} points`;
+  }
+  return null;
+}
 window.openAdminScoreSheet=(id)=>{
   const m=findMatchById(id); if(!m) return;
   const nSets=Math.max(1, rulesForMatchPhase(m.phase).sets||1);
@@ -4072,7 +4137,8 @@ window.adminStartMatchInSheet=async (id)=>{
 };
 window.submitAdminScore=async (id)=>{
   const mFor=findMatchById(id);
-  const nSets=Math.max(1, rulesForMatchPhase(mFor&&mFor.phase).sets||1);
+  const r=rulesForMatchPhase(mFor&&mFor.phase);
+  const nSets=Math.max(1, r.sets||1);
   const sets=[];
   let sawEmpty=false;
   for(let s=0;s<nSets;s++){
@@ -4083,7 +4149,8 @@ window.submitAdminScore=async (id)=>{
     if(sawEmpty){ toast(`Set ${s} manquant avant le set ${s+1}`); return; }
     const a=parseInt(aVal), b=parseInt(bVal);
     if(isNaN(a)||isNaN(b)){ toast(`Entrez les deux scores du set ${s+1}`); return; }
-    if(a===b){ toast(nSets>1?`Set ${s+1} : un set ne peut pas être à égalité`:'Un set ne peut pas finir à égalité'); return; }
+    const err=setScoreError(a,b,r,nSets>1?`Set ${s+1}`:null);
+    if(err){ toast(err); return; }
     sets.push([a,b]);
   }
   if(!sets.length){ toast(nSets>1?'Entrez le score d\'au moins un set':'Entrez les deux scores'); return; }
@@ -4303,7 +4370,7 @@ window.setTieOrder=(tieKey, team, newPos)=>{
   openTieBreakEditor(tieKey);
   render('standings');
 };
-window.confirmTieOrder=(tieKey)=>{
+window.confirmTieOrder=async (tieKey)=>{
   state.config.poolTieOrder = state.config.poolTieOrder || {};
   const names=tieKey.split('|');
   const order=(state.config.poolTieOrder[tieKey]||names.slice()).slice();
@@ -4311,6 +4378,16 @@ window.confirmTieOrder=(tieKey)=>{
   closeSheet();
   render('standings');
   toast('Ordre confirmé');
+  // Persistance immédiate : sans ça, poolTieOrder ne vivait qu'en mémoire et
+  // était effacé au prochain Object.assign(state.config, t.config) dans
+  // openTournament() (rechargement de page, retour au tableau de bord, autre
+  // appareil) — la clôture de phase redevenait alors bloquée malgré la
+  // confirmation de l'ordre.
+  const t=state.tournaments.find(x=>x.id===state.currentDraftId);
+  if(window.vboDb && t && vboDb.isUuid(t.id)){
+    t.config=JSON.parse(JSON.stringify(state.config));
+    try{ await vboDb.save(t, {}); }catch(e){ console.warn('Confirmation ordre égalité:', e); toast('⚠️ Enregistrement cloud échoué — réessayez'); }
+  }
 };
 window.openTieBreakEditor=(tieKey)=>{
   const names=tieKey.split('|');
@@ -4449,7 +4526,8 @@ window.openResolveManual=(matchId)=>{
 };
 window.submitResolveManual=async (matchId)=>{
   const m=findMatchById(matchId);
-  const nSets=Math.max(1, rulesForMatchPhase(m&&m.phase).sets||1);
+  const r=rulesForMatchPhase(m&&m.phase);
+  const nSets=Math.max(1, r.sets||1);
   const sets=[];
   for(let s=0;s<nSets;s++){
     const aVal=((document.getElementById('rsc_a'+s)||{}).value||'').trim();
@@ -4457,7 +4535,8 @@ window.submitResolveManual=async (matchId)=>{
     if(aVal===''&&bVal==='') continue;
     const a=parseInt(aVal), b=parseInt(bVal);
     if(isNaN(a)||isNaN(b)){ toast(`Entrez les deux scores du set ${s+1}`); return; }
-    if(a===b){ toast('Un set ne peut pas finir à égalité'); return; }
+    const err=setScoreError(a,b,r,nSets>1?`Set ${s+1}`:null);
+    if(err){ toast(err); return; }
     sets.push([a,b]);
   }
   if(!sets.length){ toast('Entrez au moins le score d\'un set'); return; }
@@ -5563,7 +5642,8 @@ screens.enterScore = (o)=>{
 window.submitScore=async (id)=>{
   const se=(state.schedule||[]).find(x=>x.id===id);
   if(!se){ toast('⚠️ Match non synchronisé — revenez à la liste'); return; }
-  const nSets=Math.max(1, rulesForMatchPhase(se.phase).sets||1);
+  const r=rulesForMatchPhase(se.phase);
+  const nSets=Math.max(1, r.sets||1);
   // Comme côté admin (submitAdminScore) : les sets suivants peuvent rester
   // vides pour une saisie set par set, mais jamais un trou avant un set rempli.
   const sets=[];
@@ -5575,7 +5655,8 @@ window.submitScore=async (id)=>{
     if(sawEmpty){ toast(`Set ${s} manquant avant le set ${s+1}`); return; }
     const a=parseInt(aVal), b=parseInt(bVal);
     if(isNaN(a)||isNaN(b)){ toast(nSets>1?`Entrez les deux scores du set ${s+1}`:'Entrez les deux scores'); return; }
-    if(a===b){ toast(nSets>1?`Set ${s+1} : un set ne peut pas être à égalité`:'Un set ne peut pas finir à égalité'); return; }
+    const err=setScoreError(a,b,r,nSets>1?`Set ${s+1}`:null);
+    if(err){ toast(err); return; }
     sets.push([a,b]);
   }
   if(!sets.length){ toast(nSets>1?'Entrez le score d\'au moins un set':'Entrez les deux scores'); return; }
