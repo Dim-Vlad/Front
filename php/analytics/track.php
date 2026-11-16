@@ -25,10 +25,10 @@ if ($sessionId === '' || $url === '') {
     exit;
 }
 
-// Bruit à exclure : robots d'indexation, qui ne représentent pas de
-// véritables visiteurs.
+// Bruit à exclure : robots d'indexation et connexions admin (leur propre
+// navigation sur le site ne doit pas fausser les statistiques).
 $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
-if (analytics_is_bot($ua)) {
+if (analytics_is_bot($ua) || has_role('admin')) {
     echo json_encode(['success' => true]);
     exit;
 }

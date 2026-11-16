@@ -890,7 +890,7 @@ const state = {
   config:{
     name:'',
     date:new Date().toISOString().slice(0,10), place:'', image:null,
-    teams:24, gyms:1, courts:6, courtsPerGym:[6], pools:6, teamsPerPool:4,
+    teams:24, gyms:1, courts:3, courtsPerGym:[3], pools:6, teamsPerPool:4,
     sets:1, pointsPerSet:25, twoPointGap:true, timed:false, setMinutes:15, breakMinutes:3,
     winPts:3, lossPts:0,
     phaseConsolante:true, principalPools:4, principalTeamsPerPool:4, finalStart:'auto', distribution:'snake',
@@ -1664,7 +1664,17 @@ function ensureFinalesProposal(){
 window.invalidateFinalesProposal=()=>{ state._finalesEdited=false; state._finalesProposal=null; };
 // Scores en conflit (saisies capitaines contradictoires à arbitrer) : voir state.conflicts,
 // chargé par refreshConflicts() et consommé par renderTabs / screens.orgLive / screens.validate.
+// Verrou anti-boucle : screens.validate() relance refreshConflicts() en tâche de
+// fond à chaque affichage, et refreshConflicts() réaffiche l'écran une fois la
+// requête terminée — sans ce verrou, ce réaffichage redéclenchait lui-même un
+// nouveau refreshConflicts(), qui réaffichait l'écran, etc. en boucle infinie
+// (requêtes réseau en rafale, page qui semble figée). Le verrou reste actif
+// pendant tout le ré-rendu déclenché par la résolution, pour que l'appel que
+// ce ré-rendu tente de refaire soit bien ignoré.
+let _conflictsRefreshing = false;
 async function refreshConflicts(tid){
+  if(_conflictsRefreshing) return;
+  _conflictsRefreshing = true;
   try{
     state.conflicts = await vboDb.listConflicts(tid);
   }catch(e){
@@ -1676,6 +1686,7 @@ async function refreshConflicts(tid){
     renderTabs(cur);
     screens[cur]();
   }
+  _conflictsRefreshing = false;
 }
 
 /* ---------------- Router ---------------- */
@@ -4464,7 +4475,8 @@ screens.validate = ()=>{
   // Au-delà du tout premier chargement : on affiche d'abord les conflits déjà
   // connus, puis on revérifie en tâche de fond. Sans ça, un conflit apparu
   // pendant qu'on était sur un autre onglet (ex. « Finale ») ne remontait
-  // jamais ici tant qu'on ne faisait pas un F5 complet.
+  // jamais ici tant qu'on ne faisait pas un F5 complet. (refreshConflicts
+  // ignore cet appel si une requête est déjà en cours — cf. son verrou.)
   if(state.currentDraftId) refreshConflicts(state.currentDraftId);
   const all=state.conflicts;
   if(!all.length){ host.innerHTML=`<div style="padding:0;text-align:center;margin-top:40px"><div style="font-size:46px">✅</div><h3 style="margin-top:10px">Aucun conflit</h3><p class="lead">Tous les scores concordent.</p></div>`; return; }
@@ -5768,19 +5780,9 @@ function render(screen,opts){
       }
     }catch(e){ console.warn('Restauration session:', e); }
   }
-  // Les capitaines n'ont pas de session serveur : on restaure leur équipe
-  // via localStorage pour éviter un retour à « Qui êtes-vous ? » au refresh.
-  try{
-    const saved = JSON.parse(localStorage.getItem('vbo_captain')||'null');
-    if(saved && saved.code && saved.team){
-      state.captainTeam = saved.team;
-      await loadJoinedTournament(saved.code, saved.team);
-      // En cas de code expiré/invalide, loadJoinedTournament a déjà navigué
-      // vers l'écran de scan et vidé vbo_captain — ne pas écraser ça.
-      if(!localStorage.getItem('vbo_captain')) return;
-      go(saved.verified?'myMatches':'phoneGate'); return;
-    }
-  }catch(e){ console.warn('Restauration capitaine:', e); }
+  // Sans ?join=... dans l'URL (lien générique), on affiche toujours « Qui
+  // êtes-vous ? » : la session capitaine en localStorage n'est restaurée
+  // automatiquement que via le lien/QR du tournoi, traité plus haut.
   go('home');
 })();
 </script>
