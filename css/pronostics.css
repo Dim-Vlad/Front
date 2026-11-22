@@ -621,7 +621,7 @@
 .btn-sm:hover { opacity: 0.8; }
 .btn-sm--delete  { background: #fde8e8; color: #c0392b; }
 .btn-sm--edit    { background: #e8f0fb; color: #1a3a8f; }
-.btn-sm--result  { background: #e8f4e8; color: #2d6a2d; }
+.btn-sm--result  { background: var(--secondary-color); color: #fff; }
 .btn-sm--done    { background: #f0f0f0; color: #888; cursor: default; }
 
 /* Formulaire résultat inline */

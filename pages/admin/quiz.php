@@ -44,16 +44,22 @@ $nbActifs = count(array_filter($questions, fn($q) => $q['actif']));
         </div>
     </div>
 
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap">
     <?php if (has_role('admin')): ?>
     <a href="/pages/admin/index.php" class="back-btn">← Administration</a>
     <?php else: ?>
     <a href="/pages/moderateur/index.php" class="back-btn">← Modération</a>
     <?php endif; ?>
+    <a href="/php/quiz/export_reponses.php" class="back-btn">⬇ Exporter les réponses (CSV)</a>
+    </div>
 
     <div class="quiz-admin-container">
 
-        <h2 class="quiz-admin-section-title">Créer une question</h2>
-        <div class="quiz-create-form">
+        <h2 class="quiz-admin-section-title quiz-admin-section-title--toggle" onclick="toggleCreateForm()">
+            <span>➕ Créer une question</span>
+            <span id="create-form-arrow">Déplier ▾</span>
+        </h2>
+        <div class="quiz-create-form" id="create-form" style="display:none">
             <div class="quiz-form-grid">
 
                 <div class="quiz-form-group full-width">
@@ -108,7 +114,29 @@ $nbActifs = count(array_filter($questions, fn($q) => $q['actif']));
             </div>
         </div>
 
-        <h2 class="quiz-admin-section-title">Questions (<?= $nbTotal ?>)</h2>
+        <h2 class="quiz-admin-section-title">Importer un quiz préparé à l'avance</h2>
+        <div class="quiz-create-form">
+            <p style="font-size:.82rem;color:#666;margin:0 0 14px;line-height:1.5">
+                Pratique pour remplacer tout le quiz en une fois (ex. nouvelle saison) : préparez vos questions dans
+                un tableau, exportez-le au format CSV, puis importez-le ici. Chaque ligne devient une nouvelle question —
+                pensez à supprimer les anciennes avant si vous voulez repartir de zéro.
+            </p>
+            <div class="quiz-form-actions" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+                <a href="/php/quiz/modele_import.php" class="back-btn" style="margin:0">📥 Télécharger le modèle CSV</a>
+                <div style="display:flex;align-items:center;gap:10px">
+                    <input type="file" id="f-import" accept=".csv">
+                    <button class="quiz-btn-create" onclick="importQuestions()">⬆ Importer</button>
+                </div>
+            </div>
+            <div id="import-feedback" style="margin-top:12px;font-size:.82rem;line-height:1.6"></div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+            <h2 class="quiz-admin-section-title" style="margin:0">Questions (<?= $nbTotal ?>)</h2>
+            <?php if ($nbTotal > 0): ?>
+            <button class="btn-delete-quiz" style="padding:8px 16px" onclick="deleteAllQuestions()">🗑 Supprimer toutes les questions</button>
+            <?php endif; ?>
+        </div>
 
         <?php if (empty($questions)): ?>
         <div class="quiz-empty">Aucune question créée pour le moment.</div>
@@ -131,10 +159,58 @@ $nbActifs = count(array_filter($questions, fn($q) => $q['actif']));
                         onclick="toggleQuestion(<?= $q['id'] ?>)">
                     <?= $q['actif'] ? 'Actif' : 'Inactif' ?>
                 </button>
+                <button class="btn-edit-quiz" onclick="toggleEditQuestion(<?= $q['id'] ?>)">✏️ Modifier</button>
                 <button class="btn-delete-quiz"
                         onclick="deleteQuestion(<?= $q['id'] ?>, <?= htmlspecialchars(json_encode(mb_substr($q['question'], 0, 50)), ENT_QUOTES) ?>)">
                     🗑
                 </button>
+            </div>
+
+            <div class="quiz-edit-form" id="editform-<?= $q['id'] ?>">
+                <div class="quiz-form-group full-width">
+                    <label>Question *</label>
+                    <textarea id="e-question-<?= $q['id'] ?>"><?= htmlspecialchars($q['question']) ?></textarea>
+                </div>
+                <div class="quiz-form-group">
+                    <label>Choix A *</label>
+                    <input id="e-choix_a-<?= $q['id'] ?>" type="text" value="<?= htmlspecialchars($q['choix_a']) ?>">
+                </div>
+                <div class="quiz-form-group">
+                    <label>Choix B *</label>
+                    <input id="e-choix_b-<?= $q['id'] ?>" type="text" value="<?= htmlspecialchars($q['choix_b']) ?>">
+                </div>
+                <div class="quiz-form-group">
+                    <label>Choix C</label>
+                    <input id="e-choix_c-<?= $q['id'] ?>" type="text" value="<?= htmlspecialchars($q['choix_c'] ?? '') ?>">
+                </div>
+                <div class="quiz-form-group">
+                    <label>Choix D</label>
+                    <input id="e-choix_d-<?= $q['id'] ?>" type="text" value="<?= htmlspecialchars($q['choix_d'] ?? '') ?>">
+                </div>
+                <div class="quiz-form-group">
+                    <label>Bonne réponse *</label>
+                    <select id="e-reponse-<?= $q['id'] ?>">
+                        <?php foreach (['a','b','c','d'] as $l): ?>
+                        <option value="<?= $l ?>"<?= $q['reponse_correcte'] === $l ? ' selected' : '' ?>><?= strtoupper($l) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="quiz-form-group">
+                    <label>Points</label>
+                    <select id="e-points-<?= $q['id'] ?>">
+                        <?php foreach ([1,2,3] as $p): ?>
+                        <option value="<?= $p ?>"<?= (int)$q['points'] === $p ? ' selected' : '' ?>><?= $p ?> point<?= $p > 1 ? 's' : '' ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="quiz-form-group full-width">
+                    <label>Explication</label>
+                    <textarea id="e-explication-<?= $q['id'] ?>" rows="2"><?= htmlspecialchars($q['explication'] ?? '') ?></textarea>
+                </div>
+                <div class="quiz-form-actions">
+                    <button class="btn-edit-quiz" onclick="toggleEditQuestion(<?= $q['id'] ?>)">Annuler</button>
+                    <button class="quiz-btn-create" onclick="saveQuestion(<?= $q['id'] ?>)">Enregistrer</button>
+                </div>
             </div>
         </div>
         <?php endforeach; ?>
@@ -146,6 +222,14 @@ $nbActifs = count(array_filter($questions, fn($q) => $q['actif']));
     <div id="footer"></div>
     <script src="/js/main.js?v=20260705"></script>
     <script>
+
+    function toggleCreateForm() {
+        const form  = document.getElementById('create-form');
+        const arrow = document.getElementById('create-form-arrow');
+        const open  = form.style.display !== 'none';
+        form.style.display = open ? 'none' : 'block';
+        arrow.textContent  = open ? 'Déplier ▾' : 'Replier ▴';
+    }
 
     function createQuestion() {
         const question = document.getElementById('f-question').value.trim();
@@ -181,6 +265,30 @@ $nbActifs = count(array_filter($questions, fn($q) => $q['actif']));
             .catch(() => alert('Erreur réseau'));
     }
 
+    function importQuestions() {
+        const input = document.getElementById('f-import');
+        const feedback = document.getElementById('import-feedback');
+        if (!input.files.length) { feedback.innerHTML = '<span style="color:#c0392b">Choisissez d\'abord un fichier CSV.</span>'; return; }
+
+        const fd = new FormData();
+        fd.append('fichier', input.files[0]);
+        feedback.textContent = 'Import en cours…';
+
+        fetch('/php/quiz/import_questions.php', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) { feedback.innerHTML = '<span style="color:#c0392b">' + (data.error || 'Erreur') + '</span>'; return; }
+                let html = '<span style="color:#2d6a2d;font-weight:600">' + data.creees + ' question(s) importée(s).</span>';
+                if (data.erreurs && data.erreurs.length) {
+                    html += '<br><span style="color:#c0392b">' + data.erreurs.length + ' ligne(s) ignorée(s) :</span>';
+                    html += '<ul style="margin:4px 0 0;padding-left:18px;color:#c0392b">' + data.erreurs.map(e => '<li>' + e + '</li>').join('') + '</ul>';
+                }
+                feedback.innerHTML = html;
+                if (data.creees > 0) setTimeout(() => location.reload(), 1500);
+            })
+            .catch(() => { feedback.innerHTML = '<span style="color:#c0392b">Erreur réseau</span>'; });
+    }
+
     function toggleQuestion(id) {
         const fd = new FormData();
         fd.append('id', id);
@@ -204,6 +312,19 @@ $nbActifs = count(array_filter($questions, fn($q) => $q['actif']));
             .catch(() => alert('Erreur réseau'));
     }
 
+    function deleteAllQuestions() {
+        if (!confirm('Supprimer TOUTES les questions du quiz ?\n\nToutes les réponses des utilisateurs seront aussi supprimées, et leurs points de quiz repartiront à zéro.\n\nPensez à avoir exporté les réponses avant si vous voulez garder une trace.')) return;
+        if (!confirm('Dernière confirmation : cette action est irréversible. Continuer ?')) return;
+
+        fetch('/php/quiz/delete_all_questions.php', { method: 'POST', body: new FormData() })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) { alert(data.error || 'Erreur'); return; }
+                location.reload();
+            })
+            .catch(() => alert('Erreur réseau'));
+    }
+
     function deleteQuestion(id, texte) {
         if (!confirm('Supprimer la question :\n"' + texte + '…"\n\nToutes les réponses associées seront également supprimées.')) return;
 
@@ -218,6 +339,45 @@ $nbActifs = count(array_filter($questions, fn($q) => $q['actif']));
                 item.style.transition = 'opacity .2s';
                 item.style.opacity = '0';
                 setTimeout(() => item.remove(), 200);
+            })
+            .catch(() => alert('Erreur réseau'));
+    }
+
+    function toggleEditQuestion(id) {
+        document.getElementById('editform-' + id).classList.toggle('open');
+    }
+
+    function saveQuestion(id) {
+        const question = document.getElementById('e-question-' + id).value.trim();
+        const choix_a   = document.getElementById('e-choix_a-' + id).value.trim();
+        const choix_b   = document.getElementById('e-choix_b-' + id).value.trim();
+        const choix_c   = document.getElementById('e-choix_c-' + id).value.trim();
+        const choix_d   = document.getElementById('e-choix_d-' + id).value.trim();
+        const reponse   = document.getElementById('e-reponse-' + id).value;
+        const points    = document.getElementById('e-points-' + id).value;
+        const explication = document.getElementById('e-explication-' + id).value.trim();
+
+        if (!question || !choix_a || !choix_b || !reponse) {
+            alert('Veuillez remplir la question, les choix A et B, et la bonne réponse.');
+            return;
+        }
+
+        const fd = new FormData();
+        fd.append('id', id);
+        fd.append('question', question);
+        fd.append('choix_a', choix_a);
+        fd.append('choix_b', choix_b);
+        fd.append('choix_c', choix_c);
+        fd.append('choix_d', choix_d);
+        fd.append('reponse_correcte', reponse);
+        fd.append('points', points);
+        fd.append('explication', explication);
+
+        fetch('/php/quiz/update_question.php', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) { alert(data.error || 'Erreur'); return; }
+                location.reload();
             })
             .catch(() => alert('Erreur réseau'));
     }

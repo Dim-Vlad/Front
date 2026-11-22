@@ -63,11 +63,14 @@ $setsLose = ['0-3', '1-3', '2-3'];
         </div>
     </div>
 
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap">
     <?php if (has_role('admin')): ?>
     <a href="/pages/admin/index.php" class="back-btn">← Administration</a>
     <?php else: ?>
     <a href="/pages/moderateur/index.php" class="back-btn">← Modération</a>
     <?php endif; ?>
+    <a href="/php/pronostics/export_votes.php" class="back-btn">⬇ Exporter les pronostics (CSV)</a>
+    </div>
 
     <div class="admin-prono-container">
 
