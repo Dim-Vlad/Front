@@ -532,6 +532,65 @@ input,select{font-family:inherit;font-size:15px}
   .sched-grid{display:grid;grid-template-columns:repeat(var(--n,2),1fr);gap:12px;align-items:stretch}
   .sched-grid .match,.sched-grid .match+.match{margin-top:0;height:100%}
 }
+
+/* === Écran TV/affichage (gymnase, lecture seule, sans session) ===
+   Sort du gabarit « téléphone » (.app est normalement plafonné à 440/1040px) :
+   plein écran, thème clair, polices agrandies pour une lecture à distance.
+   Ciblé via body.tv-mode (posé par screens.tv) pour ne rien affecter des
+   autres écrans. */
+body.tv-mode{background:var(--bg)}
+body.tv-mode .app{max-width:none;margin:0;height:100%;border-radius:0;box-shadow:none;background:var(--surface)}
+.tv-screen{padding:0 clamp(16px,3vw,40px) 40px}
+/* En-tête + compteurs épinglés en haut de l'écran pendant le défilement
+   automatique du planning (cf. tvStartAutoScroll) : toujours visibles.
+   .screen (host) a son propre padding-top (--pad-y, cf. plus haut) : le
+   top:0 d'un sticky se cale contre ce padding, qui lui reste un espace vide
+   fixe au-dessus du bandeau — le planning défilant restait visible dans cet
+   interstice. On annule donc ce padding-top uniquement en mode TV (ci-dessous)
+   et on le redonne en padding interne au bandeau, qui colle alors vraiment au
+   bord réel du viewport. */
+body.tv-mode .screen{padding-top:0}
+.tv-sticky{position:sticky;top:0;z-index:5;background:var(--surface-2);padding-top:22px;
+  box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.tv-header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.tv-header .mark img{height:40px}
+.tv-title{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-size:clamp(20px,2.4vw,30px);font-weight:700;color:var(--brand-ink);flex:1;min-width:0}
+.tv-phase{font-size:clamp(15px,1.6vw,19px);color:var(--muted);font-weight:600}
+.tv-clock{font-size:clamp(22px,2.8vw,34px);font-weight:800;font-variant-numeric:tabular-nums;color:var(--brand)}
+.tv-timer{font-size:clamp(16px,1.8vw,22px);font-weight:700;color:var(--fg);background:var(--surface-2);border-radius:30px;padding:6px 16px;display:flex;align-items:center;gap:6px}
+.tv-timer:empty{display:none}
+.tv-timer.running{color:var(--brand-ink);background:var(--brand-soft)}
+.tv-timer.low{color:#fff;background:var(--warn)}
+.tv-timer.ended{color:#fff;background:var(--danger)}
+.tv-timer-time{font-variant-numeric:tabular-nums}
+.tv-stats{display:flex;gap:18px;flex-wrap:wrap;margin:10px 0 0;padding-bottom:16px;font-size:clamp(14px,1.4vw,17px);color:var(--muted);font-weight:600}
+.tv-cols{display:grid;grid-template-columns:repeat(var(--n,1),1fr);gap:26px;align-items:start;margin-top:18px}
+/* Noms de gymnases répétés dans le bandeau épinglé, alignés sur la même
+   grille que .tv-cols (même --n/gap) pour rester au-dessus de leur colonne
+   une fois le planning défilé sous le bandeau. */
+.tv-gym-row{display:grid;grid-template-columns:repeat(var(--n,1),1fr);gap:26px;margin-top:14px}
+.tv-gym-label{display:flex;align-items:center;gap:8px;min-width:0;font-family:var(--font-display);
+  font-size:clamp(14px,1.5vw,18px);font-weight:700;color:var(--gym-col,var(--brand));
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tv-gym-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.tv-round{margin-bottom:16px;border-left:4px solid var(--round-col,var(--brand));border-radius:12px;background:var(--surface-2);padding:10px 14px}
+.tv-round-head{display:flex;align-items:center;gap:8px;font-size:clamp(14px,1.5vw,16px);margin-bottom:8px}
+.tv-round-head b{font-family:var(--font-display)}
+.tv-round-time{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums}
+.tv-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.tv-match{background:var(--surface);border-radius:10px;padding:10px 12px;margin-top:8px}
+.tv-match:first-child{margin-top:0}
+.tv-match.live{box-shadow:0 0 0 2px var(--warn)}
+.tv-match-meta{display:flex;align-items:center;gap:10px;font-size:clamp(11.5px,1.1vw,13px);color:var(--muted);margin-bottom:6px}
+.tv-teams{display:flex;align-items:center;gap:10px;font-size:clamp(14px,1.5vw,17px);font-weight:600}
+.tv-team{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tv-team-right{text-align:right}
+.tv-score{flex-shrink:0;font-weight:800;color:var(--brand-ink)}
+.tv-vs{color:var(--muted);font-weight:600}
+.tv-match-ref{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:clamp(11px,1.05vw,12.5px);color:var(--muted)}
+.tv-match-ref b{color:var(--fg)}
+.tv-ref-ic{color:var(--brand);display:inline-flex;font-size:13px}
+.tv-empty{color:var(--muted);text-align:center;margin-top:60px;font-size:18px}
 </style>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700;800&display=swap">
@@ -905,6 +964,7 @@ const state = {
   currentDraftId:null,
   dashView:'active',
   joinCode:null,
+  tvCode:null,
   captainList:[],
   livePhase:'brassage',
   referents:[],
@@ -939,6 +999,22 @@ function readJoinCodeFromUrl(){
   try{
     const src=(location.hash||'')+' '+(location.search||'');
     const m=src.match(/join=([A-Za-z0-9-]+)/);
+    if(m&&m[1]) return decodeURIComponent(m[1]).toUpperCase();
+  }catch(_){}
+  return null;
+}
+// Lien de l'écran TV/affichage (gymnase) : même code que les capitaines, mais
+// en paramètre ?tv=... (jamais #join=...) pour ne jamais se faire reconnaître
+// comme un lien de rejointe — cf. screens.tv.
+function buildTvUrl(code){
+  let base='https://dim-vlad.github.io/app-tournoi-vbo/';
+  try{ if(location && location.origin && location.origin!=='null') base=location.origin+location.pathname; }catch(_){}
+  return base.replace(/[#?].*$/,'')+'?tv='+encodeURIComponent(code);
+}
+function readTvCodeFromUrl(){
+  try{
+    const src=(location.hash||'')+' '+(location.search||'');
+    const m=src.match(/tv=([A-Za-z0-9-]+)/);
     if(m&&m[1]) return decodeURIComponent(m[1]).toUpperCase();
   }catch(_){}
   return null;
@@ -2979,6 +3055,11 @@ screens.qr = ()=>{
       <button class="btn ghost" style="margin:0" onclick="copyJoinCode('${code}')">📋 Copier le code</button>
       <button class="btn" style="margin:0" onclick="shareJoin('${code}','${joinUrl}')">↗ Partager</button>
     </div>
+    <div class="grid2" style="margin-top:10px">
+      <button class="btn ghost" style="margin:0" onclick="copyTvLink('${code}')">📋 Copier le lien TV</button>
+      <button class="btn ghost" style="margin:0" onclick="openTvScreen('${code}')">🖥️ Ouvrir l'écran TV</button>
+    </div>
+    <p class="muted" style="font-size:11.5px;margin:6px 4px 0">« Ouvrir l'écran TV » l'ouvre dans un nouvel onglet : glissez-le sur l'écran du gymnase et continuez à gérer le tournoi depuis celui-ci.</p>
     <button class="btn ghost" style="margin-top:10px" onclick="renderTabs('home');go('orgLive')">Accéder au tableau de bord live</button>
     </div>`;
   const box=document.getElementById('qrcode');
@@ -2992,6 +3073,11 @@ async function copyText(txt){
   try{ const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); const ok=document.execCommand('copy'); document.body.removeChild(ta); return ok; }catch(e){ return false; }
 }
 window.copyJoinCode=async(code)=>{ const ok=await copyText(code); toast(ok?'✓ Code '+code+' copié':'Code : '+code); };
+window.copyTvLink=async(code)=>{ const url=buildTvUrl(code); const ok=await copyText(url); toast(ok?'✓ Lien de l\'écran TV copié — à ouvrir sur le PC/TV du gymnase':'Lien : '+url); };
+// Ouvre l'écran TV dans un nouvel onglet/fenêtre, depuis le même ordinateur :
+// l'admin/référent peut ensuite glisser cette fenêtre sur l'écran du gymnase
+// tout en continuant à gérer le tournoi depuis sa fenêtre d'origine.
+window.openTvScreen=(code)=>{ window.open(buildTvUrl(code), '_blank', 'noopener'); };
 window.shareJoin=async(code,url)=>{
   const data={ title:C.name||'Tournoi', text:`Rejoignez le tournoi « ${C.name} » sur Tournoi VBO. Code : ${code}`, url };
   if(navigator.share){
@@ -3042,7 +3128,7 @@ screens.orgLive = ()=>{
       <span style="width:42px;height:42px;border-radius:12px;background:var(--surface);display:grid;place-items:center;font-size:20px;flex:none">📱</span>
       <div style="flex:1;min-width:0">
         <b style="font-size:13.5px">Code &amp; QR pour les capitaines</b>
-        <div style="font-size:12px;color:var(--muted);margin-top:1px">Code <b style="color:var(--brand);letter-spacing:.04em">${state.joinCode||'—'}</b> · afficher le QR à partager</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:1px">Code <b style="color:var(--brand);letter-spacing:.04em">${state.joinCode||'—'}</b> · QR capitaines + lien de l'écran TV du gymnase</div>
       </div>
       <span style="color:var(--brand);font-size:20px;flex:none">›</span>
     </div>
@@ -4291,6 +4377,178 @@ screens.schedule = ()=>{
   if(showLiveTimer) paintTimer();
 };
 
+// === Écran TV/affichage (gymnase) ===
+// Écran plein format, en lecture seule, sans session (chargé via ?tv=CODE,
+// cf. boot()) : montre le planning complet de TOUS les gymnases de la phase
+// en cours, pensé pour rester affiché sans interaction (TV/PC à l'entrée).
+const TV_PHASE_LABEL={brassage:'🔄 Phase de brassage', poules2:'🏆 Principale / Consolante', finales:'🏅 Phases finales'};
+function tvPhaseMatches(){
+  const lp=state.livePhase||'brassage';
+  return (state.schedule||[]).filter(m=>{
+    const ph=m.phase||'brassage';
+    if(lp==='brassage') return ph==='brassage';
+    if(lp==='poules2') return ph==='principal'||ph==='consolante';
+    return ph.indexOf('finales')===0;
+  });
+}
+// Colonnes de l'écran TV en phases finales : les matchs de bracket n'ont pas de
+// vrai gymnase en base (cf. buildBracketMatches — `court` n'est qu'une position
+// dans le tour) et le gymnase réel où ils sont effectivement joués est décidé
+// sur place par l'organisation, jamais enregistré. Plutôt que d'inventer un
+// gymnase (source d'incohérence avec la réalité du terrain), on regroupe par
+// catégorie (Principal/Consolante), seule information fiable à ce stade.
+const TV_FINALES_CATS=[
+  {label:'Principal', phases:['finalesPrincipal','finalesPrincipal3e'], color:GYMS[0].color},
+  {label:'Consolante', phases:['finalesConsolante','finalesConsolante3e'], color:GYMS[1].color},
+];
+function tvColumns(matches){
+  if(state.livePhase!=='finales'){
+    const gymOrder=[...new Set(matches.map(m=>m.gym))].filter(Boolean).sort((a,b)=>a.localeCompare(b,'fr'));
+    return gymOrder.map(g=>({label:g, color:gymColor(g), matches:matches.filter(m=>m.gym===g)}));
+  }
+  return TV_FINALES_CATS
+    .map(c=>({label:c.label, color:c.color, matches:matches.filter(m=>c.phases.includes(m.phase))}))
+    .filter(c=>c.matches.length);
+}
+function tvRoundLabel(m){
+  if(m.phase==='finalesPrincipal3e'||m.phase==='finalesConsolante3e') return 'Petite finale (3e place)';
+  const round1Count=(state.schedule||[]).filter(x=>x.phase===m.phase && x.r===1).length || 1;
+  const K=Math.max(2, round1Count*2);
+  return roundNames(K)[(m.r||1)-1] || 'Phase finale';
+}
+function tvMatchRow(m){
+  const played=matchSetsPlayed(m);
+  const sc=played.length?scoreSC(m):`<span class="tv-vs">vs</span>`;
+  const refHtml=m.ref?`<div class="tv-match-ref"><span class="tv-ref-ic">${ICON.whistle}</span>Arbitre : <b>${m.ref}</b></div>`:'';
+  // En finales, m.court n'est qu'une position dans le tableau (pas un vrai
+  // terrain) et m.pool est vide : on affiche le tour du bracket à la place.
+  // bracketRoundLabel() s'appuie sur state.bracketPrincipal/Consolante, qui ne
+  // sont alimentés que côté admin (buildBracket) : côté TV on recalcule donc le
+  // libellé depuis state.schedule, comme le fait déjà matchPhaseChip côté capitaine.
+  const metaTag=m.pool ? `<span>Poule ${m.pool}</span>` : `<span>${tvRoundLabel(m)}</span>`;
+  const courtTag=m.pool ? `<span>Terrain ${m.court}</span>` : '';
+  return `<div class="tv-match ${m.status==='live'?'live':''}">
+    <div class="tv-match-meta">${courtTag}${metaTag}${schedBadge(m.status)}</div>
+    <div class="tv-teams"><span class="tv-team">${m.a}</span><span class="tv-score">${sc}</span><span class="tv-team tv-team-right">${m.b}</span></div>
+    ${refHtml}
+  </div>`;
+}
+// Chrono affiché sur l'écran TV : même source que captainTimerStatus
+// (state.remoteTimer, poussé par l'organisateur/référent) mais sans filtrer
+// sur une équipe précise — le chrono est unique pour tout le tournoi (un seul
+// tour à la fois quel que soit le gymnase), donc l'écran TV l'affiche tel quel.
+function tvTimerStatus(){
+  const r=liveRules();
+  if(!r.timed) return null;
+  const rt=state.remoteTimer;
+  if(rt && rt.started){
+    const full=(rt.phase==='break' ? (r.breakMinutes!=null?r.breakMinutes:3) : (r.setMinutes||15))*60;
+    const remaining=(rt.running && rt.endAt) ? Math.max(0, Math.round((rt.endAt-Date.now())/1000)) : (rt.remaining!=null?rt.remaining:full);
+    return {round:rt.round, phase:rt.phase, remaining, full, running:!!rt.running, ended:!!rt.ended};
+  }
+  const active=activeRoundMatches(tvPhaseMatches());
+  if(!active.length) return null;
+  return {round:active[0].r, phase:'set', remaining:null, full:null, running:false, ended:false};
+}
+function tvRenderTimer(){
+  const el=document.getElementById('tvTimer');
+  if(!el) return;
+  const t=tvTimerStatus();
+  if(!t){ el.innerHTML=''; el.className='tv-timer'; return; }
+  const label=t.phase==='break'?'Pause':`Tour ${t.round}`;
+  if(t.remaining==null){
+    el.className='tv-timer';
+    el.innerHTML=`⏱ ${label}`;
+    return;
+  }
+  const low=t.running && t.remaining<=PRE_ALERT;
+  el.className='tv-timer'+(t.running?' running':'')+(low?' low':'')+(t.ended?' ended':'');
+  el.innerHTML=`⏱ ${label} · <span class="tv-timer-time">${fmtClock(t.remaining)}</span>`;
+}
+function tvGymColumn(matches){
+  // Le match de 3e place (perdants des demi-finales) a sa propre numérotation
+  // de tour, qui redémarre toujours à 1 (cf. buildBracketMatches), indépendamment
+  // du tableau principal : le regrouper par simple m.r le mélangerait avec un
+  // tour sans rapport (ex: les 1/4 de finale, si round1=2 ne correspond pas au
+  // tour des demies). On le sort donc à part, affiché après le dernier tour réel
+  // — comme côté organisateur, où il est positionné juste sous la finale.
+  const isThird=m=>m.phase==='finalesPrincipal3e'||m.phase==='finalesConsolante3e';
+  const rounds=[...new Set(matches.filter(m=>!isThird(m)).map(m=>m.r))].sort((a,b)=>a-b);
+  const groups=rounds.map(r=>({label:`Tour ${r}`, ms:matches.filter(m=>!isThird(m)&&m.r===r)}));
+  const third=matches.filter(isThird);
+  if(third.length) groups.push({label:'Petite finale (3e place)', ms:third});
+  const roundsHtml=groups.map(({label,ms:raw})=>{
+    const ms=raw.sort((a,b)=>(a.court||0)-(b.court||0));
+    const done=ms.every(m=>m.status==='done');
+    const live=!done&&ms.some(m=>m.status==='live'||matchSetsPlayed(m).length>0);
+    const col=done?'var(--ok)':live?'var(--warn)':'var(--brand)';
+    return `<div class="tv-round" style="--round-col:${col}">
+      <div class="tv-round-head"><span class="tv-dot" style="background:${col}"></span><b>${label}</b><span class="tv-round-time">${ms[0].time}</span></div>
+      ${ms.map(tvMatchRow).join('')}
+    </div>`;
+  }).join('');
+  return `<div class="tv-col">
+    ${roundsHtml}
+  </div>`;
+}
+function tvTickClock(){
+  const el=document.getElementById('tvClock');
+  if(el) el.textContent=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  tvRenderTimer();
+}
+// Défilement automatique lent : personne n'est devant l'écran pour scroller,
+// donc si le planning dépasse la hauteur visible, on le fait défiler seul
+// jusqu'en bas puis on revient en haut (avec une pause aux deux extrémités).
+let _tvScrollTimer=null, _tvScrollPauseUntil=0;
+function tvStartAutoScroll(){
+  clearInterval(_tvScrollTimer);
+  _tvScrollPauseUntil=Date.now()+3000;
+  _tvScrollTimer=setInterval(()=>{
+    if(Date.now()<_tvScrollPauseUntil) return;
+    const max=host.scrollHeight-host.clientHeight;
+    if(max<=10) return;
+    if(host.scrollTop>=max-1){ _tvScrollPauseUntil=Date.now()+5000; host.scrollTop=0; return; }
+    host.scrollTop+=1;
+  }, 70);
+}
+screens.tv = ()=>{
+  setTop(null); tabbar.hidden=true;
+  document.body.classList.add('tv-mode');
+  // Rafraîchi toutes les 10s par liveRefreshTick() : on garde la position de
+  // défilement (auto ou manuelle) au lieu de revenir en haut à chaque fois.
+  const prevScroll=host.scrollTop;
+  const matches=tvPhaseMatches();
+  // Les gymnases peuvent avoir été renommés par l'organisateur : m.gym porte
+  // déjà le nom réel (cf. les autres écrans, ex. ligne ~4251), jamais les noms
+  // de démo de GYMS — s'appuyer sur GYMS ici laissait l'écran TV vide.
+  // En finales, les colonnes sont par catégorie (Principal/Consolante) et non
+  // par gymnase, faute de vrai gymnase persisté pour ces matchs (cf. tvColumns).
+  const cols=tvColumns(matches);
+  const liveCount=matches.filter(m=>m.status==='live').length;
+  const doneCount=matches.filter(m=>m.status==='done').length;
+  const upcomingCount=matches.length-liveCount-doneCount;
+  const phaseLbl=TV_PHASE_LABEL[state.livePhase]||TV_PHASE_LABEL.brassage;
+  host.innerHTML=`<div class="tv-screen">
+    <div class="tv-sticky">
+      <div class="tv-header">
+        <div class="tv-title">${logoMark()}<span>${state.config.name||'Tournoi VBO'}</span></div>
+        <div class="tv-phase">${phaseLbl}</div>
+        <div class="tv-timer" id="tvTimer"></div>
+        <div class="tv-clock" id="tvClock"></div>
+      </div>
+      <div class="tv-stats"><span>● ${liveCount} en cours</span><span>${upcomingCount} à venir</span><span>${doneCount} terminé${doneCount>1?'s':''}</span></div>
+      ${cols.length ? `<div class="tv-gym-row" style="--n:${cols.length}">${cols.map(c=>`<div class="tv-gym-label" style="--gym-col:${c.color}"><span class="tv-gym-dot" style="background:${c.color}"></span>${c.label}</div>`).join('')}</div>` : ''}
+    </div>
+    <div class="tv-cols" style="--n:${Math.max(cols.length,1)}">
+      ${cols.length ? cols.map(c=>tvGymColumn(c.matches)).join('') : '<p class="tv-empty">Planning pas encore disponible.</p>'}
+    </div>
+  </div>`;
+  host.scrollTop=prevScroll;
+  tvTickClock();
+  if(!window._tvClockTimer) window._tvClockTimer=setInterval(tvTickClock, 1000);
+  if(!_tvScrollTimer) tvStartAutoScroll();
+};
+
 let standPool=null;
 const TIE_BADGE_STYLE='border:none;background:var(--danger-soft);color:var(--danger);font-weight:700';
 const TIE_BADGE=`<span class="chip" style="${TIE_BADGE_STYLE};margin:3px 0">⚠️ égalité</span>`;
@@ -5371,13 +5629,13 @@ window.loadJoinedTournament=async (code,team)=>{
     assignBracketReferees(state.schedule.filter(m=>m.phase==='finalesPrincipal'||m.phase==='finalesPrincipal3e'));
     assignBracketReferees(state.schedule.filter(m=>m.phase==='finalesConsolante'||m.phase==='finalesConsolante3e'));
     const cur=navStack[navStack.length-1];
-    if(cur && (cur.screen==='pickTeam'||cur.screen==='myMatches')) screens[cur.screen]();
+    if(cur && (cur.screen==='pickTeam'||cur.screen==='myMatches'||cur.screen==='tv')) screens[cur.screen]();
   }catch(e){
     state._joinLoading=false;
     console.error(e);
     toast('Connexion impossible — réessayez');
     const cur=navStack[navStack.length-1];
-    if(cur && (cur.screen==='pickTeam'||cur.screen==='myMatches')) screens[cur.screen]();
+    if(cur && (cur.screen==='pickTeam'||cur.screen==='myMatches'||cur.screen==='tv')) screens[cur.screen]();
   }
 };
 // Rafraîchissement automatique en tâche de fond (capitaines ET organisation/
@@ -5394,6 +5652,10 @@ async function liveRefreshTick(){
   try{
     if(state.captainTeam && state.joinCode && (cur.screen==='myMatches'||cur.screen==='pickTeam')){
       await loadJoinedTournament(state.joinCode, state.captainTeam);
+      return;
+    }
+    if(state.tvCode && cur.screen==='tv'){
+      await loadJoinedTournament(state.tvCode);
       return;
     }
     const tid=state.currentDraftId;
@@ -5736,6 +5998,9 @@ window.submitNewPassword=async ()=>{
 const NARROW_SCREENS=new Set(['home','login','refLogin','createRef','setPassword','wizard','enterScore','scan','qr','teamsRegister','assignPools','wizPhases','summary','refProfile','refMail','phoneGate']);
 function render(screen,opts){
   wizFooter.hidden=true; wizFooter.innerHTML='';
+  // body.tv-mode ne doit rester posé que sur l'écran TV (sinon un retour
+  // arrière depuis cet écran garderait son plein écran sur les autres).
+  if(screen!=='tv') document.body.classList.remove('tv-mode');
   (screens[screen]||screens.home)(opts||{});
   orgHeader.hidden = tabbar.hidden;
   host.classList.toggle('narrow', NARROW_SCREENS.has(screen));
@@ -5745,6 +6010,12 @@ function render(screen,opts){
   try{ window.scrollTo(0,0); }catch(_){}
 }
 (async function boot(){
+  const tvCode=readTvCodeFromUrl();
+  if(tvCode){
+    state.tvCode=tvCode;
+    await loadJoinedTournament(tvCode);
+    go('tv'); return;
+  }
   const code=readJoinCodeFromUrl();
   if(code){
     // L'URL de QR/invitation garde son ?join=... après navigation : sans ça,
