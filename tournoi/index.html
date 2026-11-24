@@ -348,7 +348,7 @@ input,select{font-family:inherit;font-size:15px}
 .finale-slot{position:relative}
 .finale-slot .third-finale{position:absolute;top:100%;left:0;right:0;margin-top:10px}
 .finale-slot .third-finale h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:center;margin:0 0 6px}
-.bm{border:1px solid var(--line);border-radius:11px;overflow:hidden;font-size:12.5px;background:var(--surface);margin:7px 0}
+.bm{position:relative;border:1px solid var(--line);border-radius:11px;overflow:hidden;font-size:12.5px;background:var(--surface);margin:7px 0}
 .bm .r{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 11px;min-height:36px}
 .bm .r+.r{border-top:1px solid var(--line)}
 .bm .nm{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px}
@@ -361,7 +361,11 @@ input,select{font-family:inherit;font-size:15px}
 .bm .r.win .sc b{color:var(--fg)}
 .bm.live{border-color:var(--warn);box-shadow:0 2px 12px -3px var(--warn)}
 .bm.tap{cursor:pointer}
-.bm.tap .bmEdit{position:absolute;top:50%;right:9px;transform:translateY(-50%);font-size:13px;opacity:.55;pointer-events:none}
+.bm .bmMeta{font-size:10px;font-weight:700;color:var(--muted);text-align:center;padding:4px 6px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+.bm .bmRef{background:var(--surface-2);border-top:1px solid var(--line);padding:4px 6px}
+.bm .bmRef .muted{margin-top:0!important}
+.bm .bmRows{position:relative}
+.bm.tap .bmRows .bmEdit{position:absolute;top:50%;right:9px;transform:translateY(-50%);font-size:13px;opacity:.55;pointer-events:none}
 .bm.tap .r{padding-right:28px}
 
 /* Podium */
@@ -552,9 +556,10 @@ body.tv-mode .app{max-width:none;margin:0;height:100%;border-radius:0;box-shadow
 body.tv-mode .screen{padding-top:0}
 .tv-sticky{position:sticky;top:0;z-index:5;background:var(--surface-2);padding-top:22px;
   box-shadow:0 4px 14px rgba(0,0,0,.12)}
-.tv-header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.tv-header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;margin-bottom:6px}
 .tv-header .mark img{height:40px}
 .tv-title{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-size:clamp(20px,2.4vw,30px);font-weight:700;color:var(--brand-ink);flex:1;min-width:0}
+.tv-title span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tv-phase{font-size:clamp(15px,1.6vw,19px);color:var(--muted);font-weight:600}
 .tv-clock{font-size:clamp(22px,2.8vw,34px);font-weight:800;font-variant-numeric:tabular-nums;color:var(--brand)}
 .tv-timer{font-size:clamp(16px,1.8vw,22px);font-weight:700;color:var(--fg);background:var(--surface-2);border-radius:30px;padding:6px 16px;display:flex;align-items:center;gap:6px}
@@ -563,6 +568,13 @@ body.tv-mode .screen{padding-top:0}
 .tv-timer.low{color:#fff;background:var(--warn)}
 .tv-timer.ended{color:#fff;background:var(--danger)}
 .tv-timer-time{font-variant-numeric:tabular-nums}
+.tv-header-side{display:flex;align-items:center;gap:16px;flex-wrap:wrap;min-width:0}
+.tv-header-left{justify-self:start}
+.tv-header-right{justify-self:end;flex-shrink:0}
+.tv-qr{justify-self:center;display:flex;align-items:center;gap:12px;flex:none;background:var(--brand-soft);border:2px solid var(--brand);border-radius:16px;padding:8px 16px 8px 8px}
+.tv-qr-box{background:#fff;border-radius:9px;padding:5px;display:flex;line-height:0}
+.tv-qr-label{display:flex;flex-direction:column;gap:2px;font-size:clamp(11px,1.1vw,13px);color:var(--brand-ink);font-weight:800;line-height:1.25;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.tv-qr-label b{font-size:clamp(16px,1.8vw,21px);color:var(--fg);letter-spacing:.07em;font-family:var(--font-display);text-transform:none}
 .tv-stats{display:flex;gap:18px;flex-wrap:wrap;margin:10px 0 0;padding-bottom:16px;font-size:clamp(14px,1.4vw,17px);color:var(--muted);font-weight:600}
 .tv-cols{display:grid;grid-template-columns:repeat(var(--n,1),1fr);gap:26px;align-items:start;margin-top:18px}
 /* Noms de gymnases répétés dans le bandeau épinglé, alignés sur la même
@@ -587,9 +599,9 @@ body.tv-mode .screen{padding-top:0}
 .tv-team-right{text-align:right}
 .tv-score{flex-shrink:0;font-weight:800;color:var(--brand-ink)}
 .tv-vs{color:var(--muted);font-weight:600}
-.tv-match-ref{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:clamp(11px,1.05vw,12.5px);color:var(--muted)}
-.tv-match-ref b{color:var(--fg)}
-.tv-ref-ic{color:var(--brand);display:inline-flex;font-size:13px}
+.tv-match-ref{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:4px 11px;border-radius:20px;background:var(--brand-soft);font-size:clamp(12px,1.15vw,14px);font-weight:700;color:var(--brand-ink)}
+.tv-match-ref b{color:var(--brand-ink)}
+.tv-ref-ic{color:var(--brand);display:inline-flex;font-size:15px}
 .tv-empty{color:var(--muted);text-align:center;margin-top:60px;font-size:18px}
 </style>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -634,6 +646,8 @@ window.api = (function(){
     loadStructure:  (tid)=>            call('tournaments.loadStructure',{query:{tid}}),
     syncTimer:      (tid,state)=>      call('tournaments.syncTimer',   {body:{tid,state}}),
     setMatchScore:  (id,sets,complete)=> call('matches.setScore',       {body:{id,sets,complete}}),
+    setMatchTeams:  (id,fields)=>       call('matches.setTeams',       {body:Object.assign({id},fields)}),
+    setMatchReferee:(id,refName)=>      call('matches.setReferee',     {body:{id,refName}}),
     submitCaptainScore:(matchId,teamName,sets)=> call('matches.submitCaptainScore', {body:{matchId,teamName,sets}}),
     startMatch:     (matchId,teamName)=> call('matches.startMatch',     {body:{matchId,teamName}}),
     adminStartMatch:(matchId)=>        call('matches.adminStartMatch', {body:{matchId}}),
@@ -768,6 +782,20 @@ window.sb = { _ovh:true };
     async setMatchScore(matchId, sets, complete){
       if(!isUuid(matchId)) throw new Error('Match non synchronisé — rouvrez le tournoi.');
       return await api.setMatchScore(matchId, sets, complete);
+    },
+    // Corrige l'équipe déjà placée dans un match de bracket déjà généré (ré-saisie
+    // d'un score en amont qui change le vainqueur/perdant) : réinitialise aussi
+    // son score, puisque ce match doit être rejoué avec la bonne équipe.
+    async setMatchTeams(matchId, fields){
+      if(!isUuid(matchId)) throw new Error('Match non synchronisé — rouvrez le tournoi.');
+      return await api.setMatchTeams(matchId, fields);
+    },
+    // Persiste l'arbitre calculé d'un match de phase finale (voir
+    // assignBracketReferees / persistBracketReferees) : non bloquant, les échecs
+    // sont avalés côté appelant (recalculé de toute façon au prochain chargement).
+    async setMatchReferee(matchId, refName){
+      if(!isUuid(matchId)) throw new Error('Match non synchronisé — rouvrez le tournoi.');
+      return await api.setMatchReferee(matchId, refName);
     },
     // Bascule un match en "live" depuis le planning (organisation), sans
     // attendre qu'une équipe le fasse elle-même sur le terrain.
@@ -931,6 +959,34 @@ const LEVELS=[
   {id:'dep',label:'Départ./Loisirs',short:'Dép',color:'#17a673',w:2},
   {id:'jeu',label:'Jeunes (U18)',short:'U18',color:'#2e4be0',w:1},
 ];
+// Catégories de phase finale actives selon la formule du tournoi (classique = 1-2 catégories sans branche
+// perdante ; classification3 = 3 catégories avec branche perdante). Point d'entrée unique remplaçant les
+// anciens `if(state.config.phaseConsolante)` / `sides=[...]` dupliqués dans tout le fichier.
+function activeCategories(){
+  if(state.config.formula==='classification3'){
+    return [
+      {key:'principal',       label:'Principal',        color:GYMS[0].color, losers:true},
+      {key:'consolante',      label:'Consolante',       color:GYMS[1].color, losers:true},
+      {key:'superConsolante', label:'Super-Consolante', color:GYMS[2].color, losers:true},
+    ];
+  }
+  const cats=[{key:'principal', label:'Principal', color:GYMS[0].color, losers:false}];
+  if(state.config.phaseConsolante!==false) cats.push({key:'consolante', label:'Consolante', color:GYMS[1].color, losers:false});
+  return cats;
+}
+// Nommage des phases de tableau final : 'finales' + Catégorie + Branche, où Branche est '' (tableau
+// gagnant) | '3e' (petite finale existante, perdants des demies gagnantes) | 'Perdants' (demies/finale
+// des perdants de la branche perdante, classification3 uniquement) | 'Petite' (petite finale 7e-8e,
+// perdants des demies perdantes). Le format classique n'utilise jamais 'Perdants'/'Petite'.
+const capFirst = s=>s.charAt(0).toUpperCase()+s.slice(1);
+function phaseKeyFor(catKey, branch){ return 'finales'+capFirst(catKey)+(branch||''); }
+function parseFinalesPhase(phase){
+  if(!phase || phase.indexOf('finales')!==0) return null;
+  let rest=phase.slice(7), branch='';
+  for(const b of ['Perdants','Petite','3e']){ if(rest.length>b.length && rest.endsWith(b)){ branch=b; rest=rest.slice(0,-b.length); break; } }
+  if(!rest) return null;
+  return { catKey: rest.charAt(0).toLowerCase()+rest.slice(1), branch };
+}
 function levelMeta(id){return LEVELS.find(l=>l.id===id)||LEVELS[2];}
 function ordinalFr(n){return n===1?'1er':n+'e';}
 const LEVEL_BADGE_LABEL={nat:'Natio',reg:'Régio',dep:'Départ',jeu:'M18'};
@@ -952,6 +1008,7 @@ const state = {
     teams:24, gyms:1, courts:3, courtsPerGym:[3], pools:6, teamsPerPool:4,
     sets:1, pointsPerSet:25, twoPointGap:true, timed:false, setMinutes:15, breakMinutes:3,
     winPts:3, lossPts:0,
+    formula:'classic',
     phaseConsolante:true, principalPools:4, principalTeamsPerPool:4, finalStart:'auto', distribution:'snake',
     scheduleMode:'rotation', splitPhase2ByGym:false,
     startTime:'09:00', roundMinutes:20, setupMinutes:10,
@@ -1072,7 +1129,12 @@ rebuildPools();
 // donc le round 1 de la phase 2 avec le round 1 du brassage. Principal et
 // consolante se jouent en parallèle (même rang), tout comme les deux tableaux
 // finaux et leurs petites finales.
-const PHASE_RANK={brassage:0, principal:1, consolante:1, finalesPrincipal:2, finalesConsolante:2, finalesPrincipal3e:2, finalesConsolante3e:2};
+function phaseRankOf(phase){
+  if(!phase || phase==='brassage') return 0;
+  if(phase==='principal' || phase==='consolante') return 1;
+  if(parseFinalesPhase(phase)) return 2;
+  return 0;
+}
 function captainMatches(team){
   return (state.schedule||[]).map((m)=>{
     const mine = (state.myEntries&&state.myEntries[m.id]) || null;
@@ -1086,7 +1148,7 @@ function captainMatches(team){
       status, mine,
     };
   }).filter(m=>m.a===team||m.b===team)
-    .sort((x,y)=>(PHASE_RANK[x.phase]??0)-(PHASE_RANK[y.phase]??0));
+    .sort((x,y)=>phaseRankOf(x.phase)-phaseRankOf(y.phase));
 }
 function captainRefMatches(team){
   return (state.schedule||[]).filter(m=>m.ref===team).map(m=>({
@@ -1098,15 +1160,27 @@ function captainRefMatches(team){
 // l'organisateur (qui filtre déjà son planning par phase), le capitaine voit tous
 // ses matchs mêlés au fil du tournoi (brassage, principal/consolante, tableau final).
 function matchPhaseChip(m){
-  if(m.phase==='finalesPrincipal3e'||m.phase==='finalesConsolante3e') return `<span class="chip">🥉 Petite finale</span>`;
-  if(m.phase==='finalesPrincipal'||m.phase==='finalesConsolante'){
+  const p=parseFinalesPhase(m.phase);
+  if(p){
+    // En classification3 (et plus généralement dès qu'il y a >1 catégorie active),
+    // plusieurs tableaux tournent en parallèle : sans le nom de la catégorie, un
+    // capitaine ne sait pas s'il regarde le tableau Principal/Consolante/Super-Consolante.
+    const cats=activeCategories();
+    const cat=cats.find(c=>c.key===p.catKey);
+    const catLabel=(cat && cats.length>1) ? cat.label+' · ' : '';
+    if(p.branch==='3e') return `<span class="chip">🥉 ${catLabel}Petite finale</span>`;
+    if(p.branch==='Petite') return `<span class="chip">🥉 ${catLabel}Petite finale (7e-8e)</span>`;
+    if(p.branch==='Perdants'){
+      const label = (m.round||m.r||1)===1 ? 'Demi-finale (perdants)' : 'Finale des perdants';
+      return `<span class="chip">🏆 ${catLabel}${label}</span>`;
+    }
     // round1Count déduit du planning du capitaine lui-même (pas de state.bracketPrincipal
     // côté capitaine, qui n'est alimenté que par les écrans admin) : le nombre de matchs
     // déjà persistés au 1er tour de cette catégorie donne la taille K du tableau.
     const round1Count=(state.schedule||[]).filter(x=>x.phase===m.phase && x.r===1).length || 1;
     const K=Math.max(2, round1Count*2);
     const label=roundNames(K)[(m.round||1)-1] || 'Phase finale';
-    return `<span class="chip">🏆 ${label}</span>`;
+    return `<span class="chip">🏆 ${catLabel}${label}</span>`;
   }
   if(m.phase==='consolante') return `<span class="chip">🥈 Consolante</span>`;
   if(m.phase==='principal') return `<span class="chip">🥇 Principal</span>`;
@@ -1237,21 +1311,120 @@ function assignBracketReferees(sched){
       if(!lastMatch[t] || (m.r||1)>(lastMatch[t].r||1)) lastMatch[t]=m;
     });
   });
-  // au repos : a gagné son dernier match connu et n'apparaît dans aucun match plus
-  // récent (= adversaire suivant pas encore connu)
-  const idle=Object.keys(lastMatch).filter(t=>{ const m=lastMatch[t]; return m.status==='done' && wonBy(m,t); });
+  // au repos : son dernier match connu est soit gagné (plus rien après), soit pas
+  // encore commencé. Ce 2e cas couvre une équipe qui vient de gagner un tour
+  // précédent et dont le prochain match (contre l'autre vainqueur de sa paire) est
+  // déjà généré mais pas encore joué — le tableau avance par paire de 2 matchs, donc
+  // dès que ces 2 matchs sont terminés, le tour suivant est créé tout de suite pour
+  // ses 2 vainqueurs, qui doivent pourtant encore patienter (un seul terrain par
+  // catégorie, joué séquentiellement) : sans ce cas, ils redeviendraient invisibles
+  // pour l'arbitrage pile au moment où un autre match (le suivant sur ce terrain)
+  // en a justement besoin. Une équipe qui n'a encore jamais gagné (tout 1er match pas
+  // encore joué) n'est PAS comptée ici : le seul trou qu'elle comble est celui du
+  // tout 1er 1/4 de la catégorie, traité à part plus bas (classification3).
+  const idle=Object.keys(lastMatch).filter(t=>{
+    const m=lastMatch[t];
+    if(m.status==='done') return wonBy(m,t);
+    if(m.status==='live') return false;
+    return sched.some(x=>x!==m && x.status==='done' && wonBy(x,t));
+  });
+  // Équité GLOBALE sur tout le tournoi (demandé explicitement) : on ne repart pas
+  // de zéro à chaque recalcul, mais on part du nombre de fois que chaque équipe a
+  // DÉJÀ arbitré — au Brassage (toujours persisté en base) et dans les matchs déjà
+  // joués de cette même catégorie (désormais persistés aussi, via
+  // vboDb.setMatchReferee / persistBracketReferees, donc fiables même après un
+  // rechargement de page en cours de phase finale). Sans ça, une équipe qui a
+  // beaucoup arbitré au Brassage pouvait être choisie en priorité dès qu'elle
+  // devenait "au repos" en finale, puisque son compteur repartait à 0 ici.
   const refCount={}; idle.forEach(t=>{ refCount[t]=0; });
+  const bump=t=>{ if(t!=null && refCount[t]!==undefined) refCount[t]++; };
+  (state.schedule||[]).forEach(m=>bump(m.ref));
+  sched.forEach(m=>{ if(m.status==='done') bump(m.ref); });
+  // Victoire la plus récente connue de chaque équipe (round puis terrain les plus
+  // hauts = jouée en dernier) : sert à départager 2 équipes à égalité d'équité en
+  // préférant celle qui vient tout juste de se libérer plutôt qu'une équipe au repos
+  // depuis plus longtemps — sinon, à équité égale, le tri alphabétique pouvait aussi
+  // bien retenir le vainqueur du match 1 que celui du match 3 pour arbitrer le match
+  // 4, alors que ce dernier vient justement de se libérer juste avant.
+  const freedKey={};
+  idle.forEach(t=>{
+    let best=-1;
+    sched.forEach(m=>{ if(m.status==='done' && wonBy(m,t)){ const k=(m.r||1)*1000+(m.court||0); if(k>best) best=k; } });
+    freedKey[t]=best;
+  });
+  // Ordre de jeu réel (un seul terrain par catégorie, séquentiel) : au sein d'une
+  // même phase (= même branche de bracket), les matchs se jouent terrain 1, 2, 3...
+  // puis le tour suivant. On en déduit, pour chaque match, le match qui le précède
+  // directement sur ce terrain — et on n'attribue un arbitre à un match PAS ENCORE
+  // joué que si ce match précédent est déjà terminé. Sinon on ne sait pas encore
+  // vraiment qui sera "au repos" à ce moment du planning (ex: le match 4 ne doit
+  // être arbitré par le vainqueur du match 3 — qui vient juste de se libérer — que
+  // si le match 3 a déjà eu lieu ; sinon il faut attendre le prochain recalcul).
+  const byPhaseOrder={};
+  sched.slice().sort((a,b)=>(a.r||1)-(b.r||1) || (a.court||0)-(b.court||0))
+    .forEach(m=>{ (byPhaseOrder[m.phase]=byPhaseOrder[m.phase]||[]).push(m); });
+  const prevOf=new Map();
+  Object.values(byPhaseOrder).forEach(list=>{ list.forEach((m,i)=>prevOf.set(m, i>0?list[i-1]:null)); });
+
   const used=new Set();
   sched.filter(m=>m.status!=='done' && m.a && m.b)
     .sort((a,b)=>(a.r||1)-(b.r||1))
     .forEach(m=>{
-      const pool=idle.filter(t=>!used.has(t));
-      // on choisit l'équipe au repos qui a le MOINS arbitré jusqu'ici (équité)
-      pool.sort((a,b)=> (refCount[a]-refCount[b]) || a.localeCompare(b));
+      const prev=prevOf.get(m);
+      if(m.status!=='live' && prev && prev.status!=='done'){ m.ref=null; return; }
+      // une équipe ne peut jamais arbitrer son propre match (cas possible depuis
+      // l'élargissement ci-dessus : un vainqueur "au repos" peut désormais être l'une
+      // des 2 équipes du match en cours de traitement, p.ex. sa propre demi-finale).
+      const pool=idle.filter(t=>!used.has(t) && t!==m.a && t!==m.b);
+      // on choisit l'équipe au repos qui a le MOINS arbitré jusqu'ici (équité), et à
+      // égalité celle qui s'est libérée le plus récemment
+      pool.sort((a,b)=> (refCount[a]-refCount[b]) || (freedKey[b]-freedKey[a]) || a.localeCompare(b));
       const pick=pool[0]||null;
       m.ref=pick;
       if(pick){ refCount[pick]++; used.add(pick); }
     });
+  // En classification3, au tout 1er 1/4 de finale d'une catégorie, aucune équipe
+  // n'est encore "au repos" (idle ci-dessus exige un match déjà gagné) : ce match
+  // reste donc sans arbitre tant qu'aucun 1/4 n'a été joué. On comble ce seul trou
+  // avec une équipe du 3e ou 4e 1/4 de la même catégorie — pas encore entrée en jeu
+  // à ce moment du planning (séquentiel sur le terrain dédié) — sans toucher au
+  // système normal (ci-dessus) pour tous les autres matchs.
+  if(state.config.formula==='classification3'){
+    sched.forEach(m=>{
+      if(m.ref || m.status==='done') return;
+      const p=parseFinalesPhase(m.phase);
+      if(!p || p.branch!=='' || (m.r||1)!==1 || (m.court||1)!==1) return;
+      const donor = sched.find(x=>{
+        const px=parseFinalesPhase(x.phase);
+        return px && px.branch==='' && (x.r||1)===1 && x.court===4 && x.a && x.b;
+      }) || sched.find(x=>{
+        const px=parseFinalesPhase(x.phase);
+        return px && px.branch==='' && (x.r||1)===1 && x.court===3 && x.a && x.b;
+      });
+      if(donor){
+        // Entre les 2 équipes du match donneur, on choisit la moins sollicitée
+        // jusqu'ici (même logique d'équité que ci-dessus).
+        const cnt=t=>refCount[t]||0;
+        m.ref = cnt(donor.a)<=cnt(donor.b) ? donor.a : donor.b;
+        refCount[m.ref]=(refCount[m.ref]||0)+1;
+      }
+    });
+  }
+}
+// Compare l'arbitre calculé par assignBracketReferees à celui chargé en base
+// (capturé dans `before` avant l'appel) et persiste uniquement les changements,
+// pour que l'équité d'arbitrage (cf. refCount ci-dessus) survive à un
+// rechargement de page en cours de phase finale. `sched` doit provenir d'un
+// contexte admin/référent authentifié (jamais de l'écran public capitaine/TV,
+// qui appelle assignBracketReferees directement sans passer par ici).
+function persistBracketReferees(sched, before){
+  if(!window.vboDb) return;
+  sched.forEach(m=>{
+    if(!m.id || !vboDb.isUuid(m.id) || m.status==='done') return;
+    if(m.ref !== (before[m.id]||null)){
+      vboDb.setMatchReferee(m.id, m.ref||null).catch(()=>{});
+    }
+  });
 }
 // Mode « rotation » : chaque tour remplit TOUS les terrains disponibles de chaque gymnase.
 // Les matchs d'une même poule (qui n'opposent jamais deux fois la même équipe dans un tour)
@@ -1439,6 +1612,29 @@ function splitQualifiers(pools, schedule){
   });
   return {principal, consolante};
 }
+// Répartition en 3 catégories de 8 équipes selon le rang DE POULE au Brassage
+// (formule classification3 uniquement) — 6 poules de 4, aucune phase 2 jouée :
+// Principal = les 6 1ers + les 2 meilleurs 2es ; Consolante = les 4 2es restants
+// + les 4 meilleurs 3es ; Super-Consolante = les 2 3es restants + les 6 4es.
+function splitQualifiersByPoolRank(pools, schedule){
+  if(!pools || pools.length!==6 || pools.some(p=>p.teams.length!==4)) throw new Error('Classification 3 catégories nécessite exactement 6 poules de 4 équipes');
+  const byRank=[[],[],[],[]];
+  pools.forEach(p=>{
+    const seedName=poolSeedTeam(p);
+    poolStandingRows(p, schedule).forEach((r,i)=>{
+      const lvl=(p.teams.find(x=>x.t===r.t)||{}).level||'dep';
+      byRank[i].push({t:r.t, level:lvl, seed:i, from:p.letter, isSeed:r.t===seedName, j:r.j, g:r.g, pf:r.pf, pc:r.pc, pts:r.pts, _pts:r.pts, _diff:r.pf-r.pc});
+    });
+  });
+  const sortBest=a=>a.slice().sort((x,y)=>y._pts-x._pts || y._diff-x._diff || x.t.localeCompare(y.t));
+  const rank1=sortBest(byRank[1]), rank2=sortBest(byRank[2]);
+  return {
+    principal:       [...byRank[0], ...rank1.slice(0,2).map(x=>({...x, wildcard:true}))],
+    consolante:       [...rank1.slice(2), ...rank2.slice(0,4).map(x=>({...x, wildcard:true}))],
+    superConsolante:  [...rank2.slice(4), ...byRank[3]],
+  };
+}
+function ensureClassGroups(){ state.classGroups = splitQualifiersByPoolRank(state.pools, state.schedule); }
 // Répartit les qualifiés dans les poules de phase 2 poule d'origine par poule
 // d'origine (toutes les équipes d'une même poule de brassage traitées en un
 // bloc), plutôt que coup par coup : pour une poule d'origine de M qualifiés,
@@ -1557,23 +1753,33 @@ function brassageOriginOf(teamName){
   const p=(state.pools||[]).find(p=>(p.teams||[]).some(x=>x.t===teamName));
   return p ? p.letter : null;
 }
-// Bracket (phase finale) persisté pour une catégorie — vide tant que le 1er tour
-// n'a pas été généré par confirmPhaseSwitch().
-function bracketData(key){ return key==='consolante' ? (state.bracketConsolante||{pools:[],schedule:[]}) : (state.bracketPrincipal||{pools:[],schedule:[]}); }
-// Match de la 3e place (perdants des demi-finales) — mini-phase indépendante du
-// tableau principal, un seul match, voir advanceBracketIfRoundDone().
-function bracketData3e(key){ return key==='consolante' ? (state.bracketConsolante3e||{pools:[],schedule:[]}) : (state.bracketPrincipal3e||{pools:[],schedule:[]}); }
+// Bracket (phase finale) persisté pour une catégorie/branche — vide tant que son
+// 1er tour n'a pas été généré par confirmPhaseSwitch() (branche gagnante, '') ou
+// par advanceBracketIfRoundDone() (3e place '3e', ou branche perdante 'Perdants'/
+// 'Petite', classification3 uniquement).
+function bracketData(catKey, branch){
+  const k='bracket'+capFirst(catKey)+(branch||'');
+  return state[k] || {pools:[], schedule:[]};
+}
+// Branches de bracket d'une catégorie : gagnante ('' + son spin-off '3e') pour
+// toutes les catégories, + branche perdante ('Perdants' + son spin-off 'Petite')
+// uniquement si la catégorie en a une (classification3).
+function bracketBranchesFor(cat){ return cat.losers ? ['','3e','Perdants','Petite'] : ['','3e']; }
 // Cherche un match par id dans TOUTES les phases (pas seulement le brassage) :
 // nécessaire pour la saisie de score admin une fois la phase 2 ou le bracket lancés.
 function findMatchById(id){
   ensurePhases();
-  return (state.schedule||[]).find(x=>x.id===id)
+  const found = (state.schedule||[]).find(x=>x.id===id)
     || (state.phasePrincipal.schedule||[]).find(x=>x.id===id)
-    || (state.phaseConsolante.schedule||[]).find(x=>x.id===id)
-    || ((state.bracketPrincipal&&state.bracketPrincipal.schedule)||[]).find(x=>x.id===id)
-    || ((state.bracketConsolante&&state.bracketConsolante.schedule)||[]).find(x=>x.id===id)
-    || ((state.bracketPrincipal3e&&state.bracketPrincipal3e.schedule)||[]).find(x=>x.id===id)
-    || ((state.bracketConsolante3e&&state.bracketConsolante3e.schedule)||[]).find(x=>x.id===id);
+    || (state.phaseConsolante.schedule||[]).find(x=>x.id===id);
+  if(found) return found;
+  for(const k in state){
+    if(k.indexOf('bracket')===0 && state[k] && state[k].schedule){
+      const m=state[k].schedule.find(x=>x.id===id);
+      if(m) return m;
+    }
+  }
+  return undefined;
 }
 // Construit le payload {gyms,pools,matches} d'UNE phase (principal/consolante) pour
 // tournaments.addPhase — même forme que la structure de brassage envoyée par
@@ -1604,14 +1810,23 @@ function applyLoadedStructure(fresh){
   // (ou déjà « Enregistrée » mais pas encore démarrée).
   const princ=byPhase('principal'); if(princ.schedule.length) state.phasePrincipal=princ;
   const conso=byPhase('consolante'); if(conso.schedule.length) state.phaseConsolante=conso;
-  const brP=byPhase('finalesPrincipal'); if(brP.schedule.length) state.bracketPrincipal=brP;
-  const brC=byPhase('finalesConsolante'); if(brC.schedule.length) state.bracketConsolante=brC;
-  const brP3=byPhase('finalesPrincipal3e'); if(brP3.schedule.length) state.bracketPrincipal3e=brP3;
-  const brC3=byPhase('finalesConsolante3e'); if(brC3.schedule.length) state.bracketConsolante3e=brC3;
+  // Découverte dynamique des phases de bracket réellement présentes (branche
+  // gagnante '', 3e place '3e', et en classification3 la branche perdante
+  // 'Perdants'/'Petite') — remplace la liste figée à 4 buckets du format classique.
+  const seenFinales=[...new Set(sched.map(m=>m.phase).filter(ph=>parseFinalesPhase(ph)))];
+  seenFinales.forEach(ph=>{
+    const d=byPhase(ph);
+    if(d.schedule.length){ const p=parseFinalesPhase(ph); state['bracket'+capFirst(p.catKey)+p.branch]=d; }
+  });
   // Arbitrage du bracket : pas persisté en base (dépend des résultats, donc pas
   // calculable à l'avance comme pour les poules) — recalculé à chaque chargement.
-  assignBracketReferees([...brP.schedule, ...brP3.schedule]);
-  assignBracketReferees([...brC.schedule, ...brC3.schedule]);
+  activeCategories().forEach(cat=>{
+    const phs=seenFinales.filter(ph=>parseFinalesPhase(ph).catKey===cat.key);
+    const catSched=phs.flatMap(ph=>byPhase(ph).schedule);
+    const before={}; catSched.forEach(m=>{ before[m.id]=m.ref; });
+    assignBracketReferees(catSched);
+    persistBracketReferees(catSched, before);
+  });
   return true;
 }
 // Construit le payload {gyms,pools,matches} d'UN tour du bracket (phase finale) pour
@@ -1628,20 +1843,97 @@ function bracketSlotTime(round){
   const t=(sh*60+sm)+((round||1)-1)*per, h=Math.floor(t/60)%24, m=t%60;
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
 }
-function buildBracketMatches(phaseKey, round, pairs){
+function buildBracketMatches(phaseKey, round, pairs, posOffset=0){
   // Filtre les paires incomplètes : buildBracket() impose un minimum de 2 têtes de
   // série même quand le classement n'en fournit pas assez (ex: Consolante avec trop
   // peu de qualifiés) — on ne veut pas persister un match fantôme sans équipes.
   const valid=(pairs||[]).filter(([a,b])=>a&&b);
-  const time=bracketSlotTime(round);
-  return { gyms:[], pools:[], matches: valid.map(([a,b],i)=>({ round, time, phase:phaseKey, poolKey:null, gymName:null, court:i+1, aKey:a, bKey:b, refKey:null })) };
+  const fallbackTime=bracketSlotTime(round);
+  return { gyms:[], pools:[], matches: valid.map(([a,b],i)=>{
+    // En classification3, chaque catégorie se joue sur un seul terrain dédié : les
+    // 12 matchs s'enchaînent donc l'un après l'autre (horaire réel par match, cf.
+    // class3TimeForSlot) plutôt que par tour entier en parallèle (bracketSlotTime).
+    // posOffset : position réelle dans le tour quand les paires sont fournies une
+    // par une au fil de l'eau (cf. advanceBracketIfRoundDone) — sans lui, chaque
+    // appel recommencerait à l'index 0 et calculerait le même horaire pour tous
+    // les matchs d'un même tour généré progressivement (ex: les 2 demi-finales).
+    const pos=i+posOffset;
+    const slot=class3SlotIndexFor(phaseKey, round, pos);
+    const time = slot!=null ? class3TimeForSlot(slot) : fallbackTime;
+    return { round, time, phase:phaseKey, poolKey:null, gymName:null, court:pos+1, aKey:a, bKey:b, refKey:null };
+  }) };
+}
+// --- Horaires & terrains réels des matchs de phase finale (formule
+// "classification3" uniquement). Hypothèse : chaque catégorie (Principal,
+// Consolante, Super-Consolante) se joue sur UN SEUL terrain dédié, donc ses 12
+// matchs s'enchaînent strictement l'un après l'autre, dans l'ordre fixe demandé :
+// 1/4 (4) → 1/2 perdantes (2) → 1/2 gagnantes (2) → finale des perdants (1) →
+// 7e-8e (1) → petite finale 3e-4e (1) → finale (1). L'horaire est calculé une
+// fois pour toutes à la création du match (cf. buildBracketMatches ci-dessus) ;
+// seul le terrain réel reste à résoudre à l'affichage, car `court` est déjà
+// réservé à la position du match dans son tour (cf. advanceBracketIfRoundDone).
+function class3SlotIndexFor(phase, round, pos0){
+  if(state.config.formula!=='classification3') return null;
+  const p=parseFinalesPhase(phase); if(!p) return null;
+  const r=round||1;
+  if(p.branch===''&&r===1) return pos0;            // 1/4 : 0-3
+  if(p.branch==='Perdants'&&r===1) return 4+pos0;  // 1/2 perdantes : 4-5
+  if(p.branch===''&&r===2) return 6+pos0;          // 1/2 gagnantes : 6-7
+  if(p.branch==='Perdants'&&r===2) return 8;        // finale des perdants (5e-6e)
+  if(p.branch==='Petite') return 9;                 // 7e-8e
+  if(p.branch==='3e') return 10;                     // petite finale (3e-4e)
+  if(p.branch===''&&r===3) return 11;                // finale
+  return null;
+}
+function class3TimeForSlot(slot){
+  if(slot==null) return null;
+  const c=horaireFor('finales');
+  const parts=String(c.startTime||'09:00').split(':');
+  const sh=(+parts[0])||9, sm=(+parts[1])||0;
+  const per=((+c.roundMinutes)||20)+((+c.setupMinutes)||10);
+  const t=(sh*60+sm)+slot*per, h=Math.floor(t/60)%24, mm=t%60;
+  return `${String(h).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+}
+// Accepte aussi bien les matchs bruts (m.r, cf. state.schedule) que les objets
+// déjà reformatés côté capitaine/référent (m.round, cf. captainMatches) : les
+// deux doivent reconnaître le même match de phase finale.
+function class3SlotIndex(m){ if(!m) return null; const r=m.r!=null?m.r:m.round; return class3SlotIndexFor(m.phase, r, Math.max(0,(m.court||1)-1)); }
+// 1er/2e/3e terrain disponible, dans l'ordre des gymnases/terrains déjà configurés
+// (gyms[0] d'abord, ses terrains 1..N, puis gyms[1]…) : Principal/Consolante/
+// Super-Consolante jouent chacune sur l'un de ces 3 terrains dédiés.
+function class3RealCourtSlots(){
+  const G=state.config.gyms||1, cpg=state.config.courtsPerGym||[];
+  const slots=[];
+  for(let gi=0; gi<G && slots.length<3; gi++){
+    const n=Math.max(1, cpg[gi]||1);
+    for(let c=1; c<=n && slots.length<3; c++) slots.push({gym:GYMS[gi].id, court:c});
+  }
+  return slots;
+}
+function class3CourtInfo(m){
+  const p=m&&parseFinalesPhase(m.phase); if(!p) return null;
+  const idx = p.catKey==='principal'?0 : p.catKey==='consolante'?1 : p.catKey==='superConsolante'?2 : -1;
+  if(idx<0) return null;
+  const cs=class3RealCourtSlots()[idx]; if(!cs) return null;
+  return { court: cs.court, gym: gymName(cs.gym) };
+}
+// Résumé d'affichage (heure réelle déjà persistée dans m.time + terrain réel) pour
+// un match de phase finale en classification3 — null pour tout le reste (formule
+// classique, brassage…), pour que les écrans existants gardent leur affichage
+// habituel (m.time/m.court/m.gym) sans aucun changement.
+function class3MatchInfo(m){
+  const slot=class3SlotIndex(m); if(slot==null) return null;
+  const ci=class3CourtInfo(m);
+  return { time: m.time, court: ci?ci.court:m.court, gym: ci?ci.gym:m.gym };
 }
 // Nom du tour affiché pour un match de bracket (ex: "1/4", "Finale"), déduit du nombre
 // de matchs du 1er tour déjà persisté pour cette catégorie.
 function bracketRoundLabel(m){
-  if(m.phase==='finalesPrincipal3e'||m.phase==='finalesConsolante3e') return 'Petite finale (3e place)';
-  const catKey = m.phase==='finalesConsolante' ? 'consolante' : 'principal';
-  const round1Count=(bracketData(catKey).schedule||[]).filter(x=>x.r===1).length || 1;
+  const p=parseFinalesPhase(m.phase); if(!p) return 'Phase finale';
+  if(p.branch==='3e') return 'Petite finale (3e place)';
+  if(p.branch==='Petite') return 'Petite finale (7e-8e)';
+  if(p.branch==='Perdants') return (m.r||1)===1 ? 'Demi-finale (perdants)' : 'Finale des perdants (5e-6e)';
+  const round1Count=(bracketData(p.catKey).schedule||[]).filter(x=>x.r===1).length || 1;
   const K=Math.max(2, round1Count*2);
   return roundNames(K)[(m.r||1)-1] || 'Phase finale';
 }
@@ -1654,9 +1946,14 @@ function bracketRoundLabel(m){
 // propre mini-phase indépendante (sinon elle fausserait la détection de fin de
 // tableau ci-dessus).
 async function advanceBracketIfRoundDone(phaseKey){
-  if(phaseKey==='finalesPrincipal3e'||phaseKey==='finalesConsolante3e') return; // match unique, terminal
-  const catKey = phaseKey==='finalesConsolante' ? 'consolante' : 'principal';
-  const sched=(bracketData(catKey).schedule||[]);
+  const parsed=parseFinalesPhase(phaseKey); if(!parsed) return;
+  const {catKey, branch}=parsed;
+  if(branch==='3e'||branch==='Petite') return; // match unique, terminal
+  // Une catégorie avec branche perdante (classification3) amorce celle-ci dès que
+  // les 4 quarts de SA branche gagnante sont joués — voir le bloc dédié en fin de
+  // fonction. Ne s'applique jamais à une catégorie `losers:false` (format classique).
+  const hasLosers = branch==='' && !!(activeCategories().find(c=>c.key===catKey)||{}).losers;
+  const sched=(bracketData(catKey, branch).schedule||[]);
   if(!sched.length) return;
   // On examine CHAQUE tour déjà présent, pas seulement le plus avancé (maxR) :
   // dès qu'une 1ère paire d'un tour est jouée, le tour suivant existe déjà
@@ -1673,6 +1970,19 @@ async function advanceBracketIfRoundDone(phaseKey){
   // des 2 premiers 1/4 (ou 1/8) terminés plutôt que des 2 vraies demi-finales.
   const round1Size = sched.filter(m=>(m.r||1)===1).length;
   const newMatches=[];
+  // Corrections d'équipe dans un match déjà généré, quand le vainqueur/perdant
+  // qui l'alimente a changé suite à une ré-saisie du score en amont (sinon ce
+  // match garde l'équipe issue de la 1ère saisie, qui n'est plus la bonne) —
+  // le match corrigé est remis à rejouer ; si lui-même avait déjà fait avancer
+  // la suite du tableau, la correction se propage à son tour quand il est
+  // resaisi (même mécanisme, un niveau à la fois).
+  const fixes=[];
+  const syncSlot=(existing,wantA,wantB)=>{
+    const f={id:existing.id};
+    if(existing.a!==wantA) f.aName=wantA;
+    if(existing.b!==wantB) f.bName=wantB;
+    if(f.aName || f.bName) fixes.push(f);
+  };
   rounds.forEach(r=>{
     const cur=sched.filter(m=>m.r===r).sort((a,b)=>(a.court||0)-(b.court||0));
     if(cur.length<=1) return; // pas de tour, ou déjà la finale : rien à générer après
@@ -1682,20 +1992,62 @@ async function advanceBracketIfRoundDone(phaseKey){
     for(let i=0;i*2+1<cur.length;i++){
       const m1=cur[i*2], m2=cur[i*2+1];
       if(!m1||!m2 || m1.status!=='done' || m2.status!=='done') continue; // paire pas encore complète
-      if(existingNext.some(m=>m.court===i+1)) continue; // déjà généré (ré-saisie d'un score)
       const w1=matchWinner(m1)==='a'?m1.a:m1.b, w2=matchWinner(m2)==='a'?m2.a:m2.b;
-      newMatches.push(...buildBracketMatches(phaseKey, nextR, [[w1,w2]]).matches.map(mm=>({...mm, court:i+1})));
+      const existing=existingNext.find(m=>m.court===i+1);
+      // Les 2 branches (vainqueurs vers le tour suivant, perdants vers la 3e place/
+      // petite finale) sont indépendantes : l'une peut déjà exister et pas l'autre
+      // (déjà vrai avant une ré-saisie), donc pas de `continue` qui saute la suite.
+      if(existing) syncSlot(existing, w1, w2);
+      else newMatches.push(...buildBracketMatches(phaseKey, nextR, [[w1,w2]], i).matches);
       if(expectedSize===2 && cur.length===2){
-        const phase3e = phaseKey==='finalesConsolante' ? 'finalesConsolante3e' : 'finalesPrincipal3e';
-        const already3e = (bracketData3e(catKey).schedule||[]).length>0;
-        if(!already3e){
-          const l1=matchWinner(m1)==='a'?m1.b:m1.a, l2=matchWinner(m2)==='a'?m2.b:m2.a;
-          newMatches.push(...buildBracketMatches(phase3e, 1, [[l1,l2]]).matches);
-        }
+        const spinoffBranch = branch==='Perdants' ? 'Petite' : '3e';
+        const phase3e = phaseKeyFor(catKey, spinoffBranch);
+        const existing3e = (bracketData(catKey, spinoffBranch).schedule||[])[0];
+        const l1=matchWinner(m1)==='a'?m1.b:m1.a, l2=matchWinner(m2)==='a'?m2.b:m2.a;
+        if(existing3e) syncSlot(existing3e, l1, l2);
+        else newMatches.push(...buildBracketMatches(phase3e, 1, [[l1,l2]]).matches);
       }
     }
   });
-  if(!newMatches.length) return;
+  // Amorce de la branche perdante (classification3 uniquement) : dès que les 4
+  // quarts de la branche gagnante sont terminés, les 4 perdants forment les 2
+  // demi-finales perdantes — appariés par paire de slots (QF0/QF1, QF2/QF3) pour
+  // éviter une revanche immédiate entre 2 équipes qui viennent de s'affronter.
+  if(hasLosers && round1Size===4){
+    const r1=sched.filter(m=>(m.r||1)===1).sort((a,b)=>(a.court||0)-(b.court||0));
+    const losersPhase=phaseKeyFor(catKey,'Perdants');
+    const losersSched=bracketData(catKey,'Perdants').schedule||[];
+    if(r1.length===4 && r1.every(m=>m.status==='done')){
+      const loser=m=>matchWinner(m)==='a'?m.b:m.a;
+      const pairs=[[loser(r1[0]),loser(r1[1])],[loser(r1[2]),loser(r1[3])]];
+      if(losersSched.length){
+        pairs.forEach(([a,b],i)=>{ const existing=losersSched.find(m=>(m.r||1)===1 && m.court===i+1); if(existing) syncSlot(existing,a,b); });
+      } else {
+        newMatches.push(...buildBracketMatches(losersPhase,1,pairs).matches);
+      }
+    }
+  }
+  if(fixes.length && window.vboDb){
+    await Promise.all(fixes.map(f=>vboDb.setMatchTeams(f.id, {aName:f.aName, bName:f.bName})));
+  }
+  if(!newMatches.length){
+    if(fixes.length){
+      const t=state.tournaments.find(x=>x.id===state.currentDraftId);
+      if(window.vboDb && t && vboDb.isUuid(t.id)){ const fresh=await vboDb.loadStructure(t.id); applyLoadedStructure(fresh); }
+    } else {
+      // Aucun nouveau match généré (la paire du tour n'est pas encore complète) :
+      // mais une équipe peut tout de même venir de se libérer (elle a gagné et
+      // attend son prochain tour). Sans ce recalcul immédiat, elle n'apparaîtrait
+      // comme arbitre disponible qu'au prochain rafraîchissement auto (10s) —
+      // recalculer tout de suite évite ce trou côté admin.
+      const branches=['','3e','Perdants','Petite'];
+      const catSched=branches.flatMap(b=>(bracketData(catKey,b).schedule)||[]);
+      const before={}; catSched.forEach(m=>{ before[m.id]=m.ref; });
+      assignBracketReferees(catSched);
+      persistBracketReferees(catSched, before);
+    }
+    return;
+  }
   const t=state.tournaments.find(x=>x.id===state.currentDraftId);
   if(window.vboDb && t && vboDb.isUuid(t.id)){
     await vboDb.addPhase(t.id, { gyms:[], pools:[], matches:newMatches });
@@ -1706,19 +2058,34 @@ async function advanceBracketIfRoundDone(phaseKey){
 // Bracket seedé depuis le classement global d'une catégorie (phase 2)
 function seedOrder(n){ let r=[0]; while(r.length<n){ const m=r.length*2; const nr=[]; r.forEach(s=>{nr.push(s);nr.push(m-1-s);}); r=nr; } return r; }
 function categoryRanking(cat){
-  const rows=[]; cat.pools.forEach(p=> poolStandingRows(p, cat.schedule).forEach(r=> rows.push(r)) );
+  const rows=[]; cat.pools.forEach(p=> poolStandingRows(p, cat.schedule).forEach(r=> rows.push({...r, pool:p.letter})) );
   rows.sort((a,b)=> b.pts-a.pts || (b.pf-b.pc)-(a.pf-a.pc) || a.t.localeCompare(b.t));
   return rows;
 }
 function roundNames(K){ const names=[]; let n=K; while(n>1){ names.push(n===2?'Finale':'1/'+(n/2)); n/=2; } return names; }
-function buildBracket(cat){
-  const rank=categoryRanking(cat);
-  let autoK=1; while(autoK*2<=rank.length) autoK*=2; autoK=Math.max(2,autoK);
-  const fs=state.config.finalStart||'auto';
-  // Choix manuel (16=1/8, 8=1/4, 4=1/2) borné au nombre réel de qualifiés
-  let K = fs==='auto' ? autoK : Math.min(+fs||autoK, autoK);
+// Équipes d'une catégorie, classées, point d'entrée unique du seeding du bracket :
+// classique → classement de la phase 2 jouée (poules principal/consolante) ;
+// classification3 → répartition par rang de poule du Brassage (§2), aucune phase
+// jouée entre les deux.
+function categoryTeams(catKey){
+  if(state.config.formula==='classification3'){
+    ensureClassGroups();
+    const sortBest=a=>a.slice().sort((x,y)=>(y._pts||0)-(x._pts||0) || (y._diff||0)-(x._diff||0) || x.t.localeCompare(y.t));
+    return sortBest(state.classGroups[catKey]||[]).map(x=>x.t);
+  }
+  return categoryRanking(phaseData(catKey)).map(r=>r.t);
+}
+function buildBracket(catKey){
+  const teams=categoryTeams(catKey);
+  let autoK=1; while(autoK*2<=teams.length) autoK*=2; autoK=Math.max(2,autoK);
+  // classification3 impose toujours 8 équipes/catégorie (quarts de finale) ; le
+  // format classique garde le choix manuel existant (16=1/8, 8=1/4, 4=1/2, borné
+  // au nombre réel de qualifiés).
+  let K;
+  if(state.config.formula==='classification3'){ K=autoK; }
+  else { const fs=state.config.finalStart||'auto'; K = fs==='auto' ? autoK : Math.min(+fs||autoK, autoK); }
   K=Math.max(2,K);
-  const seeds=rank.slice(0,K).map(r=>r.t);
+  const seeds=teams.slice(0,K);
   const order=seedOrder(K);
   const first=[]; for(let i=0;i<K/2;i++){ first.push([seeds[order[2*i]], seeds[order[2*i+1]]]); }
   return {K, first, seeds};
@@ -1729,12 +2096,10 @@ function buildBracket(cat){
 function ensureFinalesProposal(){
   if(state._finalesEdited && state._finalesProposal) return;
   const prop={};
-  const prin=buildBracket(phaseData('principal'));
-  prop.principal={K:prin.K, pairs:prin.first.map(p=>p.slice())};
-  if(state.config.phaseConsolante){
-    const cons=buildBracket(phaseData('consolante'));
-    prop.consolante={K:cons.K, pairs:cons.first.map(p=>p.slice())};
-  }
+  activeCategories().forEach(cat=>{
+    const b=buildBracket(cat.key);
+    prop[cat.key]={K:b.K, pairs:b.first.map(p=>p.slice())};
+  });
   state._finalesProposal=prop;
 }
 window.invalidateFinalesProposal=()=>{ state._finalesEdited=false; state._finalesProposal=null; };
@@ -2675,7 +3040,15 @@ screens.wizPhases = ()=>{
   tabbar.hidden=true;
   createStage=5;
   setTop('Déroulé du tournoi',{step:`6/${CREATE_STEPS.length}`, prog:createProgArr(5)});
-  host.innerHTML = `
+  const isClass3 = state.config.formula==='classification3';
+  host.innerHTML = isClass3 ? `
+    <h3 style="font-size:19px">Déroulé du tournoi</h3>
+    <p class="lead">Les phases s'enchaînent automatiquement.</p>
+    <div class="card" style="background:var(--surface-2);border:none;margin-top:12px">
+      <b>Format Classification 3 catégories</b>
+      <div class="muted" style="font-size:12.5px;margin-top:6px;line-height:1.55">Après le Brassage, pas de 2e tour de poules : les équipes sont directement réparties en 3 catégories de 8 (Principal, Consolante, Super-Consolante) selon leur rang dans leur poule. Chaque catégorie joue ensuite un tableau à élimination qui la classe de 1 à 8 (quarts → demies → finale), avec une branche « perdants » qui classe en parallèle les équipes de 5e à 8e place.</div>
+    </div>
+    <div id="wizPhaseList" style="margin-top:14px"></div>` : `
     <h3 style="font-size:19px">Déroulé du tournoi</h3>
     <p class="lead">Les phases s'enchaînent automatiquement.</p>
     <div class="toggle" style="margin-top:12px">
@@ -2701,10 +3074,18 @@ screens.wizPhases = ()=>{
     <button class="btn ghost sm" style="margin-top:10px;width:100%" onclick="saveDraft(true)">💾 Enregistrer et quitter</button>`;
   wizFooter.hidden=false;
   ['w_principalPools','w_principalTpp'].forEach(id=>{ const elc=document.getElementById(id); if(elc){ elc.addEventListener('live',updatePrincipalFit); elc.addEventListener('change',updatePrincipalFit); } });
-  updateConsoHint();
+  if(isClass3) renderWizPhaseList(); else updateConsoHint();
 };
 function renderWizPhaseList(){
   const box=document.getElementById('wizPhaseList'); if(!box) return;
+  if(state.config.formula==='classification3'){
+    const defs=[
+      ['Phase de brassage','Chaque équipe joue tous les adversaires de sa poule (6 poules de 4). Un classement se dégage par poule.'],
+      ['Phases finales','Répartition calculée en 3 catégories de 8 (Principal, Consolante, Super-Consolante), puis élimination directe classant chacune de 1 à 8, avec une branche perdante pour les 5e-8e places.'],
+    ];
+    box.innerHTML = `<div class="card">${defs.map((d,i)=>`<div class="phase"><div class="num">${i+1}</div><div><b>${d[0]}</b><small>${d[1]}</small></div></div>`).join('')}</div>`;
+    return;
+  }
   const sw=document.getElementById('sw_conso');
   const on=sw?sw.classList.contains('on'):!!C.phaseConsolante;
   const order = on ? ['brassage','poules2','finales'] : ['brassage','finales'];
@@ -2891,9 +3272,24 @@ screens.assignPools = ()=>{
   setTop('Répartition des équipes',{step:`5/${CREATE_STEPS.length}`, prog:createProgArr(4)});
   const G=state.config.gyms;
   const methods=[['snake','Serpentin'],['random','Aléatoire'],['manual','Manuel']];
+  const canClass3 = state.teams.length===24;
+  const isClass3 = state.config.formula==='classification3';
+  const formulaSeg=`<p class="eyebrow" style="margin:0 0 6px">Format du tournoi</p>
+    <div class="seg seg-strong" style="margin-bottom:4px">
+      <button class="${!isClass3?'on':''}" onclick="setFormula('classic')">Classique</button>
+      <button class="${isClass3?'on':''}" ${canClass3?'':'disabled style="opacity:.5"'} onclick="setFormula('classification3')">Classification 3 catégories</button>
+    </div>
+    <p class="muted" style="font-size:12px;margin:0 0 4px">${isClass3
+      ? "Répartit les équipes en 3 catégories de 8 (Principal, Consolante, Super-Consolante) selon leur rang de poule au Brassage, puis classe chaque catégorie de 1 à 8 par élimination directe. Pas de phase Principal/Consolante : l'étape suivante passera directement aux phases finales."
+      : "Brassage en poules, puis — selon vos réglages à l'étape suivante — un 2e tour de poules Principal/Consolante, puis des phases finales à élimination directe."}</p>
+    <p class="muted" style="font-size:11.5px;margin:0 0 16px${canClass3?';opacity:.7':''}">${canClass3
+      ? '✓ 24 équipes : la Classification 3 catégories est disponible.'
+      : `⚠ Nécessite exactement 24 équipes pour activer la Classification 3 catégories (actuellement ${state.teams.length}).`}</p>`;
   let h=`<div class="screen" style="padding:0">
     <p class="lead" style="margin-top:0">Vous avez <b>${state.teams.length} équipes</b> inscrites. Choisissez le découpage en poules, puis répartissez-les.</p>
+    ${formulaSeg}
     <p class="eyebrow" style="margin:16px 0 6px">Découpage en poules</p>
+    ${isClass3 ? `<div class="card" style="background:var(--surface-2);border:none;margin-bottom:12px"><b>Découpage imposé : 6 poules de 4 équipes</b><div class="muted" style="font-size:12px;margin-top:4px">Requis par le format Classification 3 catégories.</div></div>` : `
     <div class="card" style="background:var(--brand-soft);border:1.5px solid var(--brand);margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px;color:var(--brand)">✨ Trouver le meilleur découpage</div>
       <div style="font-size:12px;color:var(--muted);line-height:1.5;margin:6px 0 11px">Calcule d'un coup le nombre de poules et d'équipes par poule qui tombe juste sur vos <b>${state.teams.length} équipes</b>.</div>
@@ -2908,7 +3304,7 @@ screens.assignPools = ()=>{
     </div>
     <div class="card fit-card" id="poolFitCard" style="margin-top:10px">
       <div id="poolFit" class="fit-txt"></div>
-    </div>
+    </div>`}
     <p class="eyebrow" style="margin:16px 0 6px">Méthode de répartition</p>
     <div class="seg seg-strong" id="distSeg">${methods.map(m=>`<button class="${state.config.distribution===m[0]?'on':''}" onclick="setDist('${m[0]}')">${m[1]}</button>`).join('')}</div>
     <div class="card" style="background:var(--surface-2);border:none;font-size:12.5px;line-height:1.55" id="distHelp"></div>
@@ -2946,9 +3342,16 @@ screens.assignPools = ()=>{
   updateDistHelp(); updatePoolFit();
 };
 window.setDist=(m)=>{ state.config.distribution=m; rebuildPools(); screens.assignPools(); };
+window.setFormula=(f)=>{
+  if(f==='classification3' && state.teams.length!==24){ toast('⚠ Ce format nécessite exactement 24 équipes'); return; }
+  state.config.formula=f;
+  if(f==='classification3'){ state.config.pools=6; state.config.teamsPerPool=4; rebuildPools(); }
+  screens.assignPools();
+};
 // Étape 6 : on ne valide que si la répartition est correcte
 window.validateAssign=()=>{
   const n=state.teams.length, p=state.config.pools, t=state.config.teamsPerPool, cap=p*t;
+  if(state.config.formula==='classification3' && (n!==24 || p!==6 || t!==4)){ toast('⚠ Classification 3 catégories nécessite exactement 6 poules de 4 équipes'); return; }
   const placed=state.pools.reduce((s,pl)=>s+pl.teams.length,0);
   // On ne bloque QUE s'il y a moins de places que d'équipes (des équipes resteraient non placées).
   // Des places vides (cap > n) sont autorisées.
@@ -3391,6 +3794,11 @@ function phaseNextRoundCount(nxt){
     return rs.length?Math.max(...rs):1;
   }
   if(nxt==='finales'){
+    // En classification3, chaque catégorie joue ses 12 matchs (1/4 → 1/2 perdantes
+    // → 1/2 gagnantes → finale des perdants → 7e-8e → 3e place → finale) l'un après
+    // l'autre sur un seul terrain dédié (cf. class3SlotIndexFor) : 12 créneaux
+    // successifs, pas log2(K) tours en parallèle comme en formule classique.
+    if(state.config.formula==='classification3') return 12;
     const Ks=[];
     if(state._finalesProposal){
       if(state._finalesProposal.principal) Ks.push(state._finalesProposal.principal.K);
@@ -3652,15 +4060,17 @@ window.confirmPhaseSwitch=async ()=>{
         await vboDb.addPhase(t.id, structure);
       }
       if(nxt==='finales' && !alreadyPersistedFinales){
-        // Têtes de série du 1er tour, issues du classement réel de la phase précédente
-        // — sauf si l'admin a lui-même échangé des équipes via openFinalesPairingEditor().
+        // Têtes de série du 1er tour (branche gagnante) de chaque catégorie active,
+        // issues du classement réel de la phase précédente — sauf si l'admin a lui-même
+        // échangé des équipes via openFinalesPairingEditor(). La branche perdante
+        // (classification3) n'est jamais amorcée ici : elle naît dynamiquement via
+        // advanceBracketIfRoundDone() une fois les 4 quarts joués.
         const edited=state._finalesEdited && state._finalesProposal;
-        const prinPairs = edited && state._finalesProposal.principal ? state._finalesProposal.principal.pairs : buildBracket(phaseData('principal')).first;
-        const structure=buildBracketMatches('finalesPrincipal', 1, prinPairs);
-        if(state.config.phaseConsolante){
-          const consPairs = edited && state._finalesProposal.consolante ? state._finalesProposal.consolante.pairs : buildBracket(phaseData('consolante')).first;
-          structure.matches.push(...buildBracketMatches('finalesConsolante', 1, consPairs).matches);
-        }
+        const structure={gyms:[],pools:[],matches:[]};
+        activeCategories().forEach(cat=>{
+          const pairs = edited && state._finalesProposal[cat.key] ? state._finalesProposal[cat.key].pairs : buildBracket(cat.key).first;
+          structure.matches.push(...buildBracketMatches(phaseKeyFor(cat.key,''), 1, pairs).matches);
+        });
         await vboDb.addPhase(t.id, structure);
       }
       t.livePhase=nxt;
@@ -3770,8 +4180,14 @@ function refLine(m){
 
 /* ---------- Phases du tournoi (brassage → poules2 → finales) ---------- */
 const PHASE_ORDER=['brassage','poules2','finales'];
-// Déroulé réel : sans Consolante, on passe directement du brassage aux phases finales (2 phases)
-function phaseOrder(cfg){ const c=cfg||state.config; return c&&c.phaseConsolante===false ? ['brassage','finales'] : ['brassage','poules2','finales']; }
+// Déroulé réel : sans Consolante (classique) ou en classification3 (aucune phase
+// jouée entre le Brassage et les 1/4 de finale, cf. §1.5 du plan), on passe
+// directement du brassage aux phases finales (2 phases).
+function phaseOrder(cfg){
+  const c=cfg||state.config;
+  const twoPhase = (c&&c.formula==='classification3') || (c&&c.phaseConsolante===false);
+  return twoPhase ? ['brassage','finales'] : ['brassage','poules2','finales'];
+}
 const PHASE_ICON={brassage:'🔄', poules2:'🏐', finales:'🏆'};
 // Matchs de la phase EN COURS (pour vérifier qu'elle est bien terminée avant de clôturer).
 function currentPhaseMatches(){
@@ -3781,8 +4197,7 @@ function currentPhaseMatches(){
     return [...(state.phasePrincipal.schedule||[]), ...(state.config.phaseConsolante?(state.phaseConsolante.schedule||[]):[])];
   }
   if(state.livePhase==='finales'){
-    const sides=['principal', ...(state.config.phaseConsolante?['consolante']:[])];
-    return sides.flatMap(k=> [...(bracketData(k).schedule||[]), ...(bracketData3e(k).schedule||[])]);
+    return activeCategories().flatMap(cat=> bracketBranchesFor(cat).flatMap(b=> bracketData(cat.key,b).schedule||[]));
   }
   return [];
 }
@@ -3820,8 +4235,7 @@ function liveNowMatches(){
     ];
   }
   if(state.livePhase==='finales'){
-    const sides=['principal', ...(state.config.phaseConsolante?['consolante']:[])];
-    return sides.flatMap(k=> [...activeRoundMatches(bracketData(k).schedule||[]), ...activeRoundMatches(bracketData3e(k).schedule||[])]);
+    return activeCategories().flatMap(cat=> bracketBranchesFor(cat).flatMap(b=> activeRoundMatches(bracketData(cat.key,b).schedule||[])));
   }
   return [];
 }
@@ -4142,8 +4556,12 @@ function schedRow(m, showCat){
   // côté capitaine/arbitre, même effet côté API : started_at).
   const startBtn = (canEnter && m.status==='upcoming')
     ? `<button class="btn ghost sm" style="margin-top:8px;width:100%" onclick="adminStartMatch('${m.id}')">▶️ Démarrer ce match</button>` : '';
+  // Avec un seul gymnase (déjà rappelé une fois en haut de l'écran Planning),
+  // préciser lequel sur chaque match n'apporte rien : on retire simplement le chip.
+  const oneGym=(state.config.gyms||1)===1;
+  const locChip = oneGym ? '' : `<span class="chip" style="background:color-mix(in srgb, ${gymColor(m.gym)} 18%, var(--surface-2));color:${gymColor(m.gym)}">🏟️ ${m.gym}</span>`;
   return `<div class="match ${m.status==='done'?'done':m.status==='live'?'live':'upcoming'}">
-    <div class="meta"><span class="chip" style="background:color-mix(in srgb, ${gymColor(m.gym)} 18%, var(--surface-2));color:${gymColor(m.gym)}">🏟️ ${m.gym}</span><span>Terrain ${m.court} · Poule ${m.pool}</span>${schedBadge(m.status)}</div>
+    <div class="meta">${locChip}<span>Terrain ${m.court} · Poule ${m.pool}</span>${schedBadge(m.status)}</div>
     ${showCat?schedCatTag(m):''}
     <div class="teams"><span class="t"><span>${m.a}</span>${levelBadge(m.a)}</span><span class="sc">${sc}</span><span class="t right"><span>${m.b}</span>${levelBadge(m.b)}</span></div>${refLine(m)}
     ${canEnter?`<button class="btn ghost sm" style="margin-top:8px;width:100%" onclick="openAdminScoreSheet('${m.id}')">${btnLabel}</button>`:''}
@@ -4181,7 +4599,7 @@ window.adminStartMatch=async (id)=>{
 // sets que le brassage).
 function rulesForMatchPhase(phase){
   if(phase==='principal'||phase==='consolante') return rulesFor('poules2');
-  if(phase==='finalesPrincipal'||phase==='finalesConsolante'||phase==='finalesPrincipal3e'||phase==='finalesConsolante3e') return rulesFor('finales');
+  if(parseFinalesPhase(phase)) return rulesFor('finales');
   return rulesFor('brassage');
 }
 // Valide le score d'un set selon le réglage "2 points d'écart" :
@@ -4212,10 +4630,15 @@ window.openAdminScoreSheet=(id)=>{
       <div><div class="tlab">${m.b}</div><input class="num" id="bsc${s}" inputmode="numeric" value="${sb}" placeholder="0"></div>
     </div>`;
   }).join('');
-  // Les matchs de bracket n'ont ni poule ni vrai terrain : on affiche le nom du tour.
-  const isThird = m.phase==='finalesPrincipal3e' || m.phase==='finalesConsolante3e';
-  const isFinals = isThird || m.phase==='finalesPrincipal' || m.phase==='finalesConsolante';
-  const subtitle = isFinals ? `${isThird?'🥉':'🏆'} ${bracketRoundLabel(m)}` : `Poule ${m.pool} · Terrain ${m.court} · ${m.gym}`;
+  // Les matchs de bracket n'ont ni poule ni vrai terrain (sauf en classification3,
+  // où class3MatchInfo résout l'horaire réel + le terrain dédié de la catégorie) :
+  // on affiche le nom du tour, et cet horaire/terrain quand il est connu.
+  const parsedPhase = parseFinalesPhase(m.phase);
+  const isThird = parsedPhase && (parsedPhase.branch==='3e' || parsedPhase.branch==='Petite');
+  const ci3=class3MatchInfo(m);
+  const subtitle = parsedPhase
+    ? `${isThird?'🥉':'🏆'} ${bracketRoundLabel(m)}${ci3?` · 🕒 ${ci3.time} · Terrain ${ci3.court}`:''}`
+    : `Poule ${m.pool} · Terrain ${m.court} · ${m.gym}`;
   // Même bouton de démarrage que sur les matchs de poule (schedRow) : on le propose
   // aussi ici pour les matchs de bracket, qui n'ont pas d'autre point d'entrée.
   const startBtn = m.status==='upcoming'
@@ -4258,7 +4681,7 @@ window.submitAdminScore=async (id)=>{
     if(window.vboDb) await vboDb.setMatchScore(id, sets, complete);
     const m=findMatchById(id);
     if(m) Object.assign(m, {sa:sets[0][0], sb:sets[0][1], sets, status: complete?'done':'upcoming'});
-    if(m && complete && (m.phase==='finalesPrincipal'||m.phase==='finalesConsolante')) await advanceBracketIfRoundDone(m.phase);
+    if(m && complete && m.phase && m.phase.indexOf('finales')===0) await advanceBracketIfRoundDone(m.phase);
     closeSheet();
     toast(complete?'✓ Score enregistré':'✓ Set enregistré — revenez après le prochain set');
     const cur=navStack[navStack.length-1];
@@ -4397,21 +4820,29 @@ function tvPhaseMatches(){
 // sur place par l'organisation, jamais enregistré. Plutôt que d'inventer un
 // gymnase (source d'incohérence avec la réalité du terrain), on regroupe par
 // catégorie (Principal/Consolante), seule information fiable à ce stade.
-const TV_FINALES_CATS=[
-  {label:'Principal', phases:['finalesPrincipal','finalesPrincipal3e'], color:GYMS[0].color},
-  {label:'Consolante', phases:['finalesConsolante','finalesConsolante3e'], color:GYMS[1].color},
-];
+// Une colonne par catégorie active ; en classification3, les branches gagnante
+// et perdante d'une même catégorie sont FUSIONNÉES dans sa colonne (décision
+// validée) — 3 colonnes au total, pas 6.
+function tvFinalesCats(){
+  return activeCategories().map(cat=>({
+    label: cat.label, color: cat.color,
+    phases: bracketBranchesFor(cat).map(b=>phaseKeyFor(cat.key,b)),
+  }));
+}
 function tvColumns(matches){
   if(state.livePhase!=='finales'){
     const gymOrder=[...new Set(matches.map(m=>m.gym))].filter(Boolean).sort((a,b)=>a.localeCompare(b,'fr'));
     return gymOrder.map(g=>({label:g, color:gymColor(g), matches:matches.filter(m=>m.gym===g)}));
   }
-  return TV_FINALES_CATS
+  return tvFinalesCats()
     .map(c=>({label:c.label, color:c.color, matches:matches.filter(m=>c.phases.includes(m.phase))}))
     .filter(c=>c.matches.length);
 }
 function tvRoundLabel(m){
-  if(m.phase==='finalesPrincipal3e'||m.phase==='finalesConsolante3e') return 'Petite finale (3e place)';
+  const p=parseFinalesPhase(m.phase); if(!p) return 'Phase finale';
+  if(p.branch==='3e') return 'Petite finale (3e place)';
+  if(p.branch==='Petite') return 'Petite finale (7e-8e)';
+  if(p.branch==='Perdants') return (m.r||1)===1 ? 'Demi-finale (perdants)' : 'Finale des perdants (5e-6e)';
   const round1Count=(state.schedule||[]).filter(x=>x.phase===m.phase && x.r===1).length || 1;
   const K=Math.max(2, round1Count*2);
   return roundNames(K)[(m.r||1)-1] || 'Phase finale';
@@ -4425,10 +4856,16 @@ function tvMatchRow(m){
   // bracketRoundLabel() s'appuie sur state.bracketPrincipal/Consolante, qui ne
   // sont alimentés que côté admin (buildBracket) : côté TV on recalcule donc le
   // libellé depuis state.schedule, comme le fait déjà matchPhaseChip côté capitaine.
+  // Classification3 : terrain réel dédié à la catégorie + horaire propre à CE
+  // match (contrairement au format classique, où tous les matchs d'un même tour
+  // du bracket partagent le même horaire théorique, affiché une seule fois par
+  // groupe dans tvGymColumn — cf. class3MatchInfo).
+  const ci3=class3MatchInfo(m);
   const metaTag=m.pool ? `<span>Poule ${m.pool}</span>` : `<span>${tvRoundLabel(m)}</span>`;
-  const courtTag=m.pool ? `<span>Terrain ${m.court}</span>` : '';
+  const courtTag = m.pool ? `<span>Terrain ${m.court}</span>` : (ci3?`<span>Terrain ${ci3.court}</span>`:'');
+  const timeTag = ci3 ? `<span>🕒 ${ci3.time}</span>` : '';
   return `<div class="tv-match ${m.status==='live'?'live':''}">
-    <div class="tv-match-meta">${courtTag}${metaTag}${schedBadge(m.status)}</div>
+    <div class="tv-match-meta">${courtTag}${metaTag}${timeTag}${schedBadge(m.status)}</div>
     <div class="tv-teams"><span class="tv-team">${m.a}</span><span class="tv-score">${sc}</span><span class="tv-team tv-team-right">${m.b}</span></div>
     ${refHtml}
   </div>`;
@@ -4466,24 +4903,42 @@ function tvRenderTimer(){
   el.innerHTML=`⏱ ${label} · <span class="tv-timer-time">${fmtClock(t.remaining)}</span>`;
 }
 function tvGymColumn(matches){
-  // Le match de 3e place (perdants des demi-finales) a sa propre numérotation
-  // de tour, qui redémarre toujours à 1 (cf. buildBracketMatches), indépendamment
-  // du tableau principal : le regrouper par simple m.r le mélangerait avec un
-  // tour sans rapport (ex: les 1/4 de finale, si round1=2 ne correspond pas au
-  // tour des demies). On le sort donc à part, affiché après le dernier tour réel
-  // — comme côté organisateur, où il est positionné juste sous la finale.
-  const isThird=m=>m.phase==='finalesPrincipal3e'||m.phase==='finalesConsolante3e';
-  const rounds=[...new Set(matches.filter(m=>!isThird(m)).map(m=>m.r))].sort((a,b)=>a-b);
-  const groups=rounds.map(r=>({label:`Tour ${r}`, ms:matches.filter(m=>!isThird(m)&&m.r===r)}));
-  const third=matches.filter(isThird);
-  if(third.length) groups.push({label:'Petite finale (3e place)', ms:third});
+  // Les matchs de bracket se répartissent en 2 branches (gagnante '' et, en
+  // classification3, perdante 'Perdants', fusionnées dans la même colonne par
+  // tvFinalesCats) + leurs spin-offs terminaux ('3e'/'Petite'). Regrouper par
+  // simple m.r mélangerait le tour 1 de la branche gagnante avec celui de la
+  // branche perdante (tous deux r===1) : on groupe donc par (branche, tour), et
+  // on affiche les spin-offs à part, après leur branche respective — comme côté
+  // organisateur, où la petite finale est positionnée juste sous la finale.
+  const branchOf=m=>(parseFinalesPhase(m.phase)||{}).branch||'';
+  const isSpinoff=m=>{ const b=branchOf(m); return b==='3e'||b==='Petite'; };
+  const branchOrder={'':0, 'Perdants':1};
+  const spinoffLabel={'3e':'Petite finale (3e place)', 'Petite':'Petite finale (7e-8e)'};
+  const mainKeys=[...new Set(matches.filter(m=>!isSpinoff(m)).map(m=>branchOf(m)+':'+m.r))]
+    .sort((ka,kb)=>{
+      const [ba,ra]=ka.split(':'), [bb,rb]=kb.split(':');
+      return (branchOrder[ba]??0)-(branchOrder[bb]??0) || (+ra)-(+rb);
+    });
+  const groups=mainKeys.map(key=>{
+    const [b,r]=key.split(':');
+    const ms=matches.filter(m=>!isSpinoff(m) && branchOf(m)===b && String(m.r)===r);
+    return {label: ms.length?tvRoundLabel(ms[0]):`Tour ${r}`, ms};
+  });
+  ['3e','Petite'].forEach(b=>{
+    const ms=matches.filter(m=>branchOf(m)===b);
+    if(ms.length) groups.push({label:spinoffLabel[b], ms});
+  });
   const roundsHtml=groups.map(({label,ms:raw})=>{
     const ms=raw.sort((a,b)=>(a.court||0)-(b.court||0));
     const done=ms.every(m=>m.status==='done');
     const live=!done&&ms.some(m=>m.status==='live'||matchSetsPlayed(m).length>0);
     const col=done?'var(--ok)':live?'var(--warn)':'var(--brand)';
+    // En classification3, chaque match du groupe a son propre horaire (affiché
+    // par tvMatchRow) : un horaire unique ici ne montrerait que celui du 1er
+    // match du groupe et serait trompeur pour les autres.
+    const groupTime = state.config.formula!=='classification3' ? ms[0].time : null;
     return `<div class="tv-round" style="--round-col:${col}">
-      <div class="tv-round-head"><span class="tv-dot" style="background:${col}"></span><b>${label}</b><span class="tv-round-time">${ms[0].time}</span></div>
+      <div class="tv-round-head"><span class="tv-dot" style="background:${col}"></span><b>${label}</b>${groupTime?`<span class="tv-round-time">${groupTime}</span>`:''}</div>
       ${ms.map(tvMatchRow).join('')}
     </div>`;
   }).join('');
@@ -4528,13 +4983,20 @@ screens.tv = ()=>{
   const doneCount=matches.filter(m=>m.status==='done').length;
   const upcomingCount=matches.length-liveCount-doneCount;
   const phaseLbl=TV_PHASE_LABEL[state.livePhase]||TV_PHASE_LABEL.brassage;
+  if(!state.joinCode){ const ct=state.tournaments.find(x=>x.id===state.currentDraftId); state.joinCode=(ct&&ct.joinCode)||null; }
+  const tvQrHtml = state.joinCode ? `<div class="tv-qr"><div class="tv-qr-box" id="tvQrCode"></div><div class="tv-qr-label">Pour les capitaines<b>${state.joinCode}</b></div></div>` : '<div></div>';
   host.innerHTML=`<div class="tv-screen">
     <div class="tv-sticky">
       <div class="tv-header">
-        <div class="tv-title">${logoMark()}<span>${state.config.name||'Tournoi VBO'}</span></div>
-        <div class="tv-phase">${phaseLbl}</div>
-        <div class="tv-timer" id="tvTimer"></div>
-        <div class="tv-clock" id="tvClock"></div>
+        <div class="tv-header-side tv-header-left">
+          <div class="tv-title">${logoMark()}<span>${state.config.name||'Tournoi VBO'}</span></div>
+          <div class="tv-phase">${phaseLbl}</div>
+        </div>
+        ${tvQrHtml}
+        <div class="tv-header-side tv-header-right">
+          <div class="tv-timer" id="tvTimer"></div>
+          <div class="tv-clock" id="tvClock"></div>
+        </div>
       </div>
       <div class="tv-stats"><span>● ${liveCount} en cours</span><span>${upcomingCount} à venir</span><span>${doneCount} terminé${doneCount>1?'s':''}</span></div>
       ${cols.length ? `<div class="tv-gym-row" style="--n:${cols.length}">${cols.map(c=>`<div class="tv-gym-label" style="--gym-col:${c.color}"><span class="tv-gym-dot" style="background:${c.color}"></span>${c.label}</div>`).join('')}</div>` : ''}
@@ -4547,6 +5009,10 @@ screens.tv = ()=>{
   tvTickClock();
   if(!window._tvClockTimer) window._tvClockTimer=setInterval(tvTickClock, 1000);
   if(!_tvScrollTimer) tvStartAutoScroll();
+  if(state.joinCode){
+    const qrBox=document.getElementById('tvQrCode');
+    if(qrBox){ try{ new QRCode(qrBox,{text:buildJoinUrl(state.joinCode),width:88,height:88,colorDark:'#141a2e',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H}); }catch(e){} }
+  }
 };
 
 let standPool=null;
@@ -4677,36 +5143,88 @@ window.openTieBreakEditor=(tieKey)=>{
 };
 let standPhase='brassage';
 let standGym='all';
-const PHASE_LABEL={brassage:'Brassage',principal:'Principal',consolante:'Consolante'};
+const PHASE_LABEL={brassage:'Brassage',global:'Général'};
+function phaseLabelFor(k){ return PHASE_LABEL[k] || ((activeCategories().find(c=>c.key===k)||{}).label) || k; }
 function phaseSeg(current,fn){
-  // Principal/Consolante n'ont de sens qu'une fois le Brassage terminé
-  // (phase 2 construite) — sinon ces onglets n'affichent rien et laissent
-  // croire que la phase 2 a déjà démarré.
+  // Les catégories n'ont de sens qu'une fois le Brassage terminé (répartition
+  // calculée pour classification3, ou phase 2 construite pour le format
+  // classique) — sinon ces onglets n'affichent rien et laissent croire que
+  // la phase 2 a déjà démarré. « Général » (toutes catégories confondues)
+  // n'a de sens que si au moins une catégorie existe.
   const phase2Reached = state.livePhase!=='brassage';
-  const keys=['brassage',...(phase2Reached?['principal',...(state.config.phaseConsolante?['consolante']:[])]:[])];
-  return `<div class="seg seg-strong" style="margin-bottom:8px">${keys.map(k=>`<button class="${current===k?'on':''}" onclick="${fn}('${k}')">${PHASE_LABEL[k]}</button>`).join('')}</div>`;
+  const keys=['brassage',...(phase2Reached?['global',...activeCategories().map(c=>c.key)]:[])];
+  return `<div class="seg seg-strong" style="margin-bottom:8px">${keys.map((k,i)=>{
+    // Séparateur visuel entre "Brassage" (phase 1) et le groupe phase 2
+    // (Général/catégories), comme dans le planning.
+    const sep = (i===1 && k!=='brassage') ? `<div style="width:1.5px;align-self:stretch;margin:2px 1px;background:var(--line);border-radius:1px"></div>` : '';
+    return `${sep}<button class="${current===k?'on':''}" onclick="${fn}('${k}')">${phaseLabelFor(k)}</button>`;
+  }).join('')}</div>`;
 }
 window.setStandPhase=k=>{ standPhase=k; standPool=null; render('standings'); };
+function classGroupRows(catKey){
+  ensureClassGroups();
+  return (state.classGroups[catKey]||[]).slice().sort((x,y)=>y.pts-x.pts || (y.pf-y.pc)-(x.pf-x.pc) || x.t.localeCompare(y.t));
+}
+// Tableau plat (gabarit identique à la vue « Général ») : réutilisé pour l'onglet
+// « Général » (toutes catégories) et pour chaque catégorie individuelle en
+// classification3, où il n'existe pas de phase 2 jouée par poules.
+function flatRankingTable(title, rows, note){
+  return `<div class="pool"><div class="ph">${title}<span class="tn">${rows.length} équipes</span></div>
+  <div style="overflow-x:auto">
+  <table class="tbl" style="min-width:460px"><thead><tr><th>Équipe</th>${rows[0]&&rows[0].cat?'<th>Cat.</th>':''}<th>J</th><th>V</th><th>PP</th><th>PC</th><th>Diff</th><th>Pts</th></tr></thead><tbody>
+  ${rows.map((r,i)=>{const d=r.pf-r.pc;const dc=d>0?'var(--ok)':d<0?'var(--danger)':'var(--muted)';return `<tr><td><span class="rk">${i+1}</span><span class="tcell"><span>${r.t}</span>${levelBadge(r.t)}</span></td>${r.cat?`<td>${r.cat}</td>`:''}<td>${r.j}</td><td style="color:var(--ok);font-weight:800">${r.g}</td><td>${r.pf}</td><td>${r.pc}</td><td style="color:${dc};font-weight:800">${d>0?'+':''}${d}</td><td><b>${r.pts}</b></td></tr>`;}).join('')}
+  </tbody></table></div></div>
+  <p class="muted" style="font-size:12px;margin-top:10px;line-height:1.6"><b>V</b> victoires · <b>PP</b> points pour · <b>PC</b> points contre · <b>Diff</b> différence · <b>Pts</b> points de classement (${state.config.winPts??3} par victoire, ${state.config.lossPts??0} par défaite).</p>
+  ${note?`<p class="muted" style="font-size:12.5px;margin-top:6px">${note}</p>`:''}`;
+}
 screens.standings = ()=>{
   setTop(null); renderTabs('standings');
   if(standPhase!=='brassage' && state.livePhase==='brassage') standPhase='brassage';
+  const isClass3 = state.config.formula==='classification3';
+  if(standPhase==='global'){
+    const rows = isClass3
+      ? activeCategories().flatMap(c=>classGroupRows(c.key).map(r=>({...r, cat:c.label})))
+      : [
+          ...categoryRanking(phaseData('principal')).map(r=>({...r, cat:'Principal'})),
+          ...(state.config.phaseConsolante ? categoryRanking(phaseData('consolante')).map(r=>({...r, cat:'Consolante'})) : []),
+        ];
+    const note = isClass3
+      ? `Répartition en 3 catégories de 8 selon le rang de poule au Brassage (voir l'onglet de chaque catégorie pour le détail) — classement de chacune mis à jour au fil des phases finales.`
+      : `Classement Principal (1 à ${categoryRanking(phaseData('principal')).length}) puis Consolante (${categoryRanking(phaseData('principal')).length+1} à ${rows.length}) — chaque catégorie est classée en fusionnant ses propres poules (comparables : même niveau et même nombre de matchs).`;
+    host.innerHTML=`<div style="padding:0">
+      <h3 style="font-size:19px;margin-bottom:var(--pad-y)">Classement général</h3>
+      <div class="filter-sticky">${phaseSeg(standPhase,'setStandPhase')}</div>
+      ${flatRankingTable('Toutes catégories confondues', rows, note)}
+    </div>`;
+    return;
+  }
+  if(isClass3 && activeCategories().some(c=>c.key===standPhase)){
+    const cat=activeCategories().find(c=>c.key===standPhase);
+    const rows=classGroupRows(standPhase);
+    host.innerHTML=`<div style="padding:0">
+      <h3 style="font-size:19px;margin-bottom:var(--pad-y)">Classements · ${cat.label}</h3>
+      <div class="filter-sticky">${phaseSeg(standPhase,'setStandPhase')}</div>
+      ${flatRankingTable(cat.label, rows)}
+    </div>`;
+    return;
+  }
   const phase=phaseData(standPhase);
   const allPools=phase.pools||[];
+  const qualNote = standPhase==='brassage'
+    ? `<span class="rk top" style="margin:0 4px 0 0">1</span>1ers &amp; 2es → Principal (+ meilleurs 3es repêchés si besoin) · le reste → Consolante.`
+    : `<span class="rk top" style="margin:0 4px 0 0">1</span>Les mieux classés sont têtes de série pour les phases finales.`;
   const realGyms=[...new Set(allPools.map(x=>gymName(x.gym)))];
   if(realGyms.length<=1 || !realGyms.includes(standGym)) standGym='all';
   const pools = standGym==='all' ? allPools : allPools.filter(x=>gymName(x.gym)===standGym);
   if(!standPool || !pools.find(p=>p.letter===standPool)) standPool = pools[0]?pools[0].letter:null;
   const p=pools.find(x=>x.letter===standPool);
-  const qualNote = standPhase==='brassage'
-    ? `<span class="rk top" style="margin:0 4px 0 0">1</span>1ers &amp; 2es → Principal (+ meilleurs 3es repêchés si besoin) · le reste → Consolante.`
-    : `<span class="rk top" style="margin:0 4px 0 0">1</span>Les mieux classés sont têtes de série pour les phases finales.`;
   const gymSeg = realGyms.length<=1 ? '' : `<p class="eyebrow" style="margin:14px 0 6px">🏟️ Gymnase</p>
     <div class="seg seg-strong">${['all',...realGyms].map(g=>`<button class="${standGym===g?'on':''}" onclick="standGym='${g}';standPool=null;render('standings')">${g!=='all'?`<span class="dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${gymColor(g)};margin-right:5px;vertical-align:middle"></span>`:''}${g==='all'?'Tous':g}</button>`).join('')}</div>`;
   if(!p){ host.innerHTML=`<div style="padding:0"><h3 style="font-size:19px;margin-bottom:var(--pad-y)">Classements par poule</h3><div class="filter-sticky">${phaseSeg(standPhase,'setStandPhase')}${gymSeg}</div><p class="muted" style="margin-top:10px">Aucune poule pour cette phase.</p></div>`; return; }
   const rows=poolStandingRows(p, phase.schedule);
   const courtLabel=`${gymName(p.gym)} · T${p.court}`;
   host.innerHTML=`<div style="padding:0">
-    <h3 style="font-size:19px;margin-bottom:var(--pad-y)">Classements · ${PHASE_LABEL[standPhase]}</h3>
+    <h3 style="font-size:19px;margin-bottom:var(--pad-y)">Classements · ${phaseLabelFor(standPhase)}</h3>
     <div class="filter-sticky">
     ${phaseSeg(standPhase,'setStandPhase')}
     ${gymSeg}
@@ -4772,6 +5290,15 @@ async function applyConflictResolution(matchId){
   if(state.currentDraftId && window.vboDb && vboDb.isUuid(state.currentDraftId)){
     try{ applyLoadedStructure(await vboDb.loadStructure(state.currentDraftId)); }catch(e){ console.warn('Relecture structure:', e); }
   }
+  // Comme submitAdminScore (saisie directe d'un score côté admin) : un score validé
+  // ici (saisie capitaine, conflit tranché, ou unique saisie acceptée) doit aussi
+  // faire avancer le bracket — génération du tour suivant, 3e place, branche
+  // perdante — sinon rien ne se passe après ce match (ex: les 2 derniers 1/4 d'une
+  // catégorie validés via cet écran, sans jamais faire apparaître la demi-finale).
+  try{
+    const m=findMatchById(matchId);
+    if(m && m.phase && m.phase.indexOf('finales')===0) await advanceBracketIfRoundDone(m.phase);
+  }catch(e){ console.warn('Avancement bracket:', e); }
   toast('Score validé — classement mis à jour');
   renderTabs('validate'); screens.validate();
 }
@@ -4823,20 +5350,26 @@ window.submitResolveManual=async (matchId)=>{
   }
 };
 
-let bracketCat='principal';
-window.setBracketCat=k=>{ bracketCat=k; render('bracket'); };
+// Persisté (localStorage) pour que l'onglet catégorie choisi (Principal/
+// Consolante/Super-Consolante) survive à un simple rechargement de page (F5) —
+// sinon la variable repartait toujours de 'principal' au reboot du script.
+let bracketCat=(()=>{ try{ return localStorage.getItem('vbo_bracket_cat')||'principal'; }catch(_){ return 'principal'; } })();
+window.setBracketCat=k=>{
+  bracketCat=k;
+  try{ localStorage.setItem('vbo_bracket_cat', k); }catch(_){}
+  render('bracket');
+};
 // Classement 1er/2e/3e d'une catégorie : vainqueur/perdant de la finale + vainqueur de la
 // petite finale. Tant que ces matchs ne sont pas (tous) joués, projection basée sur les
 // têtes de série (`real:false`) — même esprit que l'aperçu du tableau avant lancement.
 function podiumInfo(catKey){
-  const cat=phaseData(catKey);
-  const br=buildBracket(cat);
+  const br=buildBracket(catKey);
   const names=roundNames(br.K);
   const hasThird=br.K>=4;
   const sched=bracketData(catKey).schedule||[];
   const finalMatch=sched.find(m=>m.r===names.length);
   const finalDone=finalMatch && finalMatch.status==='done';
-  const thirdMatch=hasThird ? (bracketData3e(catKey).schedule||[])[0] : null;
+  const thirdMatch=hasThird ? (bracketData(catKey,'3e').schedule||[])[0] : null;
   const thirdDone=thirdMatch && thirdMatch.status==='done';
   let first=null, second=null, third=null;
   if(finalDone){ const w=matchWinner(finalMatch); first=w==='a'?finalMatch.a:finalMatch.b; second=w==='a'?finalMatch.b:finalMatch.a; }
@@ -4845,10 +5378,10 @@ function podiumInfo(catKey){
 }
 screens.bracket = ()=>{
   setTop(null); renderTabs('bracket');
-  if(bracketCat==='consolante' && !state.config.phaseConsolante) bracketCat='principal';
-  const cat=phaseData(bracketCat);
-  const catLabel=PHASE_LABEL[bracketCat];
-  const br=buildBracket(cat);
+  if(!activeCategories().some(c=>c.key===bracketCat)) bracketCat=activeCategories()[0].key;
+  const catObj=activeCategories().find(c=>c.key===bracketCat);
+  const catLabel=catObj.label;
+  const br=buildBracket(bracketCat);
   // Si l'admin a ajusté manuellement les face-à-face du 1er tour (fiche « Fin de
   // phase »), l'aperçu doit refléter cet ajustement et non le seedage automatique.
   ensureFinalesProposal();
@@ -4867,8 +5400,7 @@ screens.bracket = ()=>{
   const byRound=r=>persisted.filter(m=>m.r===r).sort((a,b)=>(a.court||0)-(b.court||0));
   const started=persisted.length>0;
   const catSeg=`<div class="filter-sticky"><div class="seg seg-strong">
-    <button class="${bracketCat==='principal'?'on':''}" onclick="setBracketCat('principal')">Principal</button>
-    ${state.config.phaseConsolante?`<button class="${bracketCat==='consolante'?'on':''}" onclick="setBracketCat('consolante')">Consolante</button>`:''}
+    ${activeCategories().map(c=>`<button class="${bracketCat===c.key?'on':''}" onclick="setBracketCat('${c.key}')">${c.label}</button>`).join('')}
   </div></div>`;
 
   // Podium : sur la même page que le tableau (pas un onglet/vue séparée).
@@ -4892,7 +5424,7 @@ screens.bracket = ()=>{
   // déterminables, donc on ne l'affiche pas.
   let thirdBlockHtml='';
   if(hasThird){
-    const m3=(bracketData3e(bracketCat).schedule||[])[0];
+    const m3=(bracketData(bracketCat,'3e').schedule||[])[0];
     if(m3) thirdBlockHtml=`<div class="third-finale"><h4>🥉 Petite finale</h4>${bm(m3.a, m3.b, m3)}</div>`;
   }
   let cols='';
@@ -4920,10 +5452,35 @@ screens.bracket = ()=>{
     // Rappel de l'horaire de départ — uniquement sur le 1er tour : les tours suivants
     // démarrent dès que le tour précédent est joué, donc leur horaire théorique n'a
     // pas de valeur informative pour l'admin.
-    const roundTime = round===1 ? (real.length ? real[0].time : bracketSlotTime(round)) : null;
+    // Masqué en classification3 : chaque match y a déjà son propre horaire affiché
+    // sur sa carte (cf. bm/class3MatchInfo) — un unique badge de tour ne montrerait
+    // que l'horaire du 1er match et serait trompeur pour les 3 autres.
+    const roundTime = (round===1 && state.config.formula!=='classification3') ? (real.length ? real[0].time : bracketSlotTime(round)) : null;
     cols+=`<div class="round"><div class="round-head"><h4>${names[ci]}</h4>${roundTime?`<div class="rtime">🕒 ${roundTime}</div>`:''}</div><div class="rmatches">${inner}</div></div>`;
   }
   const rw=164+nSets*20;
+  // Branche perdante (formule classification3 uniquement) : affichée sous le tableau
+  // principal de la catégorie, même carte visuelle que la 3e place (bm/rm réutilisés),
+  // mais empilée normalement (pas d'overlay absolu comme la petite finale principale)
+  // pour rester indépendante du calcul de hauteur dynamique fait plus bas.
+  let losingBranchHtml='';
+  if(catObj.losers){
+    const lSched=bracketData(bracketCat,'Perdants').schedule||[];
+    const semis=lSched.filter(m=>m.r===1).sort((a,b)=>(a.court||0)-(b.court||0));
+    const final5=lSched.find(m=>m.r===2);
+    const petite=(bracketData(bracketCat,'Petite').schedule||[])[0];
+    if(semis.length){
+      const semisHtml=semis.map(m=>rm(bm(m.a,m.b,m))).join('');
+      const finalHtml=rm(bm(final5?final5.a:'À déterminer', final5?final5.b:'À déterminer', final5));
+      losingBranchHtml = `
+      <p class="eyebrow" style="margin:16px 0 8px">🥈 Branche perdante (5e à 8e place)</p>
+      <div class="bracket" style="--rw:${rw}px">
+        <div class="round"><div class="round-head"><h4>Demi-finale (perdants)</h4></div><div class="rmatches">${semisHtml}</div></div>
+        <div class="round"><div class="round-head"><h4>Finale des perdants</h4></div><div class="rmatches">${finalHtml}</div></div>
+      </div>
+      ${petite?`<div class="card" style="margin-top:10px;max-width:${rw}px"><h4 style="margin:0 0 6px">🥉 Petite finale (7e-8e)</h4>${bm(petite.a,petite.b,petite)}</div>`:''}`;
+    }
+  }
   // Chrono visible ici aussi quand les phases finales se jouent au temps —
   // une seule phase "finales" pour Principal et Consolante, donc valable
   // quelle que soit la catégorie affichée (bracketCat).
@@ -4937,6 +5494,7 @@ screens.bracket = ()=>{
     ${podiumBlock}
     <p class="eyebrow" style="margin:16px 0 8px">📋 Tableau</p>
     <div class="bracket" style="--rw:${rw}px">${cols}</div>
+    ${losingBranchHtml}
     <div class="card" style="margin-top:16px;text-align:center;background:var(--surface-2);border:none">
       <small class="muted">${started?'Appuyez sur un match pour saisir son score. Le tour suivant se génère automatiquement une fois le tour en cours terminé.':'Aperçu basé sur le classement actuel — les matchs seront créés au lancement des phases finales.'}</small>
     </div>
@@ -4969,15 +5527,32 @@ function bm(a, b, m){
   // nSets scores) : afficher uniquement le dernier set cachait les précédents
   // une fois plusieurs sets saisis.
   const row=(name,vals,win)=>`<div class="r${win?' win':''}"><span class="nm"><span class="nmtxt">${name}</span>${levelBadge(name)}</span><span class="sc">${vals.map(v=>`<b>${v}</b>`).join('')}</span></div>`;
-  if(!m || !m.id) return `<div class="bm">${row(a,['–'])}${row(b,['–'])}</div>`;
+  // Horaire + terrain réel (classification3 uniquement) : affichés au-dessus des
+  // 2 lignes d'équipe, dans .bmRows pour que le picto de saisie (ancré sur
+  // .bmRows, pas sur toute la carte) reste centré sur ces 2 lignes même quand
+  // cette bannière est présente.
+  const ci3=class3MatchInfo(m);
+  // Avec un seul gymnase (déjà rappelé une fois en haut de l'écran), préciser
+  // lequel sur chaque match n'apporte rien : on retire simplement cette info
+  // (même choix que sur l'écran Planning, cf. schedRow) — l'arbitre, lui, est
+  // toujours affiché en bas du cadre via refLine, jamais sur cette bannière.
+  const oneGym=(state.config.gyms||1)===1;
+  const locPart = (ci3 && !oneGym && ci3.gym) ? ' · '+ci3.gym : '';
+  const metaHtml = ci3 ? `<div class="bmMeta">🕒 ${ci3.time} · 🏟️ T${ci3.court}${locPart}</div>` : '';
+  if(!m || !m.id) return `<div class="bm">${metaHtml}${row(a,['–'])}${row(b,['–'])}</div>`;
   const played=matchSetsPlayed(m);
   const w=matchWinner(m);
   const icon=m.status==='done' ? '✏️' : '📝';
   const va=played.length?played.map(s=>s[0]):['–'];
   const vb=played.length?played.map(s=>s[1]):['–'];
+  // Même fond que .bmMeta en haut (demandé explicitement), pour démarquer la
+  // ligne d'arbitre du corps de la carte — uniquement quand il y a un arbitre
+  // à afficher, sinon pas de bandeau vide en bas.
+  const refHtml = m.ref ? `<div class="bmRef">${refLine(m)}</div>` : '';
   return `<div class="bm tap${m.status==='live'?' live':''}" onclick="openAdminScoreSheet('${m.id}')">
-    ${row(a, va, w==='a')}${row(b, vb, w==='b')}
-    <span class="bmEdit">${icon}</span>
+    ${metaHtml}
+    <div class="bmRows">${row(a, va, w==='a')}${row(b, vb, w==='b')}<span class="bmEdit">${icon}</span></div>
+    ${refHtml}
   </div>`;
 }
 
@@ -5618,6 +6193,7 @@ window.loadJoinedTournament=async (code,team)=>{
     const tc=data.timerConfig;
     if(tc){
       state.livePhase=tc.livePhase||'brassage';
+      state.config.formula=tc.formula||'classic';
       state.config.phaseConsolante=!!tc.phaseConsolante;
       if(tc.brassage) Object.assign(state.config, tc.brassage);
       state.config.rules2=tc.rules2||null;
@@ -5626,8 +6202,9 @@ window.loadJoinedTournament=async (code,team)=>{
     state.remoteTimer=data.timer||null;
     // L'arbitrage des phases à élimination directe n'est pas persisté en base
     // (voir assignBracketReferees) : on le recalcule ici aussi, par catégorie.
-    assignBracketReferees(state.schedule.filter(m=>m.phase==='finalesPrincipal'||m.phase==='finalesPrincipal3e'));
-    assignBracketReferees(state.schedule.filter(m=>m.phase==='finalesConsolante'||m.phase==='finalesConsolante3e'));
+    activeCategories().forEach(cat=>{
+      assignBracketReferees(state.schedule.filter(m=>{ const p=parseFinalesPhase(m.phase); return p && p.catKey===cat.key; }));
+    });
     const cur=navStack[navStack.length-1];
     if(cur && (cur.screen==='pickTeam'||cur.screen==='myMatches'||cur.screen==='tv')) screens[cur.screen]();
   }catch(e){
@@ -5668,6 +6245,14 @@ async function liveRefreshTick(){
     if(window.vboDb && vboDb.isUuid(tid) && liveScreens.includes(cur.screen)){
       const fresh = await vboDb.loadStructure(tid);
       applyLoadedStructure(fresh);
+      // Un match peut se terminer sans aucune action admin (2 capitaines qui
+      // saisissent le même score se valident automatiquement côté serveur) : sans
+      // ceci, le bracket n'avancerait jamais pour ce match tant qu'un admin ne
+      // saisit pas lui-même un score ailleurs (seul autre déclencheur de
+      // advanceBracketIfRoundDone). On revérifie donc ici chaque phase finale
+      // présente, à chaque rafraîchissement auto.
+      const finalesPhases=[...new Set((fresh.schedule||[]).map(m=>m.phase).filter(ph=>parseFinalesPhase(ph)))];
+      for(const ph of finalesPhases){ try{ await advanceBracketIfRoundDone(ph); }catch(e){ console.warn('Avancement bracket auto:', e); } }
       // refreshConflicts se rend déjà lui-même pour 'orgLive'/'validate' (avec les
       // données déjà à jour ci-dessus) ; les autres écrans ont besoin d'un rendu manuel.
       await refreshConflicts(tid);
@@ -5855,8 +6440,10 @@ function matchCard(m,team,hi){
     ? `<button class="btn ghost sm" style="width:100%" onclick="startMatch('${m.id}')">▶️ Démarrer le match</button>`
     : '';
   const refPart = m.ref ? `<span style="display:flex;align-items:center;gap:5px"><span style="color:var(--brand);font-size:13px;display:inline-flex">${ICON.whistle}</span>Arbitre : <b style="color:var(--fg)">${m.ref}</b></span>` : '<span></span>';
+  const ci3=class3MatchInfo(m);
+  const dispCourt=ci3?ci3.court:m.court, dispGym=ci3?ci3.gym:m.gym;
   return `<div class="match"${hi?' style="border:2px solid var(--brand)"':''}>
-    <div class="meta"><span class="chip"${hi?' style="background:var(--brand-soft);color:var(--brand)"':''}>Tour ${m.round} · ${m.time}</span><span>T${m.court} · ${m.gym}</span>${badge}</div>
+    <div class="meta"><span class="chip"${hi?' style="background:var(--brand-soft);color:var(--brand)"':''}>Tour ${m.round} · ${m.time}</span><span>T${dispCourt} · ${dispGym}</span>${badge}</div>
     <div class="teams"><span class="t">${m.a}</span>
       <span class="sc">${scoreSC(scObj)}</span>
       <span class="t right">${m.b}</span></div>
@@ -5869,8 +6456,10 @@ function refMatchCard(m){
     : `<span class="badge brand" style="margin-left:auto">À arbitrer</span>`;
   const action = m.status==='todo'
     ? `<button class="btn ghost sm" style="width:100%;margin-top:8px" onclick="startMatch('${m.id}')">▶️ Démarrer ce match</button>` : '';
+  const ci3=class3MatchInfo(m);
+  const dispCourt=ci3?ci3.court:m.court, dispGym=ci3?ci3.gym:m.gym;
   return `<div class="match">
-    <div class="meta"><span class="chip">Tour ${m.round} · ${m.time}</span><span>T${m.court} · ${m.gym}</span>${st}</div>
+    <div class="meta"><span class="chip">Tour ${m.round} · ${m.time}</span><span>T${dispCourt} · ${dispGym}</span>${st}</div>
     <div class="teams"><span class="t">${m.a}</span>
       <span class="sc" style="color:var(--muted);font-weight:700">vs</span>
       <span class="t right">${m.b}</span></div>
@@ -6051,9 +6640,18 @@ function render(screen,opts){
       }
     }catch(e){ console.warn('Restauration session:', e); }
   }
-  // Sans ?join=... dans l'URL (lien générique), on affiche toujours « Qui
-  // êtes-vous ? » : la session capitaine en localStorage n'est restaurée
-  // automatiquement que via le lien/QR du tournoi, traité plus haut.
+  // Sans ?join=... dans l'URL (lien générique rechargé, ou hash perdu au F5
+  // sur certains navigateurs mobiles) : on retombe quand même sur la dernière
+  // session capitaine connue en localStorage, pour ne pas forcer une
+  // reconnexion à chaque rechargement de page.
+  let savedCaptain=null;
+  try{ savedCaptain=JSON.parse(localStorage.getItem('vbo_captain')||'null'); }catch(_){}
+  if(savedCaptain && savedCaptain.code && savedCaptain.team){
+    state.captainTeam=savedCaptain.team;
+    await loadJoinedTournament(savedCaptain.code, savedCaptain.team);
+    if(!localStorage.getItem('vbo_captain')) return; // code expiré : déjà redirigé vers l'écran de scan
+    go(savedCaptain.verified?'myMatches':'phoneGate'); return;
+  }
   go('home');
 })();
 </script>

@@ -17,6 +17,7 @@
 //    tournaments.addPhase     POST {tid,s}              -> {counts} (ajoute une phase, sans toucher au reste)
 //    tournaments.loadStructure GET  ?tid=                -> {pools,schedule}|null
 //    matches.setScore      POST {id,sets}                -> {ok} (admin/référent)
+//    matches.setReferee    POST {id,refName}             -> {ok} (admin/référent)
 //    matches.submitCaptainScore POST {matchId,teamName,sets} (public) -> {status:pending|validated,...}
 //    matches.startMatch    POST {matchId,teamName} (public) -> {ok} (équipe/arbitre du match)
 //    matches.adminStartMatch POST {matchId}               -> {ok} (admin/référent)
@@ -263,7 +264,9 @@ function clean_sets($sets): array {
 // pour ne jamais valider un match tant que les DEUX capitaines n'ont pas
 // saisi tous les sets requis, même si leurs saisies partielles coïncident.
 function expected_sets_for_phase(array $cfg, ?string $phase): int {
-  $finales = ['finalesPrincipal', 'finalesConsolante', 'finalesPrincipal3e', 'finalesConsolante3e'];
+  $cats = ['Principal', 'Consolante', 'SuperConsolante'];
+  $finales = [];
+  foreach ($cats as $c) { foreach (['', '3e', 'Perdants', 'Petite'] as $b) { $finales[] = 'finales'.$c.$b; } }
   $poules2 = ['principal', 'consolante'];
   if (in_array($phase, $finales, true)) { $r = $cfg['finale'] ?? null; }
   elseif (in_array($phase, $poules2, true)) { $r = $cfg['rules2'] ?? null; }
@@ -617,6 +620,66 @@ switch ($action) {
     break;
   }
 
+  // Corrige l'équipe déjà placée dans un match de bracket déjà généré, suite à
+  // une ré-saisie d'un score en amont qui change le vainqueur/perdant propagé
+  // (cf. advanceBracketIfRoundDone côté front : la 1ère saisie avait déjà créé
+  // ce match suivant avec l'ancienne équipe). Le match corrigé doit être rejoué,
+  // donc son score éventuel est réinitialisé.
+  case 'matches.setTeams': {
+    require_login();
+    $id = (string)field('id', '');
+    if (!is_uuid($id)) fail(400, "Match invalide.");
+    $st = db()->prepare("SELECT tournament_id FROM vbo_matches WHERE id = ?");
+    $st->execute([$id]);
+    $row = $st->fetch();
+    if (!$row) fail(404, "Match introuvable.");
+
+    $teamNameToId = [];
+    $st2 = db()->prepare("SELECT id, name FROM vbo_teams WHERE tournament_id = ?");
+    $st2->execute([$row['tournament_id']]);
+    foreach ($st2->fetchAll() as $r) $teamNameToId[$r['name']] = $r['id'];
+
+    $aName = field('aName', null);
+    $bName = field('bName', null);
+    $sets = []; $params = [];
+    if ($aName !== null) { $sets[] = 'team_a = ?'; $params[] = $teamNameToId[$aName] ?? null; }
+    if ($bName !== null) { $sets[] = 'team_b = ?'; $params[] = $teamNameToId[$bName] ?? null; }
+    if (!$sets) { ok(['ok' => true]); break; }
+    $sets[] = 'score_a = NULL'; $sets[] = 'score_b = NULL'; $sets[] = 'sets = NULL'; $sets[] = "status = 'todo'";
+    $params[] = $id;
+    db()->prepare("UPDATE vbo_matches SET " . implode(', ', $sets) . " WHERE id = ?")->execute($params);
+    ok(['ok' => true]);
+    break;
+  }
+
+  // Enregistre l'arbitre d'un match de phase finale une fois déterminé côté
+  // front (voir assignBracketReferees) : contrairement au Brassage, où l'arbitre
+  // est connu dès la création du planning, celui des 1/4-1/2-finale dépend des
+  // résultats qui arrivent au fil de l'eau — on le persiste donc après coup, dès
+  // qu'il est calculé, pour que l'équité d'arbitrage (comptage par équipe) reste
+  // exacte même après un rechargement de page en cours de phase finale.
+  case 'matches.setReferee': {
+    require_login();
+    $id = (string)field('id', '');
+    if (!is_uuid($id)) fail(400, "Match invalide.");
+    $st = db()->prepare("SELECT tournament_id FROM vbo_matches WHERE id = ?");
+    $st->execute([$id]);
+    $row = $st->fetch();
+    if (!$row) fail(404, "Match introuvable.");
+
+    $refName = field('refName', null);
+    $refId = null;
+    if ($refName !== null && $refName !== '') {
+      $st2 = db()->prepare("SELECT id FROM vbo_teams WHERE tournament_id = ? AND name = ?");
+      $st2->execute([$row['tournament_id'], $refName]);
+      $r = $st2->fetch();
+      $refId = $r ? $r['id'] : null;
+    }
+    db()->prepare("UPDATE vbo_matches SET referee_team = ? WHERE id = ?")->execute([$refId, $id]);
+    ok(['ok' => true]);
+    break;
+  }
+
   // Double-saisie croisée des capitaines (public, sans authentification —
   // mêmes capitaines que tournaments.publicByCode, sans compte). Chaque
   // capitaine envoie son score ; on l'oriente dans le sens team_a/team_b du
@@ -901,6 +964,7 @@ switch ($action) {
     };
     $timerConfig = [
       'livePhase' => $t['live_phase'] ?: 'brassage',
+      'formula' => $cfg['formula'] ?? 'classic',
       'phaseConsolante' => !empty($cfg['phaseConsolante']),
       'brassage' => $pickRules($cfg),
       'rules2' => $pickRules($cfg['rules2'] ?? null),
