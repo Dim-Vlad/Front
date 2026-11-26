@@ -30,6 +30,8 @@
 //    referents.create      POST {name,email,password}    -> {ok,id,email,name}
 //    organizers.list       GET                           -> [rows]
 //    organizers.create     POST {name,email,password}    -> {ok,id,email,name}
+//    messages.list         GET  ?tid=                    -> [rows] (admin/référent, messagerie du tournoi)
+//    messages.send         POST {tid,body}                -> {id,author_name,author_role,body,created_at}
 // =====================================================================
 
 require __DIR__ . '/_bootstrap.php';
@@ -127,6 +129,24 @@ function ensure_score_entries_table(PDO $pdo): void {
     created_at DATETIME NOT NULL,
     UNIQUE KEY uniq_match_team (match_id, team_id),
     KEY idx_match (match_id)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+  $done = true;
+}
+
+// Messagerie admin/référent d'un tournoi (un seul salon, partagé par tous les
+// comptes authentifiés du tournoi). Pas de système de migration dans ce
+// projet : on la crée au premier besoin, comme vbo_score_entries ci-dessus.
+function ensure_messages_table(PDO $pdo): void {
+  static $done = false;
+  if ($done) return;
+  $pdo->exec("CREATE TABLE IF NOT EXISTS vbo_messages (
+    id CHAR(36) NOT NULL PRIMARY KEY,
+    tournament_id CHAR(36) NOT NULL,
+    author_name VARCHAR(190) NOT NULL,
+    author_role VARCHAR(20) NOT NULL,
+    body TEXT NOT NULL,
+    created_at DATETIME NOT NULL,
+    KEY idx_tournament (tournament_id, created_at)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
   $done = true;
 }
@@ -593,7 +613,19 @@ switch ($action) {
     require_login();
     $tid = $_GET['tid'] ?? '';
     if (!is_uuid($tid)) { ok(null); break; }
-    ok(load_structure($tid));
+    $s = load_structure($tid);
+    if ($s === null) { ok(null); break; }
+    // Chrono "set au temps" : relu ici aussi (pas seulement par
+    // tournaments.publicByCode) pour qu'un référent/admin qui lance le chrono
+    // sur son appareil soit vu par les autres admins/référents connectés sur
+    // le même tournoi (cf. timerAdoptRemote côté front).
+    $pdo = db();
+    ensure_timer_state_column($pdo);
+    $tst = $pdo->prepare("SELECT timer_state FROM vbo_tournaments WHERE id = ?");
+    $tst->execute([$tid]);
+    $trow = $tst->fetch();
+    $s['timer'] = ($trow && $trow['timer_state'] !== null) ? json_decode($trow['timer_state'], true) : null;
+    ok($s);
     break;
   }
 
@@ -928,6 +960,42 @@ switch ($action) {
       ->execute([$clean[0][0], $clean[0][1], json_encode($clean), $matchId]);
     $pdo->prepare("DELETE FROM vbo_score_entries WHERE match_id = ?")->execute([$matchId]);
     ok(['ok' => true]);
+    break;
+  }
+
+  // Messagerie admin/référent d'un tournoi : un seul salon partagé, pour que
+  // les référents de gymnase et l'organisation puissent échanger pendant le
+  // déroulement du tournoi (coordination, imprévus, etc.).
+  case 'messages.list': {
+    require_login();
+    $tid = (string)($_GET['tid'] ?? '');
+    if (!is_uuid($tid)) { ok([]); break; }
+    $pdo = db();
+    ensure_messages_table($pdo);
+    $st = $pdo->prepare("SELECT id, author_name, author_role, body, created_at
+                          FROM vbo_messages WHERE tournament_id = ?
+                          ORDER BY created_at DESC, id DESC LIMIT 200");
+    $st->execute([$tid]);
+    ok(array_reverse($st->fetchAll()));
+    break;
+  }
+
+  case 'messages.send': {
+    $u = require_login();
+    $tid = (string)field('tid', '');
+    if (!is_uuid($tid)) fail(400, "Tournoi invalide.");
+    $body = trim((string)field('body', ''));
+    if ($body === '') fail(400, "Message vide.");
+    if (mb_strlen($body) > 2000) $body = mb_substr($body, 0, 2000);
+    $pdo = db();
+    ensure_messages_table($pdo);
+    $id = uuid4();
+    $now = date('Y-m-d H:i:s');
+    $authorName = $u['name'] !== '' ? $u['name'] : $u['email'];
+    $pdo->prepare("INSERT INTO vbo_messages (id, tournament_id, author_name, author_role, body, created_at)
+                   VALUES (?,?,?,?,?,?)")
+        ->execute([$id, $tid, $authorName, $u['role'], $body, $now]);
+    ok(['id' => $id, 'author_name' => $authorName, 'author_role' => $u['role'], 'body' => $body, 'created_at' => $now]);
     break;
   }
 
