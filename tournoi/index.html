@@ -620,6 +620,7 @@ body.tv-mode .screen{padding-top:0}
 .tv-match{background:var(--surface);border-radius:10px;padding:10px 12px;margin-top:8px}
 .tv-match:first-child{margin-top:0}
 .tv-match.live{box-shadow:0 0 0 2px var(--warn)}
+.tv-match.done{box-shadow:0 0 0 2px var(--ok);opacity:.74}
 .tv-match-meta{display:flex;align-items:center;gap:10px;font-size:clamp(11.5px,1.1vw,13px);color:var(--muted);margin-bottom:6px}
 .tv-teams{display:flex;align-items:center;gap:10px;font-size:clamp(14px,1.5vw,17px);font-weight:600}
 .tv-team{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -685,6 +686,7 @@ window.api = (function(){
     publicByCode:   (code,team)=>      call('tournaments.publicByCode', {query:{code, team:team||undefined}}),
     verifyCaptainPhone:(code,team,phone)=> call('teams.verifyPhone', {body:{code,team,phone}}),
     teamsDirectory: (tid)=>            call('teams.directory',       {query:{tid}}),
+    setTeamPresent: (tid,name,present)=> call('teams.setPresent',     {body:{tid,name,present}}),
     listReferents:  ()=>               call('referents.list'),
     createReferent: (name,email,password)=> call('referents.create',   {body:{name,email,password}}),
     setReferentStatus:(id,status)=>    call('referents.setStatus',     {body:{id,status}}),
@@ -778,6 +780,10 @@ window.sb = { _ovh:true };
     async setFinished(id, finished){
       if(!isUuid(id)) return;
       await api.setFinished(id, !!finished);
+    },
+    async setTeamPresent(tid, name, present){
+      if(!isUuid(tid)) return;
+      await api.setTeamPresent(tid, name, !!present);
     },
     async remove(id){
       if(!isUuid(id)) return;
@@ -1042,6 +1048,17 @@ function levelBadge(name){
   const label=LEVEL_BADGE_LABEL[lvl]||lm.short;
   return `<span class="lvbadge" style="color:${lm.color};background:${lm.color}22">${label}</span>`;
 }
+// Équipe absente/forfait, affichée après lancement sur state.absentTeams (Set
+// alimenté par le serveur) — cf. toggleDirectoryPresent. Visible de tous
+// (capitaines inclus), donc pas de garde isStaff().
+function isTeamAbsent(name){
+  if(state.absentTeams && state.absentTeams.has(name)) return true;
+  const t=(state.teams||[]).find(x=>x.name===name);
+  return !!(t && t.present===false);
+}
+function absentBadge(name){
+  return isTeamAbsent(name) ? '<span class="badge danger" style="margin-left:4px">Forfait</span>' : '';
+}
 // 24 teams -> 6 pools of 4, 3 pools per gym
 const state = {
   config:{
@@ -1074,6 +1091,7 @@ const state = {
   messages:[],
   _messagesLoaded:false,
   _unreadMessages:0,
+  absentTeams:null,
 };
 function fmtDate(iso,long){
   if(!iso) return '';
@@ -1140,7 +1158,7 @@ function rebuildPools(){
   // Liste des terrains disponibles par gymnase (pour le sélecteur manuel)
   state.courtsByGym={};
   for(let gi=0;gi<G;gi++){ state.courtsByGym[GYMS[gi].id]=Array.from({length:gymCourts[gi]},(_,k)=>k+1); }
-  // On part des équipes inscrites avec leur niveau
+  // On part des équipes avec leur niveau
   let order = state.teams.slice(0, P*T).map(x=>({t:x.name, level:x.level}));
   if(state.config.distribution==='random') shuffle(order);
   else if(state.config.distribution==='snake') order.sort((a,b)=> levelMeta(b.level).w - levelMeta(a.level).w); // tête de série = niveau le plus fort
@@ -1154,7 +1172,7 @@ function rebuildPools(){
       for(const pi of seq){ if(idx<order.length) pools[pi].teams.push(order[idx++]); }
     }
   }
-  state.pools=pools;
+  state.pools = pools;
   state.phasePrincipal=null; state.phaseConsolante=null; // recalculées à la demande
   buildSchedule();
 }
@@ -1886,6 +1904,7 @@ function buildPhaseStructure(phaseKey, cat){
 function applyLoadedStructure(fresh){
   if(!fresh) return false;
   if(fresh.timer!==undefined) timerAdoptRemote(fresh.timer);
+  if(fresh.absentTeams) state.absentTeams = new Set(fresh.absentTeams);
   if(!fresh.schedule || !fresh.schedule.length) return false;
   const pools=fresh.pools||[], sched=fresh.schedule;
   const byPhase=ph=>({ pools: pools.filter(p=>(p.phase||'brassage')===ph), schedule: sched.filter(m=>(m.phase||'brassage')===ph) });
@@ -2815,7 +2834,7 @@ function snapshotTournament(){
   return {
     config: JSON.parse(JSON.stringify(state.config)),
     gyms: GYMS.slice(0, state.config.gyms).map(g=>g.name),
-    teams: state.teams.map(t=>({name:t.name, level:t.level, phone:t.phone||''})),
+    teams: state.teams.map(t=>({name:t.name, level:t.level, phone:t.phone||'', present:t.present!==false})),
     step: createStage,
   };
 }
@@ -2839,7 +2858,7 @@ function resumeDraft(id){
   const d=state.tournaments.find(x=>x.id===id); if(!d) return;
   Object.assign(state.config, d.config);
   (d.gyms||[]).forEach((nm,i)=>{ if(GYMS[i]) GYMS[i].name=nm; });
-  state.teams = (d.teams||[]).map(t=>({name:t.name, level:t.level, phone:t.phone||''}));
+  state.teams = (d.teams||[]).map(t=>({name:t.name, level:t.level, phone:t.phone||'', present:t.present!==false}));
   state.currentDraftId=id;
   const st=d.step||0; createStage=st;
   if(st<=2){ wizStep=st; go('wizard'); }
@@ -2866,7 +2885,7 @@ async function launchTournament(){
         const gymsUsed=[...new Set(state.pools.map(p=>p.gym))];
         const structure={
           gyms: gymsUsed.map(gid=>({ key:gid, name:gymName(gid), position:Math.max(0,GYMS.findIndex(g=>g.id===gid)) })),
-          teams: state.teams.map(tm=>({ key:tm.name, name:tm.name, levelW:levelMeta(tm.level).w, phone:tm.phone||'' })),
+          teams: state.teams.map(tm=>({ key:tm.name, name:tm.name, levelW:levelMeta(tm.level).w, phone:tm.phone||'', present: tm.present!==false })),
           pools: state.pools.map(p=>({ letter:p.letter, phase:'brassage', gymKey:p.gym, court:p.court, teamKeys:p.teams.map(x=>x.t) })),
           matches: (state.schedule||[]).map(m=>({ round:m.r, time:m.time, phase:'brassage', poolKey:m.pool, gymName:m.gym, court:m.court, aKey:m.a, bKey:m.b, refKey:m.ref })),
         };
@@ -4066,7 +4085,7 @@ window.openPhase2PoolsEditor=(fresh=true)=>{
         h+=`<div class="p2card">
           <span class="seed">${ordinalFr(x.seed+1)}</span>
           <div class="p2info">
-            <div class="p2name">${x.t}</div>
+            <div class="p2name">${x.t}${absentBadge(x.t)}</div>
             <div class="p2meta">
               <span class="chip" style="color:${lm.color}">${lm.label}</span>
               <span class="chip">Vient de poule ${x.from||brassageOriginOf(x.t)||'?'}</span>
@@ -4375,7 +4394,7 @@ function liveCourtRowCompact(m){
   return `<div class="live-row">
     <span class="court">T${m.court}</span>
     <span class="live-dot"></span>
-    <span class="teams"><b>${m.a}</b> <span class="muted" style="font-weight:600">vs</span> <b>${m.b}</b></span>
+    <span class="teams"><b>${m.a}</b>${absentBadge(m.a)} <span class="muted" style="font-weight:600">vs</span> <b>${m.b}</b>${absentBadge(m.b)}</span>
     <span class="pool">${tag}</span>
   </div>`;
 }
@@ -4811,7 +4830,7 @@ function schedRow(m, showCat){
   return `<div class="match ${m.status==='done'?'done':m.status==='live'?'live':'upcoming'}">
     <div class="meta">${locChip}<span>Terrain ${m.court} · Poule ${m.pool}</span>${schedBadge(m.status)}</div>
     ${showCat?schedCatTag(m):''}
-    <div class="teams"><span class="t"><span>${m.a}</span>${levelBadge(m.a)}</span><span class="sc">${sc}</span><span class="t right"><span>${m.b}</span>${levelBadge(m.b)}</span></div>${refLine(m)}
+    <div class="teams"><span class="t"><span>${m.a}</span>${levelBadge(m.a)}${absentBadge(m.a)}</span><span class="sc">${sc}</span><span class="t right"><span>${m.b}</span>${levelBadge(m.b)}${absentBadge(m.b)}</span></div>${refLine(m)}
     ${canEnter?`<button class="btn ghost sm" style="margin-top:8px;width:100%" onclick="openAdminScoreSheet('${m.id}')">${btnLabel}</button>`:''}
     ${startBtn}</div>`;
 }
@@ -4873,9 +4892,9 @@ window.openAdminScoreSheet=(id)=>{
     const sa=preSets[s]?preSets[s][0]:''; const sb=preSets[s]?preSets[s][1]:'';
     return `<div class="scorebox"${s>0?' style="margin-top:12px"':''}>
       ${nSets>1?`<div class="setlab">Set ${s+1}</div>`:''}
-      <div><div class="tlab">${m.a}</div><input class="num" id="asc${s}" inputmode="numeric" value="${sa}" placeholder="0"></div>
+      <div><div class="tlab">${m.a}${absentBadge(m.a)}</div><input class="num" id="asc${s}" inputmode="numeric" value="${sa}" placeholder="0"></div>
       <div class="dash">–</div>
-      <div><div class="tlab">${m.b}</div><input class="num" id="bsc${s}" inputmode="numeric" value="${sb}" placeholder="0"></div>
+      <div><div class="tlab">${m.b}${absentBadge(m.b)}</div><input class="num" id="bsc${s}" inputmode="numeric" value="${sb}" placeholder="0"></div>
     </div>`;
   }).join('');
   // Les matchs de bracket n'ont ni poule ni vrai terrain (sauf en classification3,
@@ -5119,9 +5138,9 @@ function tvMatchRow(m){
   const metaTag=m.pool ? `<span>Poule ${m.pool}</span>` : `<span>${tvRoundLabel(m)}</span>`;
   const courtTag = m.pool ? `<span>Terrain ${m.court}</span>` : (ci3?`<span>Terrain ${ci3.court}</span>`:'');
   const timeTag = ci3 ? `<span>🕒 ${ci3.time}</span>` : '';
-  return `<div class="tv-match ${m.status==='live'?'live':''}">
+  return `<div class="tv-match ${m.status==='live'?'live':m.status==='done'?'done':''}">
     <div class="tv-match-meta">${courtTag}${metaTag}${timeTag}${schedBadge(m.status)}</div>
-    <div class="tv-teams"><span class="tv-team">${m.a}</span><span class="tv-score">${sc}</span><span class="tv-team tv-team-right">${m.b}</span></div>
+    <div class="tv-teams"><span class="tv-team">${m.a}${absentBadge(m.a)}</span><span class="tv-score">${sc}</span><span class="tv-team tv-team-right">${m.b}${absentBadge(m.b)}</span></div>
     ${refHtml}
   </div>`;
 }
@@ -5438,7 +5457,7 @@ function flatRankingTable(title, rows, note){
   return `<div class="pool"><div class="ph">${title}<span class="tn">${rows.length} équipes</span></div>
   <div style="overflow-x:auto">
   <table class="tbl" style="min-width:460px"><thead><tr><th>Équipe</th>${rows[0]&&rows[0].cat?'<th>Cat.</th>':''}<th>J</th><th>V</th><th>PP</th><th>PC</th><th>Diff</th><th>Pts</th></tr></thead><tbody>
-  ${rows.map((r,i)=>{const d=r.pf-r.pc;const dc=d>0?'var(--ok)':d<0?'var(--danger)':'var(--muted)';return `<tr><td><span class="rk">${i+1}</span><span class="tcell"><span>${r.t}</span>${levelBadge(r.t)}</span></td>${r.cat?`<td>${r.cat}</td>`:''}<td>${r.j}</td><td style="color:var(--ok);font-weight:800">${r.g}</td><td>${r.pf}</td><td>${r.pc}</td><td style="color:${dc};font-weight:800">${d>0?'+':''}${d}</td><td><b>${r.pts}</b></td></tr>`;}).join('')}
+  ${rows.map((r,i)=>{const d=r.pf-r.pc;const dc=d>0?'var(--ok)':d<0?'var(--danger)':'var(--muted)';return `<tr><td><span class="rk">${i+1}</span><span class="tcell"><span>${r.t}</span>${levelBadge(r.t)}${absentBadge(r.t)}</span></td>${r.cat?`<td>${r.cat}</td>`:''}<td>${r.j}</td><td style="color:var(--ok);font-weight:800">${r.g}</td><td>${r.pf}</td><td>${r.pc}</td><td style="color:${dc};font-weight:800">${d>0?'+':''}${d}</td><td><b>${r.pts}</b></td></tr>`;}).join('')}
   </tbody></table></div></div>
   <p class="muted" style="font-size:12px;margin-top:10px;line-height:1.6"><b>V</b> victoires · <b>PP</b> points pour · <b>PC</b> points contre · <b>Diff</b> différence · <b>Pts</b> points de classement (${state.config.winPts??3} par victoire, ${state.config.lossPts??0} par défaite).</p>
   ${note?`<p class="muted" style="font-size:12.5px;margin-top:6px">${note}</p>`:''}`;
@@ -5505,7 +5524,7 @@ screens.standings = ()=>{
     <div class="pool"><div class="ph">Poule ${p.letter}<span class="tn">${courtLabel}</span></div>
     <div style="overflow-x:auto">
     <table class="tbl" style="min-width:400px"><thead><tr><th>Équipe</th><th>J</th><th>V</th><th>PP</th><th>PC</th><th>Diff</th><th>Pts</th></tr></thead><tbody>
-    ${rows.map((r,i)=>{const d=r.pf-r.pc;const dc=d>0?'var(--ok)':d<0?'var(--danger)':'var(--muted)';const tieBtn=r.tieKey?`<button class="chip" style="margin-left:6px;${TIE_BADGE_STYLE};cursor:pointer" onclick="openTieBreakEditor('${r.tieKey.replace(/'/g,"\\'")}')" title="Égalité à départager">⚠️ égalité</button>`:'';return `<tr class="${i<2?'qual':''}"><td><span class="rk ${i<2?'top':''}">${i+1}</span><span class="tcell"><span>${r.t}</span>${levelBadge(r.t)}${tieBtn}</span></td><td>${r.j}</td><td style="color:var(--ok);font-weight:800">${r.g}</td><td>${r.pf}</td><td>${r.pc}</td><td style="color:${dc};font-weight:800">${d>0?'+':''}${d}</td><td><b>${r.pts}</b></td></tr>`;}).join('')}
+    ${rows.map((r,i)=>{const d=r.pf-r.pc;const dc=d>0?'var(--ok)':d<0?'var(--danger)':'var(--muted)';const tieBtn=r.tieKey?`<button class="chip" style="margin-left:6px;${TIE_BADGE_STYLE};cursor:pointer" onclick="openTieBreakEditor('${r.tieKey.replace(/'/g,"\\'")}')" title="Égalité à départager">⚠️ égalité</button>`:'';return `<tr class="${i<2?'qual':''}"><td><span class="rk ${i<2?'top':''}">${i+1}</span><span class="tcell"><span>${r.t}</span>${levelBadge(r.t)}${absentBadge(r.t)}${tieBtn}</span></td><td>${r.j}</td><td style="color:var(--ok);font-weight:800">${r.g}</td><td>${r.pf}</td><td>${r.pc}</td><td style="color:${dc};font-weight:800">${d>0?'+':''}${d}</td><td><b>${r.pts}</b></td></tr>`;}).join('')}
     </tbody></table></div></div>
     <p class="muted" style="font-size:12px;margin-top:10px;line-height:1.6"><b>V</b> victoires · <b>PP</b> points pour · <b>PC</b> points contre · <b>Diff</b> différence · <b>Pts</b> points de classement (${state.config.winPts??3} par victoire, ${state.config.lossPts??0} par défaite).</p>
     ${rows.some(r=>r.tieKey)?`<p class="muted" style="font-size:12.5px;margin-top:6px">En cas d'égalité stricte (points et différence), l'ordre est alphabétique par défaut — touchez ${TIE_BADGE} sur une équipe concernée pour choisir l'ordre vous-même, puis validez avec « Confirmer cet ordre » : tant que ce n'est pas fait (même pour garder l'ordre actuel), le passage à la phase suivante reste bloqué.</p>`:''}
@@ -5902,7 +5921,7 @@ function bm(a, b, m){
   // Un set par colonne (la largeur --rw de .bracket réserve déjà la place pour
   // nSets scores) : afficher uniquement le dernier set cachait les précédents
   // une fois plusieurs sets saisis.
-  const row=(name,vals,win)=>`<div class="r${win?' win':''}"><span class="nm"><span class="nmtxt">${name}</span>${levelBadge(name)}</span><span class="sc">${vals.map(v=>`<b>${v}</b>`).join('')}</span></div>`;
+  const row=(name,vals,win)=>`<div class="r${win?' win':''}"><span class="nm"><span class="nmtxt">${name}</span>${levelBadge(name)}${absentBadge(name)}</span><span class="sc">${vals.map(v=>`<b>${v}</b>`).join('')}</span></div>`;
   // Horaire + terrain réel (classification3 uniquement) : affichés au-dessus des
   // 2 lignes d'équipe, dans .bmRows pour que le picto de saisie (ancré sur
   // .bmRows, pas sur toute la carte) reste centré sur ces 2 lignes même quand
@@ -6009,7 +6028,7 @@ screens.teamsDirectory = ()=>{
   const list=state._directory||[];
   host.innerHTML=`<div style="padding:0">
     <div class="card" style="background:var(--brand-soft);border:none;margin-bottom:14px">
-      <small class="muted">📇 Coordonnées des capitaines, réservées à l'organisation — à utiliser en cas de besoin de les contacter.</small>
+      <small class="muted">📇 Coordonnées des capitaines, réservées à l'organisation — à utiliser en cas de besoin de les contacter.<br>Le bouton à droite de chaque équipe marque une équipe absente/forfait le jour J : un badge "Forfait" s'affiche alors partout (planning, poules, classements, bracket) à titre indicatif — cela n'a aucun effet sur les scores. Pour l'éliminer sportivement, saisissez-lui un score via l'écran de saisie habituel.</small>
     </div>
     ${list.length?`<div class="search-pill" style="margin-top:0"><span class="search-ic">🔍</span><input placeholder="Rechercher une équipe…" oninput="filterDirectory(this.value)" autofocus></div>`:''}
     <div id="directoryList" style="margin-top:${list.length?'12px':'0'}"></div>
@@ -6018,17 +6037,42 @@ screens.teamsDirectory = ()=>{
 };
 window.filterDirectory=(q)=>{ renderDirectoryList(q); };
 function renderDirectoryList(q){
+  state._directoryQuery=q||'';
   const all=state._directory||[];
   const list=q?all.filter(t=>t.name.toLowerCase().includes(q.toLowerCase())):all;
   const elList=document.getElementById('directoryList');
   if(!elList) return;
-  elList.innerHTML=list.length?list.map(t=>`<div class="list-item" style="background:var(--surface)">
+  elList.innerHTML=list.length?list.map(t=>{ const esc=t.name.replace(/'/g,"\\'"); const absent=isTeamAbsent(t.name);
+    return `<div class="list-item" style="background:var(--surface)">
       <span class="ic">🏐</span>
-      <span style="min-width:0;flex:1"><b>${t.name}</b><small>${t.pool?('Poule '+t.pool):'—'}</small></span>
+      <span style="min-width:0;flex:1"><b${absent?' style="text-decoration:line-through;opacity:.6"':''}>${t.name}</b>${absentBadge(t.name)}<small>${t.pool?('Poule '+t.pool):'—'}</small></span>
       ${t.phone?`<a href="tel:${String(t.phone).replace(/\s+/g,'')}" class="btn sm" style="margin-left:auto;flex:none;text-decoration:none">📞 <span style="text-decoration:underline">${formatPhoneFr(t.phone)}</span></a>`
         :`<small class="muted" style="margin-left:auto;flex:none">Non renseigné</small>`}
-    </div>`).join(''):`<div class="empty">📇<p>${all.length?'Aucune équipe trouvée':'Aucune équipe.'}</p></div>`;
+      <button class="sw${absent?'':' on'}" style="margin-left:8px;flex:none" title="${absent?'Absente — cliquer pour marquer présente':'Présente — cliquer pour marquer absente'}" onclick="toggleDirectoryPresent('${esc}')"></button>
+    </div>`;
+  }).join(''):`<div class="empty">📇<p>${all.length?'Aucune équipe trouvée':'Aucune équipe.'}</p></div>`;
 }
+// Mise à jour optimiste (comme matches.setScore) : l'écran reflète le changement
+// immédiatement, les autres vues (planning/classement/bracket/capitaines) se
+// synchronisent via le polling liveRefreshTick (~10s). Rollback si l'appel échoue.
+window.toggleDirectoryPresent=(name)=>{
+  const tid=state._directoryTid; if(!tid) return;
+  const entry=(state._directory||[]).find(t=>t.name===name); if(!entry) return;
+  const wasAbsent=isTeamAbsent(name);
+  const nextPresent=wasAbsent; // recocher si absente, décocher si présente
+  const prevEntryPresent=entry.present;
+  entry.present = nextPresent?1:0;
+  if(!state.absentTeams) state.absentTeams=new Set();
+  if(nextPresent) state.absentTeams.delete(name); else state.absentTeams.add(name);
+  renderDirectoryList(state._directoryQuery||'');
+  vboDb.setTeamPresent(tid, name, nextPresent).catch(e=>{
+    console.warn('Présence équipe:', e);
+    entry.present=prevEntryPresent;
+    if(wasAbsent) state.absentTeams.add(name); else state.absentTeams.delete(name);
+    renderDirectoryList(state._directoryQuery||'');
+    toast('⚠️ Mise à jour échouée — réessayez');
+  });
+};
 
 screens.refProfile = (opts)=>{
   if(!state.authed){ go(state.refSession?'refSpace':'home'); return; }
@@ -6562,6 +6606,7 @@ window.loadJoinedTournament=async (code,team)=>{
     state.config.name=data.name;
     state.pools=data.pools||[];
     state.schedule=data.schedule||[];
+    state.absentTeams=new Set(data.absentTeams||[]);
     state.myEntries=data.myEntries||{};
     // Nécessaire au visuel d'avancement du chrono (captainTimerStatus) : le
     // capitaine n'a pas d'autre moyen de connaître le tour/phase en cours ni
@@ -6705,7 +6750,7 @@ window.submitPhoneGate=async ()=>{
 window.captainLeave=()=>{
   try{ localStorage.removeItem('vbo_captain'); }catch(_){}
   clearInterval(window._capTimerTick); window._capTimerTick=null;
-  state.captainTeam=null; state.joinCode=null; state.myEntries=null; state.pools=[]; state.schedule=[]; state.remoteTimer=null;
+  state.captainTeam=null; state.joinCode=null; state.myEntries=null; state.pools=[]; state.schedule=[]; state.remoteTimer=null; state.absentTeams=null;
   go('home',{replace:true});
 };
 window.startMatch=async (id)=>{
@@ -6820,11 +6865,11 @@ function matchCard(m,team,hi){
     : (m.a && m.b && m.status!=='valid' && parseFinalesPhase(m.phase)) ? `<span style="display:flex;align-items:center;gap:5px"><span style="font-size:13px;display:inline-flex">⚠️</span>Arbitre à définir sur place</span>` : '<span></span>';
   const ci3=class3MatchInfo(m);
   const dispCourt=ci3?ci3.court:m.court, dispGym=ci3?ci3.gym:m.gym;
-  return `<div class="match"${hi?' style="border:2px solid var(--brand)"':''}>
+  return `<div class="match${m.status==='valid'?' done':''}"${hi?' style="border:2px solid var(--brand)"':''}>
     <div class="meta"><span class="chip"${hi?' style="background:var(--brand-soft);color:var(--brand)"':''}>Tour ${m.round} · ${m.time}</span><span>T${dispCourt} · ${dispGym}</span>${badge}</div>
-    <div class="teams"><span class="t">${m.a}</span>
+    <div class="teams"><span class="t">${m.a}${absentBadge(m.a)}</span>
       <span class="sc">${scoreSC(scObj)}</span>
-      <span class="t right">${m.b}</span></div>
+      <span class="t right">${m.b}${absentBadge(m.b)}</span></div>
     <div class="muted" style="font-size:11px;margin-top:7px;display:flex;align-items:center;justify-content:space-between;gap:8px">${refPart}${matchPhaseChip(m)}</div>
     ${action}</div>`;
 }
@@ -6838,9 +6883,9 @@ function refMatchCard(m){
   const dispCourt=ci3?ci3.court:m.court, dispGym=ci3?ci3.gym:m.gym;
   return `<div class="match">
     <div class="meta"><span class="chip">Tour ${m.round} · ${m.time}</span><span>T${dispCourt} · ${dispGym}</span>${st}</div>
-    <div class="teams"><span class="t">${m.a}</span>
+    <div class="teams"><span class="t">${m.a}${absentBadge(m.a)}</span>
       <span class="sc" style="color:var(--muted);font-weight:700">vs</span>
-      <span class="t right">${m.b}</span></div>
+      <span class="t right">${m.b}${absentBadge(m.b)}</span></div>
     <div class="muted" style="font-size:11px;margin-top:7px;display:flex;align-items:center;justify-content:space-between;gap:8px"><span>🏐 Poule ${m.pool}</span>${matchPhaseChip(m)}</div>
     ${action}
   </div>`;

@@ -48,6 +48,7 @@ function load_structure(string $tid): ?array {
     return $st->fetchAll();
   };
   ensure_match_started_column($pdo);
+  ensure_team_present_column($pdo);
   $gyms = $fetchAll('vbo_gyms'); $teams = $fetchAll('vbo_teams');
   $pools = $fetchAll('vbo_pools'); $matches = $fetchAll('vbo_matches');
   if (!$matches) return null;
@@ -63,6 +64,7 @@ function load_structure(string $tid): ?array {
   $gymById = []; foreach ($gyms as $g) $gymById[$g['id']] = $g['name'];
   $teamById = []; foreach ($teams as $t) $teamById[$t['id']] = ['name' => $t['name'], 'level' => $W2ID[(int)$t['level']] ?? 'dep'];
   $poolById = []; foreach ($pools as $p) $poolById[$p['id']] = $p;
+  $absentNames = array_values(array_map(fn($t) => $t['name'], array_filter($teams, fn($t) => (int)($t['present'] ?? 1) === 0)));
 
   usort($pools, fn($a, $b) => strcmp((string)$a['letter'], (string)$b['letter']));
   $poolsOut = array_map(function ($p) use ($pteams, $gymById, $teamById) {
@@ -110,7 +112,7 @@ function load_structure(string $tid): ?array {
     ];
   }, $matches);
 
-  return ['pools' => $poolsOut, 'schedule' => $schedOut];
+  return ['pools' => $poolsOut, 'schedule' => $schedOut, 'absentTeams' => $absentNames];
 }
 
 // Table de la double-saisie croisée des capitaines (une ligne par équipe par
@@ -180,6 +182,20 @@ function ensure_team_phone_column(PDO $pdo): void {
                         AND column_name = 'phone'");
   if ((int)$st->fetchColumn() === 0) {
     $pdo->exec("ALTER TABLE vbo_teams ADD COLUMN phone VARCHAR(30) NULL");
+  }
+  $done = true;
+}
+
+// Équipe absente/forfait le jour du tournoi (cf. teams.setPresent) — défaut
+// présente (1) pour compatibilité avec les tournois créés avant cette colonne.
+function ensure_team_present_column(PDO $pdo): void {
+  static $done = false;
+  if ($done) return;
+  $st = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                      WHERE table_schema = DATABASE() AND table_name = 'vbo_teams'
+                        AND column_name = 'present'");
+  if ((int)$st->fetchColumn() === 0) {
+    $pdo->exec("ALTER TABLE vbo_teams ADD COLUMN present TINYINT(1) NOT NULL DEFAULT 1");
   }
   $done = true;
 }
@@ -416,6 +432,19 @@ switch ($action) {
     break;
   }
 
+  case 'teams.setPresent': {
+    require_login();
+    $tid = (string)field('tid', '');
+    $name = (string)field('name', '');
+    if (!is_uuid($tid) || $name === '') { ok(); break; }
+    $pdo = db();
+    ensure_team_present_column($pdo);
+    $st = $pdo->prepare("UPDATE vbo_teams SET present = ? WHERE tournament_id = ? AND name = ?");
+    $st->execute([field('present') ? 1 : 0, $tid, $name]);
+    ok();
+    break;
+  }
+
   case 'tournaments.setStatus': {
     require_admin();
     $id = field('id');
@@ -467,13 +496,15 @@ switch ($action) {
       }
       // Équipes
       ensure_team_phone_column($pdo);
+      ensure_team_present_column($pdo);
       $teamNameToId = [];
-      $insTeam = $pdo->prepare("INSERT INTO vbo_teams (id, tournament_id, name, level, phone) VALUES (?,?,?,?,?)");
+      $insTeam = $pdo->prepare("INSERT INTO vbo_teams (id, tournament_id, name, level, phone, present) VALUES (?,?,?,?,?,?)");
       foreach ($teams as $t) {
         $teid = uuid4();
         $lvl = isset($t['levelW']) ? (int)$t['levelW'] : null;
         $phone = trim((string)($t['phone'] ?? ''));
-        $insTeam->execute([$teid, $tid, $t['name'] ?? '', $lvl, $phone !== '' ? $phone : null]);
+        $present = isset($t['present']) ? ((int)!!$t['present']) : 1;
+        $insTeam->execute([$teid, $tid, $t['name'] ?? '', $lvl, $phone !== '' ? $phone : null, $present]);
         $teamNameToId[$t['name'] ?? ''] = $teid;
       }
       // Poules
@@ -1039,7 +1070,7 @@ switch ($action) {
       'finale' => $pickRules($cfg['finale'] ?? null),
     ];
     $timer = $t['timer_state'] !== null ? json_decode($t['timer_state'], true) : null;
-    ok(['name' => $t['name'], 'pools' => $s['pools'], 'schedule' => $s['schedule'], 'myEntries' => $myEntries, 'timerConfig' => $timerConfig, 'timer' => $timer]);
+    ok(['name' => $t['name'], 'pools' => $s['pools'], 'schedule' => $s['schedule'], 'absentTeams' => $s['absentTeams'] ?? [], 'myEntries' => $myEntries, 'timerConfig' => $timerConfig, 'timer' => $timer]);
     break;
   }
 
@@ -1077,7 +1108,8 @@ switch ($action) {
     if (!is_uuid($tid)) fail(400, "Tournoi non encore enregistré.");
     $pdo = db();
     ensure_team_phone_column($pdo);
-    $st = $pdo->prepare("SELECT t.name AS name, t.phone AS phone, p.letter AS pool
+    ensure_team_present_column($pdo);
+    $st = $pdo->prepare("SELECT t.name AS name, t.phone AS phone, t.present AS present, p.letter AS pool
                          FROM vbo_teams t
                          LEFT JOIN vbo_pool_teams pt ON pt.team_id = t.id
                          LEFT JOIN vbo_pools p ON p.id = pt.pool_id AND p.phase = 'brassage'
