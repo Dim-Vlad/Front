@@ -467,6 +467,8 @@ input,select{font-family:inherit;font-size:15px}
 .img-pick img{width:100%;height:100%;object-fit:cover;display:block}
 .img-ph{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:var(--muted)}
 .img-ph small{font-size:12.5px;font-weight:600}
+.img-pick.logo-pick{height:84px;background:#fff}
+.img-pick.logo-pick img{object-fit:contain;padding:8px}
 /* Bottom sheet (pop-up) */
 .sheet-backdrop{position:absolute;inset:0;z-index:80;background:rgba(10,13,30,.62);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
   display:flex;align-items:flex-end;opacity:0;transition:opacity .22s ease}
@@ -596,10 +598,13 @@ body.tv-mode .screen{padding-top:0}
 .tv-header-right{justify-self:end;flex-shrink:0;align-items:flex-end}
 .tv-header-right .theme-toggle{width:clamp(36px,3.6vw,48px);height:clamp(36px,3.6vw,48px);
   font-size:clamp(16px,1.8vw,22px);background:var(--surface);box-shadow:inset 0 0 0 2px var(--line)}
-.tv-qr{justify-self:center;display:flex;align-items:center;gap:12px;flex:none;background:var(--brand-soft);border:2px solid var(--brand);border-radius:16px;padding:8px 16px 8px 8px}
+.tv-qr-row{justify-self:center;display:flex;align-items:center;gap:14px;flex:none}
+.tv-qr{display:flex;align-items:center;gap:12px;flex:none;background:var(--brand-soft);border:2px solid var(--brand);border-radius:16px;padding:8px 16px 8px 8px}
 .tv-qr-box{background:#fff;border-radius:9px;padding:5px;display:flex;line-height:0}
 .tv-qr-label{display:flex;flex-direction:column;gap:2px;font-size:clamp(11px,1.1vw,13px);color:var(--brand-ink);font-weight:800;line-height:1.25;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
 .tv-qr-label b{font-size:clamp(16px,1.8vw,21px);color:var(--fg);letter-spacing:.07em;font-family:var(--font-display);text-transform:none}
+.tv-partner{background:#fff;border:2px solid var(--line);border-radius:14px;padding:6px;display:flex;align-items:center;justify-content:center;flex:none;width:clamp(76px,8vw,116px);height:clamp(76px,8vw,116px)}
+.tv-partner img{max-width:100%;max-height:100%;object-fit:contain;display:block}
 .tv-stats{display:flex;gap:18px;flex-wrap:wrap;margin:10px 0 0;padding-bottom:16px;font-size:clamp(14px,1.4vw,17px);color:var(--muted);font-weight:600}
 .tv-cols{display:grid;grid-template-columns:repeat(var(--n,1),1fr);gap:26px;align-items:start;margin-top:18px}
 .tv-cols.tv-cols-single{grid-template-columns:min(760px,100%);justify-content:center}
@@ -1905,6 +1910,13 @@ function applyLoadedStructure(fresh){
   if(!fresh) return false;
   if(fresh.timer!==undefined) timerAdoptRemote(fresh.timer);
   if(fresh.absentTeams) state.absentTeams = new Set(fresh.absentTeams);
+  // Sans ceci, state.config (règles, horaires, poolTieOrder, formule...) n'était
+  // relu depuis le serveur qu'à l'ouverture complète du tournoi (openTournament) :
+  // une validation d'égalité (confirmTieOrder) ou un ajustement fait par un
+  // admin/référent restait invisible des autres admins/référents déjà connectés
+  // tant qu'ils ne rouvraient pas le tournoi. Le rafraîchissement auto (~10s,
+  // liveRefreshTick) le propage maintenant comme le reste de la structure.
+  if(fresh.config) Object.assign(state.config, fresh.config);
   if(!fresh.schedule || !fresh.schedule.length) return false;
   const pools=fresh.pools||[], sched=fresh.schedule;
   const byPhase=ph=>({ pools: pools.filter(p=>(p.phase||'brassage')===ph), schedule: sched.filter(m=>(m.phase||'brassage')===ph) });
@@ -2984,6 +2996,26 @@ function wizInfos(){
       </label>
       <input id="w_image" type="file" accept="image/*" hidden onchange="pickTournImage(this)">
       ${C.image?`<button class="btn ghost sm" style="margin-top:8px;width:100%" onclick="clearTournImage()">Retirer l'image</button>`:`<small class="muted" style="display:block;margin-top:6px;font-size:11.5px">Elle remplacera l'icône dans la liste de vos tournois.</small>`}
+    </div>
+    <div class="field">
+      <span>Logos partenaires <span style="font-weight:500">(optionnel)</span></span>
+      <div class="grid2">
+        <div>
+          <label for="w_partner1" class="img-pick logo-pick">
+            ${C.partnerLogo1?`<img src="${C.partnerLogo1}" alt="">`:`<div class="img-ph"><span style="font-size:22px">🤝</span><small>Partenaire gauche</small></div>`}
+          </label>
+          <input id="w_partner1" type="file" accept="image/*" hidden onchange="pickPartnerLogo(this,1)">
+          ${C.partnerLogo1?`<button class="btn ghost sm" style="margin-top:6px;width:100%" onclick="clearPartnerLogo(1)">Retirer</button>`:''}
+        </div>
+        <div>
+          <label for="w_partner2" class="img-pick logo-pick">
+            ${C.partnerLogo2?`<img src="${C.partnerLogo2}" alt="">`:`<div class="img-ph"><span style="font-size:22px">🤝</span><small>Partenaire droit</small></div>`}
+          </label>
+          <input id="w_partner2" type="file" accept="image/*" hidden onchange="pickPartnerLogo(this,2)">
+          ${C.partnerLogo2?`<button class="btn ghost sm" style="margin-top:6px;width:100%" onclick="clearPartnerLogo(2)">Retirer</button>`:''}
+        </div>
+      </div>
+      <small class="muted" style="display:block;margin-top:6px;font-size:11.5px">Affichés de part et d'autre du QR code sur l'écran TV (gauche / droite).</small>
     </div>`;
 }
 window.pickTournImage=(input)=>{
@@ -2994,6 +3026,14 @@ window.pickTournImage=(input)=>{
   r.readAsDataURL(f);
 };
 window.clearTournImage=()=>{ saveWizard(); state.config.image=null; wizInfos(); };
+window.pickPartnerLogo=(input,n)=>{
+  const f=input.files&&input.files[0]; if(!f) return;
+  saveWizard();
+  const r=new FileReader();
+  r.onload=()=>{ state.config['partnerLogo'+n]=r.result; wizInfos(); };
+  r.readAsDataURL(f);
+};
+window.clearPartnerLogo=(n)=>{ saveWizard(); state.config['partnerLogo'+n]=null; wizInfos(); };
 function numCtl(id,val,min,max){
   return `<div class="stepper">
     <button onclick="bump('${id}',-1,${min},${max})">−</button>
@@ -4152,14 +4192,24 @@ window.openFinalesPairingEditor=(fresh=true)=>{
       edited: state._finalesEdited
     }));
   }
+  const isClass3=state.config.formula==='classification3';
   const catBlock=(key,label)=>{
     const prop=(state._finalesProposal||{})[key]; if(!prop || !prop.pairs || prop.pairs.length<2) return '';
     const allTeams=prop.pairs.flat();
     const esc=s=>s.replace(/'/g,"\\'");
-    // Provenance de chaque équipe : poule de phase 2 (Principale/Consolante) +
-    // poule de brassage d'origine (x.from), retrouvées dans phaseData(key).pools.
+    // Provenance de chaque équipe. Classique : poule de phase 2 (Principale/Consolante)
+    // + poule de brassage d'origine (x.from), retrouvées dans phaseData(key).pools —
+    // phaseData('principal'/'consolante') n'a de sens QUE pour ce format (c'est l'autre
+    // notion de "principal/consolante", celle du 2e tour de poules). En classification3,
+    // il n'y a pas de 2e tour de poules : on retrouve la provenance (niveau + poule de
+    // brassage + rang dans cette poule) dans state.classGroups (cf. categoryTeams).
     const origin={};
-    (phaseData(key).pools||[]).forEach(p=>{ p.teams.forEach(x=>{ origin[x.t]={level:x.level, from:x.from||brassageOriginOf(x.t), letter:p.letter}; }); });
+    if(isClass3){
+      ensureClassGroups();
+      (state.classGroups[key]||[]).forEach(x=>{ origin[x.t]={level:x.level, from:x.from, seed:x.seed}; });
+    } else {
+      (phaseData(key).pools||[]).forEach(p=>{ p.teams.forEach(x=>{ origin[x.t]={level:x.level, from:x.from||brassageOriginOf(x.t), letter:p.letter}; }); });
+    }
     let h=`<p class="eyebrow" style="margin:14px 0 4px">${label}</p>`;
     prop.pairs.forEach((pair,mi)=>{
       h+=`<div class="pool"><div class="ph">Match ${mi+1}</div><div style="padding:4px 10px 10px">`;
@@ -4168,13 +4218,15 @@ window.openFinalesPairingEditor=(fresh=true)=>{
         const others=allTeams.filter(t=>t!==team);
         const o=origin[team];
         const lm=o?levelMeta(o.level):null;
+        const poolMeta = o && !isClass3 ? `<span class="chip">Poule ${o.letter} en ${label.replace(/^\S+\s/,'')}</span>` : '';
+        const seedMeta = o && isClass3 ? `<span class="chip">${o.seed+1}${o.seed===0?'er':'e'} de poule</span>` : '';
         h+=`<div class="p2card">
           <span class="seed">${side===0?'A':'B'}</span>
           <div class="p2info">
             <div class="p2name">${team}</div>
             ${o?`<div class="p2meta">
               <span class="chip" style="color:${lm.color}">${lm.label}</span>
-              <span class="chip">Poule ${o.letter} en ${label.replace(/^\S+\s/,'')}</span>
+              ${poolMeta}${seedMeta}
               <span class="chip">Vient de poule ${o.from||'?'} (brassage)</span>
             </div>`:''}
             <div class="p2moveto">
@@ -4188,11 +4240,11 @@ window.openFinalesPairingEditor=(fresh=true)=>{
     });
     return h;
   };
+  const CAT_EMOJI={principal:'🏅', consolante:'🥈', superConsolante:'🥉'};
   openSheet(`
     <h3 class="sheet-title">Ajuster les appariements</h3>
     <p style="font-size:12.5px;color:var(--muted);margin:0 0 10px;line-height:1.5">Touchez le nom d'une équipe pour l'échanger avec celle sélectionnée, et changer ainsi les face-à-face du 1er tour.</p>
-    ${catBlock('principal','🏅 Principal')}
-    ${state.config.phaseConsolante ? catBlock('consolante','🥈 Consolante') : ''}
+    ${activeCategories().map(cat=>catBlock(cat.key, `${CAT_EMOJI[cat.key]||'🏐'} ${cat.label}`)).join('')}
     <div class="btn-row" style="margin-top:16px">
       <button class="btn ghost" style="flex:1" onclick="cancelFinalesPairingEdit()">Annuler</button>
       <button class="btn ok" style="flex:1" onclick="saveFinalesPairingEdit()">Enregistrer</button>
@@ -5190,20 +5242,26 @@ function tvGymColumn(matches){
   const branchOf=m=>(parseFinalesPhase(m.phase)||{}).branch||'';
   const isSpinoff=m=>{ const b=branchOf(m); return b==='3e'||b==='Petite'; };
   const branchOrder={'':0, 'Perdants':1};
+  // Spin-off propre à chaque branche : '3e' (petite finale) suit juste la
+  // branche gagnante '', 'Petite' (7e-8e) suit juste la branche perdante
+  // 'Perdants' — insérés immédiatement après le dernier tour de leur branche,
+  // pas regroupés à la fin, pour que la petite finale apparaisse bien
+  // sous la finale correspondante (comme côté organisateur).
+  const spinoffOf={'':'3e', 'Perdants':'Petite'};
   const spinoffLabel={'3e':'Petite finale (3e place)', 'Petite':'Petite finale (7e-8e)'};
-  const mainKeys=[...new Set(matches.filter(m=>!isSpinoff(m)).map(m=>branchOf(m)+':'+m.r))]
-    .sort((ka,kb)=>{
-      const [ba,ra]=ka.split(':'), [bb,rb]=kb.split(':');
-      return (branchOrder[ba]??0)-(branchOrder[bb]??0) || (+ra)-(+rb);
+  const branches=[...new Set(matches.filter(m=>!isSpinoff(m)).map(branchOf))]
+    .sort((a,b)=>(branchOrder[a]??0)-(branchOrder[b]??0));
+  const groups=[];
+  branches.forEach(b=>{
+    const rounds=[...new Set(matches.filter(m=>!isSpinoff(m) && branchOf(m)===b).map(m=>m.r))]
+      .sort((a,c)=>(+a)-(+c));
+    rounds.forEach(r=>{
+      const ms=matches.filter(m=>!isSpinoff(m) && branchOf(m)===b && m.r===r);
+      groups.push({label: ms.length?tvRoundLabel(ms[0]):`Tour ${r}`, ms});
     });
-  const groups=mainKeys.map(key=>{
-    const [b,r]=key.split(':');
-    const ms=matches.filter(m=>!isSpinoff(m) && branchOf(m)===b && String(m.r)===r);
-    return {label: ms.length?tvRoundLabel(ms[0]):`Tour ${r}`, ms};
-  });
-  ['3e','Petite'].forEach(b=>{
-    const ms=matches.filter(m=>branchOf(m)===b);
-    if(ms.length) groups.push({label:spinoffLabel[b], ms});
+    const sb=spinoffOf[b];
+    const sms=matches.filter(m=>branchOf(m)===sb);
+    if(sms.length) groups.push({label:spinoffLabel[sb], ms:sms});
   });
   const roundsHtml=groups.map(({label,ms:raw})=>{
     const ms=raw.sort((a,b)=>(a.court||0)-(b.court||0));
@@ -5278,7 +5336,9 @@ screens.tv = ()=>{
   const upcomingCount=matches.length-liveCount-doneCount;
   const phaseLbl=TV_PHASE_LABEL[state.livePhase]||TV_PHASE_LABEL.brassage;
   if(!state.joinCode){ const ct=state.tournaments.find(x=>x.id===state.currentDraftId); state.joinCode=(ct&&ct.joinCode)||null; }
-  const tvQrHtml = state.joinCode ? `<div class="tv-qr"><div class="tv-qr-box" id="tvQrCode"></div><div class="tv-qr-label">Pour les capitaines<b>${state.joinCode}</b></div></div>` : '<div></div>';
+  const tvPartner=(src,side)=> src?`<div class="tv-partner tv-partner-${side}"><img src="${src}" alt=""></div>`:'';
+  const tvQrCard = `<div class="tv-qr"><div class="tv-qr-box" id="tvQrCode"></div><div class="tv-qr-label">Pour les capitaines<b>${state.joinCode}</b></div></div>`;
+  const tvQrHtml = state.joinCode ? `<div class="tv-qr-row">${tvPartner(state.config.partnerLogo1,'left')}${tvQrCard}${tvPartner(state.config.partnerLogo2,'right')}</div>` : '<div></div>';
   host.innerHTML=`<div class="tv-screen">
     <div class="tv-sticky">
       <div class="tv-header">
@@ -6621,6 +6681,8 @@ window.loadJoinedTournament=async (code,team)=>{
       return;
     }
     state.config.name=data.name;
+    state.config.partnerLogo1=data.partnerLogo1||null;
+    state.config.partnerLogo2=data.partnerLogo2||null;
     state.pools=data.pools||[];
     state.schedule=data.schedule||[];
     state.absentTeams=new Set(data.absentTeams||[]);

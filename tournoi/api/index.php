@@ -112,7 +112,18 @@ function load_structure(string $tid): ?array {
     ];
   }, $matches);
 
-  return ['pools' => $poolsOut, 'schedule' => $schedOut, 'absentTeams' => $absentNames];
+  // `config` (règles, horaires, poolTieOrder, formule...) : inclus ici pour que le
+  // rafraîchissement auto (~10s, liveRefreshTick) le propage lui aussi entre admin
+  // et référent(s) connectés en même temps — sans ça, une validation d'égalité ou
+  // un ajustement fait d'un côté (ex: confirmTieOrder) restait invisible de l'autre
+  // tant que le tournoi n'était pas rouvert (seul moment où openTournament()
+  // recopiait `config` depuis le serveur).
+  $cfgSt = $pdo->prepare("SELECT config FROM vbo_tournaments WHERE id = ?");
+  $cfgSt->execute([$tid]);
+  $cfgJson = $cfgSt->fetchColumn();
+  $config = $cfgJson ? json_decode($cfgJson, true) : null;
+
+  return ['pools' => $poolsOut, 'schedule' => $schedOut, 'absentTeams' => $absentNames, 'config' => $config];
 }
 
 // Table de la double-saisie croisée des capitaines (une ligne par équipe par
@@ -611,6 +622,20 @@ switch ($action) {
         }
       }
 
+      // Garde-fou anti-doublon : (phase, round, court) identifie un créneau unique
+      // du planning (un seul match par terrain et par tour dans une phase donnée).
+      // advanceBracketIfRoundDone() peut être déclenché deux fois en quasi-simultané
+      // (ex. les 2 matchs d'une demi-finale validés à quelques ms d'intervalle, sans
+      // que la 2e invocation n'ait encore vu le match généré par la 1ère) — sans
+      // cette vérification côté serveur, les 2 appels insèrent chacun le même match
+      // suivant (finale, petite finale…), qui apparaît alors en double sur l'écran TV.
+      $existingSlots = [];
+      $st = $pdo->prepare("SELECT phase, round, court FROM vbo_matches WHERE tournament_id = ?");
+      $st->execute([$tid]);
+      foreach ($st->fetchAll() as $row) {
+        $existingSlots[$row['phase'] . '|' . ($row['round'] ?? '') . '|' . ($row['court'] ?? '')] = true;
+      }
+
       $insMatch = $pdo->prepare(
         "INSERT INTO vbo_matches (id, tournament_id, pool_id, phase, round, scheduled_time,
                               gym_id, court, team_a, team_b, referee_team, status)
@@ -618,17 +643,20 @@ switch ($action) {
       $nMatches = 0;
       foreach ($matches as $m) {
         $phase  = $m['phase'] ?? 'poules2';
+        $round  = isset($m['round']) ? (int)$m['round'] : null;
         $poolId = isset($m['poolKey']) ? ($poolKeyToId[$phase . '|' . $m['poolKey']] ?? null) : null;
         $gymId  = isset($m['gymName']) ? ($nameToGymId[$m['gymName']] ?? null) : null;
         $court  = array_key_exists('court', $m) && $m['court'] !== null ? (int)$m['court'] : null;
+        $slotKey = $phase . '|' . ($round ?? '') . '|' . ($court ?? '');
+        if (isset($existingSlots[$slotKey])) continue;
         $teamA  = isset($m['aKey'])   ? ($teamNameToId[$m['aKey']] ?? null) : null;
         $teamB  = isset($m['bKey'])   ? ($teamNameToId[$m['bKey']] ?? null) : null;
         $ref    = !empty($m['refKey']) ? ($teamNameToId[$m['refKey']] ?? null) : null;
         $insMatch->execute([
-          uuid4(), $tid, $poolId, $phase,
-          isset($m['round']) ? (int)$m['round'] : null, $m['time'] ?? null,
+          uuid4(), $tid, $poolId, $phase, $round, $m['time'] ?? null,
           $gymId, $court, $teamA, $teamB, $ref,
         ]);
+        $existingSlots[$slotKey] = true;
         $nMatches++;
       }
       $pdo->commit();
@@ -1070,7 +1098,9 @@ switch ($action) {
       'finale' => $pickRules($cfg['finale'] ?? null),
     ];
     $timer = $t['timer_state'] !== null ? json_decode($t['timer_state'], true) : null;
-    ok(['name' => $t['name'], 'pools' => $s['pools'], 'schedule' => $s['schedule'], 'absentTeams' => $s['absentTeams'] ?? [], 'myEntries' => $myEntries, 'timerConfig' => $timerConfig, 'timer' => $timer]);
+    // Logos partenaires affichés de part et d'autre du QR code sur l'écran TV
+    // (cf. l'étape 1 de création) : publics comme le reste de ce payload.
+    ok(['name' => $t['name'], 'pools' => $s['pools'], 'schedule' => $s['schedule'], 'absentTeams' => $s['absentTeams'] ?? [], 'myEntries' => $myEntries, 'timerConfig' => $timerConfig, 'timer' => $timer, 'partnerLogo1' => $cfg['partnerLogo1'] ?? null, 'partnerLogo2' => $cfg['partnerLogo2'] ?? null]);
     break;
   }
 
