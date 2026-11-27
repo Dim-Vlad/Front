@@ -5138,7 +5138,7 @@ function tvMatchRow(m){
   const metaTag=m.pool ? `<span>Poule ${m.pool}</span>` : `<span>${tvRoundLabel(m)}</span>`;
   const courtTag = m.pool ? `<span>Terrain ${m.court}</span>` : (ci3?`<span>Terrain ${ci3.court}</span>`:'');
   const timeTag = ci3 ? `<span>🕒 ${ci3.time}</span>` : '';
-  return `<div class="tv-match ${m.status==='live'?'live':m.status==='done'?'done':''}">
+  return `<div class="tv-match ${m.status==='live'?'live':m.status==='done'?'done':''}" data-mid="${m.id}">
     <div class="tv-match-meta">${courtTag}${metaTag}${timeTag}${schedBadge(m.status)}</div>
     <div class="tv-teams"><span class="tv-team">${m.a}${absentBadge(m.a)}</span><span class="tv-score">${sc}</span><span class="tv-team tv-team-right">${m.b}${absentBadge(m.b)}</span></div>
     ${refHtml}
@@ -5234,6 +5234,11 @@ function tvTickClock(){
 // donc si le planning dépasse la hauteur visible, on le fait défiler seul
 // jusqu'en bas puis on revient en haut (avec une pause aux deux extrémités).
 let _tvScrollTimer=null, _tvScrollPauseUntil=0;
+// Signature d'un match (statut + sets joués) : permet de détecter, d'un
+// rafraîchissement TV (~10s) à l'autre, quel match vient d'être mis à jour,
+// pour y ramener le défilement au lieu de rester sur une position arbitraire.
+let _tvLastSnap=null;
+function tvMatchSig(m){ return m.status+'|'+JSON.stringify(matchSetsPlayed(m)); }
 function tvStartAutoScroll(){
   clearInterval(_tvScrollTimer);
   _tvScrollPauseUntil=Date.now()+3000;
@@ -5252,6 +5257,16 @@ screens.tv = ()=>{
   // défilement (auto ou manuelle) au lieu de revenir en haut à chaque fois.
   const prevScroll=host.scrollTop;
   const matches=tvPhaseMatches();
+  // Détecte le match dont le score/statut vient de changer depuis le dernier
+  // rendu, pour y ramener le défilement ci-dessous plutôt que de conserver
+  // une position de scroll qui n'a plus de rapport avec la mise à jour.
+  const newSnap={};
+  matches.forEach(m=>{ newSnap[m.id]=tvMatchSig(m); });
+  let updatedId=null;
+  if(_tvLastSnap){
+    for(const m of matches){ if(_tvLastSnap[m.id]!==undefined && _tvLastSnap[m.id]!==newSnap[m.id]){ updatedId=m.id; break; } }
+  }
+  _tvLastSnap=newSnap;
   // Les gymnases peuvent avoir été renommés par l'organisateur : m.gym porte
   // déjà le nom réel (cf. les autres écrans, ex. ligne ~4251), jamais les noms
   // de démo de GYMS — s'appuyer sur GYMS ici laissait l'écran TV vide.
@@ -5290,7 +5305,9 @@ screens.tv = ()=>{
       ${cols.length ? cols.map(c=>tvGymColumn(c.matches)).join('') : '<p class="tv-empty">Planning pas encore disponible.</p>'}
     </div>
   </div>`;
-  host.scrollTop=prevScroll;
+  const updatedEl = updatedId ? host.querySelector(`[data-mid="${updatedId}"]`) : null;
+  if(updatedEl){ updatedEl.scrollIntoView({behavior:'smooth', block:'center'}); _tvScrollPauseUntil=Date.now()+6000; }
+  else { host.scrollTop=prevScroll; }
   tvTickClock();
   if(!window._tvClockTimer) window._tvClockTimer=setInterval(tvTickClock, 1000);
   if(!_tvScrollTimer) tvStartAutoScroll();
